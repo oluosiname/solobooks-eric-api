@@ -1,0 +1,45 @@
+services:
+  eric-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: eric-api
+    ports:
+      - "127.0.0.1:5000:5000" # Only bind to localhost
+    volumes:
+      - ./logs:/app/logs
+      - ./Linux-x86_64:/app/Linux-x86_64:ro # Mount ERIC libraries as read-only
+    environment:
+      - FLASK_ENV=production
+      - API_KEY=${API_KEY}
+      - ERIC_HOME_DIR=/app/Linux-x86_64/lib
+      - ERIC_LOG_DIR=/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 3G
+        reservations:
+          cpus: "1"
+          memory: 1G
+
+  nginx:
+    image: nginx:alpine
+    container_name: eric-api-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      eric-api:
+        condition: service_healthy
+    restart: unless-stopped

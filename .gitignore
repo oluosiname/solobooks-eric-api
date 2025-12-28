@@ -32,6 +32,11 @@ logs/
 *.pfx
 *.pdf
 
+# Environment files
+.env
+.env.prod
+.env.local
+
 # IDE
 .vscode/
 .idea/
@@ -42,4 +47,10 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Deployment
+nginx/ssl/
+*.pem
+*.key
+*.crt
 

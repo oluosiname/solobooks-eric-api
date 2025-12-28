@@ -242,6 +242,148 @@ Port mapping is configured in `docker-compose.yml` (default: `5000:5000`)
 - Added support for multiple XML structure patterns (UStVA_2025 and Anmeldungssteuern)
 - Fixed PDF generation to always capture PDF via callback (works with both return_pdf true/false)
 
+## Deployment
+
+For production deployment to Hetzner Cloud, see [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step instructions.
+
+**Recommended Server**: CX23 (Cost-Optimized) - €3.56/month
+
+- 2 vCPU, 4 GB RAM, 40 GB SSD
+- Perfect for 1000 users with monthly submissions
+- 50% cheaper than regular performance servers
+
+## Production Deployment & Maintenance
+
+### Initial Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete initial setup instructions.
+
+### Deploying New Code
+
+When you have code changes to deploy:
+
+#### Option 1: Using rsync (from local machine)
+
+```bash
+# From your local project directory
+cd /path/to/solobooks-eric-api
+
+# Transfer updated files (exclude unnecessary files)
+rsync -avz --progress -e "ssh -i ~/.ssh/id_rsa_solobooks" \
+    --exclude '.git' \
+    --exclude '__pycache__' \
+    --exclude '*.pyc' \
+    --exclude 'logs' \
+    --exclude '*.log' \
+    --exclude '.env' \
+    --exclude 'docker-compose.yml' \
+    --exclude 'Dockerfile' \
+    ./ root@YOUR_SERVER_IP:/opt/eric-api/
+```
+
+#### Option 2: Using Git (if code is in repository)
+
+```bash
+# On the server
+cd /opt/eric-api
+git pull origin main  # or your branch name
+```
+
+### Restarting Services After Code Changes
+
+After deploying new code, rebuild and restart:
+
+```bash
+# Navigate to project directory
+cd /opt/eric-api
+
+# Load environment variables
+export $(cat .env.prod | xargs)
+
+# Rebuild and restart containers
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Check status
+docker compose -f docker-compose.prod.yml ps
+
+# View logs to verify everything started correctly
+docker compose -f docker-compose.prod.yml logs -f
+```
+
+### Quick Restart (No Code Changes)
+
+If you just need to restart services without code changes:
+
+```bash
+cd /opt/eric-api
+docker compose -f docker-compose.prod.yml restart
+
+# Or restart specific service
+docker compose -f docker-compose.prod.yml restart eric-api
+docker compose -f docker-compose.prod.yml restart nginx
+```
+
+### Viewing Logs
+
+```bash
+# All services
+docker compose -f docker-compose.prod.yml logs -f
+
+# Specific service
+docker compose -f docker-compose.prod.yml logs -f eric-api
+
+# Last 100 lines
+docker compose -f docker-compose.prod.yml logs --tail=100 eric-api
+```
+
+### Stopping Services
+
+```bash
+# Stop all services
+docker compose -f docker-compose.prod.yml down
+
+# Stop specific service
+docker compose -f docker-compose.prod.yml stop eric-api
+```
+
+### Common Maintenance Tasks
+
+#### Update SSL Certificate (Let's Encrypt Auto-Renewal)
+
+Certificates auto-renew, but you may need to copy them:
+
+```bash
+# Stop nginx
+docker stop eric-api-nginx
+
+# Renew certificate (if needed)
+certbot renew
+
+# Copy updated certificates
+cp /etc/letsencrypt/live/eric-api.yourdomain.com/fullchain.pem /opt/eric-api/nginx/ssl/cert.pem
+cp /etc/letsencrypt/live/eric-api.yourdomain.com/privkey.pem /opt/eric-api/nginx/ssl/key.pem
+
+# Restart nginx
+docker start eric-api-nginx
+```
+
+#### Check Container Status
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+docker stats  # Resource usage
+```
+
+#### Access Container Shell
+
+```bash
+# Access eric-api container
+docker compose -f docker-compose.prod.yml exec eric-api bash
+
+# Access nginx container
+docker compose -f docker-compose.prod.yml exec nginx sh
+```
+
 ## License
 
 See the ERIC license documentation in `Linux-x86_64/lizenz.pdf`

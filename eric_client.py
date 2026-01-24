@@ -115,7 +115,37 @@ class EricClient:
             root = ET.fromstring(xml_content)
             ns = {'elster': 'http://www.elster.de/elsterxml/schema/v11'}
             
-            # Get DatenArt from TransferHeader
+            # Check if root element is 'zm' (ZM format - no TransferHeader)
+            root_tag = root.tag
+            if '}' in root_tag:
+                root_tag = root_tag.split('}')[1]
+            
+            if root_tag == 'zm':
+                # ZM format: extract year from zm structure
+                jahr = None
+                for path in [
+                    './/elster:zm/elster:unternehmer/elster:zm-zeilen/elster:mzr/elster:jahr',
+                    './/zm/unternehmer/zm-zeilen/mzr/jahr',
+                    './/elster:mzr/elster:jahr',
+                    './/mzr/jahr'
+                ]:
+                    jahr_elem = root.find(path, ns if 'elster:' in path else {})
+                    if jahr_elem is not None and jahr_elem.text:
+                        jahr = jahr_elem.text
+                        break
+                
+                if jahr:
+                    return f"ZM_{jahr}"
+                else:
+                    # Fallback: try to get version from zm element's version attribute
+                    version_attr = root.get('version')
+                    if version_attr:
+                        # Version is like "000005", but we need the year
+                        # For now, return ZM without year if we can't find it
+                        return "ZM"
+                    raise ValueError("Could not find year in ZM XML")
+            
+            # Standard format: Get DatenArt from TransferHeader
             daten_art_elem = root.find('.//elster:TransferHeader/elster:DatenArt', ns)
             if daten_art_elem is None:
                 daten_art_elem = root.find('.//TransferHeader/DatenArt')
@@ -229,12 +259,12 @@ class EricClient:
         password: str, 
         datenart_version: Optional[str] = None,
         return_pdf: bool = True
-    ) -> Tuple[bool, Optional[int], Optional[int], Optional[str], Optional[bytes], Optional[str]]:
+    ) -> Tuple[bool, Optional[int], Optional[int], Optional[str], Optional[bytes], Optional[str], Optional[str]]:
         """
         Submit XML with certificate authentication
         
         Returns:
-            (success, error_code, transfer_handle, error_message, pdf_data, server_response_xml)
+            (success, error_code, transfer_handle, error_message, pdf_data, server_response_xml, validation_result_xml)
         """
         eric = self._get_eric_instance()
         
@@ -244,8 +274,8 @@ class EricClient:
             if not datenart_version:
                 raise ValueError('Could not determine datenartversion from XML. Please provide it explicitly.')
         
-        if not datenart_version.startswith('UStVA'):
-            raise ValueError(f'Invalid datenartversion for VAT return: {datenart_version}. Expected UStVA_YYYY format.')
+        # Allow any valid datenartversion - ERIC library will validate if it's supported
+        # This enables support for UStVA, ZM, and other data types
         
         # Decode and save certificate
         try:
@@ -287,17 +317,18 @@ class EricClient:
                     result_xml = eric.PyEricRueckgabepufferInhalt(response_buffer)
                     server_response = eric.PyEricRueckgabepufferInhalt(server_buffer)
                     server_response_text = server_response.decode('utf-8', errors='replace') if server_response else None
+                    validation_result_xml = result_xml.decode('utf-8', errors='replace') if result_xml else None
                     
                     if rc != ERIC_OK:
                         error_message = self._get_error_message(eric, rc)
-                        return False, rc, None, error_message, None, server_response_text
+                        return False, rc, None, error_message, None, server_response_text, validation_result_xml
                     
                     # Get PDF from callback if available
                     result_pdf = None
                     if pdf_capture and pdf_capture.pdf_data:
                         result_pdf = pdf_capture.pdf_data
                     
-                    return True, None, th, None, result_pdf, server_response_text
+                    return True, None, th, None, result_pdf, server_response_text, None
         finally:
             # Cleanup certificate file
             try:

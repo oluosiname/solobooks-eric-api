@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 class ValidationRequest(BaseModel):
     """Request model for XML validation"""
     xml: str = Field(..., description="The XML content to validate")
-    datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025). Auto-detected if not provided.")
+    datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025, ZM_2025). Auto-detected if not provided.")
 
 
 class ValidationResult(BaseModel):
@@ -19,16 +19,16 @@ class ValidationResult(BaseModel):
 
 
 class SubmissionRequest(BaseModel):
-    """Request model for VAT return submission"""
+    """Request model for tax return submission (UStVA, ZM, etc.)"""
     xml: str = Field(..., description="The XML content to submit")
     cert_base64: str = Field(..., description="Base64-encoded certificate (.pfx file)")
     password: str = Field(..., description="Certificate password")
-    datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025). Auto-detected if not provided.")
+    datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025, ZM_2025). Auto-detected if not provided.")
     return_pdf: bool = Field(True, description="Whether to return PDF as file download (true) or base64 in JSON (false)")
 
 
 class SubmissionResult(BaseModel):
-    """Response model for VAT return submission (JSON format)"""
+    """Response model for tax return submission (JSON format)"""
     status: str
     transfer_handle: Optional[int] = None
     pdf_base64: Optional[str] = None

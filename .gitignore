@@ -54,3 +54,4 @@ nginx/ssl/
 *.key
 *.crt
 
+keys

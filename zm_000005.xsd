@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xs:annotation>
+		<xs:documentation xml:lang="de"><![CDATA[
+		=== Änderungen ===
+		10.06.2025 (Version 5)
+		1) eigenes Root-Element für ZM mit type zm_Type.
+		2) max. Länge von ../unternehmer/anschrift/name auf 100 erhöht.
+		3) zulassNr_Type1 in zulassNr1_Type und zulassNr_Type2 in zulassNr2_Type umbenannt.
+		4) Wiederholbarkeit für ../unternehmer entfernt (wurde bereits zuvor durch Regeln unterbunden).
+		5) Elster-Namespace ergänzt, um Abwärtskompatibilität für ERiC sicherzustellen.
+		6) Version nicht erhöht, um Abwärtskompatibilität für ERiC sicherzustellen.
+		15.10.2020 (Version 5)
+		1) Wegen des Brexits und zur Unterscheidung der Abgaben wurde die Version auf 000005 erhoeht.
+		30.09.2019 (Version 4)
+		1) knre_Type: Erweiterung des Patterns
+		06.05.2014 (Version 3)
+		1) betrag_Type: Von 9 auf 11 Stellen erweitert.
+		01.08.2012 (Version 2)
+		1) Dokumentation zu Element zulnr2 angepasst (siehe MGM-29844)
+		21.03.2011
+		1) zulassNr_Type1: Paginierbuchstabe "N" für ERiC ergänzt.
+		13.01.2011
+		1) Element knre: USt-IdNr. wird in einem Element übermittelt.
+		2) Element zm: Attribut version ergänzt.
+		15.12.2010
+		1) Element anschrift: Typ anschrift_Type eingeführt.
+		2) Element ../unternehmer/zm-zeilen/mzr: Getrennte Eingabe Jahrhundert und Jahr durch 4-stellige Jahreszahl ersetzt.		
+		]]></xs:documentation>
+	</xs:annotation>
+	<xs:element name="zm" type="zm_Type"/>
+	<xs:simpleType name="knre_Type">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{2}[A-Za-z0-9\+\*]{1,12}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="knri_Type">
+		<xs:restriction base="xs:string">
+			<xs:pattern value="DE[0-9]{9}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="quart_Type">
+		<xs:restriction base="xs:int">
+			<xs:minInclusive value="1"/>
+			<xs:maxInclusive value="32"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="meldeart_Type">
+		<xs:restriction base="xs:int">
+			<xs:enumeration value="10"/>
+			<xs:enumeration value="11"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="waehrung_Type">
+		<xs:restriction base="xs:int">
+			<xs:enumeration value="0"/>
+			<xs:enumeration value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="betrag_Type">
+		<xs:restriction base="xs:long">
+			<xs:minInclusive value="-99999999999"/>
+			<xs:maxInclusive value="99999999999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="zulassNr1_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="S"/>
+			<xs:enumeration value="P"/>
+			<xs:enumeration value="N"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="zulassNr2_Type">
+		<xs:restriction base="xs:int">
+			<xs:minInclusive value="0300000"/>
+			<xs:maxInclusive value="99999999"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="zulassNr_Type">
+		<xs:sequence>
+			<xs:element name="zulnr1" type="zulassNr1_Type">
+				<xs:annotation>
+					<xs:documentation>Paginierbuchstabe. Wurde die Zusammenfassende Meldung im ElsterOnline-Portal erfasst und abgesendet, so wird der Buchstabe "S" übermittelt; bei Übermittlung aus dem BZStOnline-Portal der Buchstabe "P". Bei ERiC-Übermittlungen ist der Buchstabe "N" anzugeben.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="zulnr2" type="zulassNr2_Type">
+				<xs:annotation>
+					<xs:documentation>In diesem Element wird die Zeichenfolge "1111111“ übermittelt.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="umsatzart_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="D"/>
+			<xs:enumeration value="L"/>
+			<xs:enumeration value="S"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="zm_Type">
+		<xs:sequence>
+			<xs:element name="unternehmer">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="knri" type="knri_Type">
+							<xs:annotation>
+								<xs:documentation>Inländische Umsatzsteuer-Identifikationsnummer des Meldenden bestehend aus dem Länderkürzel "DE" gefolgt von exakt 9 Ziffern.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="zulassNr" type="zulassNr_Type">
+							<xs:annotation>
+								<xs:documentation>Teilnehmernummer für die elektronische Abgabe der Zusammenfassenden Meldung. Diese Nummer wird vom BZSt auf Antrag vergeben.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="anschrift" type="anschrift_Type"/>
+						<xs:element name="zm-zeilen" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="anzeige" type="boolean_Type">
+										<xs:annotation>
+											<xs:documentation>Bei Abgabe einer Monatsmeldung in Meldezeiträumen ab 01.07.2010 kann der Benutzer anzeigen, dass er zukünftig monatlich seine Zusammenfassende Meldung abgeben möchte.
+
+												Zulässige Werte: "true", "false".
+											</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+									<xs:element name="widerruf" type="xs:boolean">
+										<xs:annotation>
+											<xs:documentation>Bei Abgabe einer Monatsmeldung in Meldezeiträumen ab 01.07.2010 kann der Benutzer die monatliche Abgabe seiner Zusammenfassenden Meldung widerrufen.
+
+												Zulässige Werte: "true", "false".
+											</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+									<xs:element name="mzr">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="quart" type="quart_Type">
+													<xs:annotation>
+														<xs:documentation>1 = Quartal 1
+															2 = Quartal 2
+															3 = Quartal 3
+															4 = Quartal 4
+															5 = Jahresmeldung
+															11 = 2-Monat-ZM Jan-Feb
+															12 = 2-Monat-ZM April-Mai
+															13 = 2-Monat-ZM Juli-Aug
+															14 = 2-Monat-ZM Okt-Nov
+															21 = Monats-ZM Januar
+															22 = Monats-ZM Februar
+															23 = Monats-ZM März
+															24 = Monats-ZM April
+															25 = Monats-ZM Mai
+															26 = Monats-ZM Juni
+															27 = Monats-ZM Juli
+															28 = Monats-ZM August
+															29 = Monats-ZM September
+															30 = Monats-ZM Oktober
+															31 = Monats-ZM November
+															32 = Monats-ZM Dezember
+														</xs:documentation>
+													</xs:annotation>
+												</xs:element>
+												<xs:element name="jahr">
+													<xs:annotation>
+														<xs:documentation>4-stellige Jahreszahl.</xs:documentation>
+													</xs:annotation>
+													<xs:simpleType>
+														<xs:restriction base="xs:int">
+															<xs:minInclusive value="1900"/>
+														</xs:restriction>
+													</xs:simpleType>
+												</xs:element>
+											</xs:sequence>
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="zeile" maxOccurs="unbounded">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="knre" type="knre_Type">
+													<xs:annotation>
+														<xs:documentation>Umsatzsteuer-Identifikationsnummer</xs:documentation>
+													</xs:annotation>
+												</xs:element>
+												<xs:element name="betrag" type="betrag_Type"/>
+											</xs:sequence>
+											<xs:attribute name="umsatzart" type="umsatzart_Type" use="required">
+												<xs:annotation>
+													<xs:documentation>Zulässige Werte:
+														D (Dreiecksgeschäft)
+														L (Innergemeinschaftliche Lieferung)
+														S (Sonstige Leistung)
+													</xs:documentation>
+												</xs:annotation>
+											</xs:attribute>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+								<xs:attribute name="waehrung" type="waehrung_Type" use="required">
+									<xs:annotation>
+										<xs:documentation>Das Attribut waehrung wird defaultmäßig mit „1“ (Euro) belegt.</xs:documentation>
+									</xs:annotation>
+								</xs:attribute>
+								<xs:attribute name="meldeart" type="meldeart_Type" use="required">
+									<xs:annotation>
+										<xs:documentation>Zulässige Werte:
+											10 (Erstmeldung)
+											11 (berichtigte Anmeldung)
+										</xs:documentation>
+									</xs:annotation>
+								</xs:attribute>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="version" use="required">
+			<xs:annotation>
+				<xs:documentation>Version des XML-Schemas für ZM.
+
+					Konstanter Wert: 000005
+				</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="000005"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="anschrift_Type">
+		<xs:sequence>
+			<xs:element name="name">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="100"/>
+						<xs:minLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="adresszusatz" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="40"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="strasse">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="30"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="hausnr" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="10"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="hausnrzusatz" minOccurs="0">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="10"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="plz" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Postleitzahl.
+
+						Sofern es sich um eine inländische Adresse handelt (Staat ="DE"), stellt das Portal (EOP/BOP) sicher, dass eine Angabe vorliegt und dass es sich um 5 Ziffern aus dem Bereich von „01001“ bis „99999“ handelt.
+
+						Handelt es sich nicht um eine inländische Adresse, so ist die Angabe optional und darf aus den Buchstaben A-Z (Groß- und Kleinbuchstaben zulässig, Umlaute unzulässig) und den Ziffern 0-9 bestehen.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="12"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="ort">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="30"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="staat">
+				<xs:annotation>
+					<xs:documentation>Übermittlung des ISO-3166-Alpha-2-Codes des Staates.</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:maxLength value="2"/>
+						<xs:minLength value="2"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="telefon" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Telefonnummer.
+
+						Zulässige Zeichen sind die Ziffern 0-9, /, \, (, ), +, - und das Leerzeichen.
+					</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+						<xs:maxLength value="20"/>
+						<xs:pattern value="[0-9+\-/() ]*"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="boolean_Type">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="true"/>
+			<xs:enumeration value="false"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

@@ -66,8 +66,8 @@ def validate_xml():
 
 
 @app.route('/submit', methods=['POST'])
-def submit_vat_return():
-    """Submit advanced VAT return (UStVA) and return PDF + submission response"""
+def submit_submission():
+    """Submit tax return (UStVA, ZM, etc.) to ELSTER and return PDF + submission response"""
     pdf_file_path = None
     temp_files = []
     
@@ -84,7 +84,7 @@ def submit_vat_return():
             return jsonify({'error': f'Invalid request: {str(e)}'}), 400
         
         # Submit XML using ERIC client
-        success, error_code, transfer_handle, error_message, pdf_data, server_response = eric_client.submit_xml(
+        success, error_code, transfer_handle, error_message, pdf_data, server_response, validation_result = eric_client.submit_xml(
             req.xml,
             req.cert_base64,
             req.password,
@@ -97,7 +97,8 @@ def submit_vat_return():
                 'error': 'ERIC submission failed',
                 'error_code': error_code,
                 'error_message': error_message,
-                'server_response': server_response
+                'server_response': server_response,
+                'validation_result': validation_result
             }), 500
         
         # Handle PDF return based on return_pdf setting
@@ -121,12 +122,15 @@ def submit_vat_return():
                 pdf_file_path = pdf_file.name
                 temp_files.append(pdf_file_path)
             
+            # Extract datenartversion for filename
+            datenartversion = req.datenartversion or eric_client.extract_datenart_version(req.xml) or 'submission'
+            
             # Return PDF file
             response = send_file(
                 pdf_file_path,
                 mimetype='application/pdf',
                 as_attachment=True,
-                download_name=f'UStVA_2025_submission_{transfer_handle if transfer_handle else "unknown"}.pdf'
+                download_name=f'{datenartversion}_submission_{transfer_handle if transfer_handle else "unknown"}.pdf'
             )
             
             response.headers['X-Transfer-Handle'] = str(transfer_handle) if transfer_handle else 'N/A'
@@ -148,7 +152,7 @@ def submit_vat_return():
                 transfer_handle=transfer_handle,
                 pdf_base64=pdf_base64,
                 server_response=server_response,
-                message='VAT return submitted successfully'
+                message='Tax return submitted successfully'
             )
             
             return jsonify(result.model_dump())

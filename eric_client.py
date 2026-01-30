@@ -165,7 +165,11 @@ class EricClient:
                 './/elster:Umsatzsteuervoranmeldung/elster:Jahr',
                 './/Umsatzsteuervoranmeldung/Jahr',
                 './/elster:Steuerfall/elster:Umsatzsteuervoranmeldung/elster:Jahr',
-                './/Steuerfall/Umsatzsteuervoranmeldung/Jahr'
+                './/Steuerfall/Umsatzsteuervoranmeldung/Jahr',
+                './/elster:Einnahmenueberschussrechnung/elster:Jahr',
+                './/Einnahmenueberschussrechnung/Jahr',
+                './/elster:E77/elster:Jahr',
+                './/E77/Jahr'
             ]:
                 jahr_elem = root.find(path, ns if 'elster:' in path else {})
                 if jahr_elem is not None and jahr_elem.text:
@@ -187,6 +191,17 @@ class EricClient:
                             jahr = parts[1]
                             break
                     
+                    # For EUER, check E77 element version attribute specifically
+                    if daten_art == 'EUER' and tag == 'E77' and 'version' in elem.attrib:
+                        version_attr = elem.attrib['version']
+                        # Version might be in format like "2025" or "v2025"
+                        if version_attr.isdigit() and len(version_attr) == 4:
+                            jahr = version_attr
+                            break
+                        elif version_attr.startswith('v') and version_attr[1:].isdigit() and len(version_attr) == 5:
+                            jahr = version_attr[1:]
+                            break
+                    
                     # Check for version attribute (e.g., Anmeldungssteuern version="2025")
                     if 'version' in elem.attrib:
                         version_attr = elem.attrib['version']
@@ -198,6 +213,8 @@ class EricClient:
             if jahr:
                 if daten_art == 'UStVA':
                     return f"UStVA_{jahr}"
+                elif daten_art == 'EUER':
+                    return f"EUER_{jahr}"
                 return f"{daten_art}_{jahr}"
             else:
                 # Fallback: use DatenArt as-is

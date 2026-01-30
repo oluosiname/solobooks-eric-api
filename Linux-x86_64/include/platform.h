@@ -7,7 +7,7 @@
 
 /**
  * @file
- * @brief Konstanten für verschiedene Betriebssysteme
+ * @details Konstanten für verschiedene Betriebssysteme
  */
 
 
@@ -204,7 +204,7 @@ typedef unsigned char byte;
    ERiC API HTML-Referenz ausgewertet */
 
 /**
- * @brief Definition eines vorzeichenlosen, 32 Bit breiten Integer-Typs.
+ * @details Definition eines vorzeichenlosen, 32 Bit breiten Integer-Typs.
  *
  * Siehe Quellcode von platform.h für Implementierung.
  */

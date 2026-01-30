@@ -1,10 +1,10 @@
 # ERIC API Service
 
-A REST API service for submitting advanced VAT returns (UStVA) to ELSTER using the ERIC library. This service processes XML files, validates them, submits them with certificate authentication, and returns PDF confirmations.
+A REST API service for submitting tax returns (UStVA, EUER, etc.) to ELSTER using the ERIC library. This service processes XML files, validates them, submits them with certificate authentication, and returns PDF confirmations.
 
 ## Features
 
-- Submit advanced VAT returns (UStVA) to ELSTER
+- Submit tax returns (UStVA, EUER, etc.) to ELSTER
 - Validate XML before submission
 - Certificate-based authentication (base64 encoded .pfx files)
 - Automatic PDF generation
@@ -65,7 +65,7 @@ docker-compose up -d --build
 
 ### POST /submit
 
-Submit an advanced VAT return (UStVA) to ELSTER.
+Submit a tax return (UStVA, EUER, etc.) to ELSTER.
 
 **Request Body (JSON):**
 
@@ -74,7 +74,7 @@ Submit an advanced VAT return (UStVA) to ELSTER.
   "xml": "<xml content>",
   "cert_base64": "base64 encoded .pfx file",
   "password": "certificate password",
-  "datenartversion": "UStVA_2025" (optional, auto-detected if not provided),
+  "datenartversion": "UStVA_2025" (optional, auto-detected if not provided - supports UStVA, EUER, ZM, etc.),
   "return_pdf": true (optional, default: true)
 }
 ```
@@ -114,7 +114,7 @@ Validate XML without submitting (useful for testing).
 ```json
 {
   "xml": "<xml content>",
-  "datenartversion": "UStVA_2025" (optional)
+  "datenartversion": "UStVA_2025" (optional - supports UStVA, EUER, ZM, etc.)
 }
 ```
 
@@ -217,7 +217,7 @@ Port mapping is configured in `docker-compose.yml` (default: `5000:5000`)
 ## Notes
 
 - The API automatically extracts the `datenartversion` from the XML if not provided
-- For UStVA, it looks for the year in the XML structure
+- For UStVA and EUER, it looks for the year in the XML structure
 - Certificates are temporarily stored during processing and cleaned up afterwards
 - The ERIC instance is reused across requests for better performance
 - All temporary files are cleaned up after processing

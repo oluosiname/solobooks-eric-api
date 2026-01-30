@@ -1,0 +1,145 @@
+===== Willkommen bei ERiC! =====
+ERiC richtet sich an Software-Entwickler, die in der Steuersoftwarebranche tätig sind.
+
+Mit ERiC, die Kurzform von ElsterRichClient, steht dem Steuersoftwarehersteller eine kostenlose ELSTER-Schnittstelle der Steuerverwaltung zur Verfügung, die in Form von C-Bibliotheken in ein Steuerprogramm integriert wird.
+
+In dieser kleinen Liesmich.txt haben wir Empfehlungen zusammengestellt mit dem Ziel, Ihnen den Einstieg in ERiC zu erleichtern.
+
+     ++ HINWEIS ++
+
+Diese Liesmich.txt unterstützt Sie inhaltlich ab dem Zeitpunkt,
+
+a) an dem Sie sich als Hersteller bei www.elster.de registriert haben,
+
+b) die neueste ERiC Version bei www.elster.de heruntergeladen haben, und zwar:
+
+   ERiC-<version>-Dokumentation.zip
+   ERiC-<version>-Schemadokumentation.zip
+   ERiC-<version>-<plattform>.jar (Windows | Linux | macOS | AIX)
+   Vordrucke_<jahr>_ERiC-<version>.zip
+   <etc>.zip
+
+c) und bei sich installiert haben unter Berücksichtigung des unten angegebenen Tipps zur Installation.
+
+===== Tipp zur Installation =====
+Die Software-und Dokumentationspakete werden als *.zip bzw. *.jar-Dateien bereitgestellt. 
+
+Entpacken Sie diese jeweils mit dem Befehl „Hier entpacken“. 
+
+Dadurch werden die Ordner beim Entpacken so ineinander verschachtelt, dass die Pfade mit den in der Dokumentation angegebenen Pfaden übereinstimmen.
+
+Ergebnis nach dem Entpacken am Beispiel von Windows:
+
+ERiC-<version>\
+              \Dokumentation\
+              \Windows-x86_64\
+
+===== Eine kurze Liste der allerwichtigsten Dokumente ===== 
+Die allerwichtigsten Dokumente finden Sie hier:
+
+ERiC-<version>\Dokumentation\
+                            \ERiC-Entwicklerhandbuch.pdf
+                            \ERiC-Releasenotes.pdf
+                            \Datenartversionmatrix.xml
+                            \Tutorial\
+                                     \ERiC-Tutorial.pdf
+                            \API-Referenz\
+                                         \HTML\<dateien>.html (*)
+                                         \ERiC-API-Referenz.pdf (**)
+
+* HTML und PDF der ERiC-API-Referenz sind inhaltlich identisch. 
+** Die PDF-Ausgabe dient der Volltextsuche.
+
+===== Womit starte ich am besten? ===== 
+Wir empfehlen Ihnen, als allererstes das ERiC-Tutorial.pdf durchzuarbeiten. 
+Siehe [~~\Dokumentation\Tutorial\ERiC-Tutorial.pdf]
+
+* Das Tutorial führt Sie mithilfe der Beispielprogramme „ericdemo“ und „ottodemo“ sowie XML-Beispieldateien durch die Integration des ERiC in die Steuersoftware.
+
+* Nicht nur um die Beispiele ausprobieren zu können, sondern auch um den ERiC produktiv nutzen zu können, benötigen Sie Ihre Hersteller-ID.
+
+Siehe dazu im Tutorial die Kap.:
+* „Registrieren als Softwarehersteller“
+* „Anmelden im Entwicklerbereich (Login)“
+* „Beantragen der Hersteller-ID bzw. Hersteller-IDs“
+
+===== Tipp zur Navigation in der ERiC-Dokumentation =====
+Nutzen Sie als PDF-Viewer einen Internet-Browser wie Chrome oder Edge. 
+
+Dann können Sie mit [Strg + Mausklick] von jeder ERiC API-Funktion in einer ERiC-Datei (PDF) zur Funktionsbeschreibung in der ERiC API-Referenz (HTML) springen.
+
+===== Tipp zur Volltextsuche in den oben genannten PDF-Dateien =====
+Sehr viele Abbildungen in der ERiC-Dokumentation enthalten durchsuchbaren Text. Machen Sie also regen Gebrauch von der Volltextsuche in der PDF.
+Probieren Sie das doch mal aus anhand von „EricBearbeiteVorgang“ im ERiC-Entwicklerhandbuch.pdf.
+
+===== Was finde ich als Neuling wo? =====
+-----------------------------------------------------------------------------
+1) ERiC-Entwicklerhandbuch.pdf [~~\Dokumentation\ERiC-Entwicklerhandbuch.pdf]
+-----------------------------------------------------------------------------
+In Kap. „An welche Lesergruppe wendet sich dieses Dokument?“ finden Sie Empfehlungen, welche Kapitel Sie als Einsteiger zuerst lesen sollten, sowie den Link zum ELSTER-Hersteller-Forum und zum ERiC-Newsletter.
+
+In Kap. „Aufbau dieses Dokuments“ sind Sie nur noch einen Hyperlink-Sprung entfernt von den Kapiteln, die für Ihre zukünftige Arbeit sehr wichtig sein werden:
+* „Grundlagen der Programmierung mit ERiC“
+   und
+* „Programmierung steuerfachlicher Anwendungsfälle mit ERiC“
+
+Kap. „Typographische und andere Konventionen“ informiert Sie über die Bedeutung der gelben und grünen Änderungsmarkierung. Auch die Bedeutung des blau-weißen Dreiecks mit Ausrufzeichen ist dort beschrieben.
+
+Kap. „Inhalt des ERiC“ beschreibt unter anderem:
+* die ERiC Softwarepakete
+* das ERiC Dokumentationspaket
+Insbesondere die Tabelle „Verzeichnisstruktur und Inhalt der ERiC Dokumentation“ bietet Ihnen als Einsteiger einen schnellen Überblick über die Dokumentation.
+
+-----------------------------------------------------------------------------
+2) ERiC-Releasenotes.pdf             [~~\Dokumentation\ERiC-Releasenotes.pdf]
+-----------------------------------------------------------------------------
+Die ERiC-Release Notes bieten Ihnen einen Überblick über alle fachlichen und technischen Neuerungen und Änderungen sowie die Einstufung von Sicherheitslücken in verwendeten Drittbibliotheken.
+
+-----------------------------------------------------------------------------
+3) Datenartversionmatrix.xml     [~~\Dokumentation\Datenartversionmatrix.xml]
+-----------------------------------------------------------------------------
+Warum die Datenartversionmatrix.xml an so prominenter Stelle in der ERiC-Ordnerstruktur liegt, erfahren Sie im ERiC-Entwicklerhandbuch.pdf in Kap. „datenartVersion – Definition und Verwendung“. Öffnen Sie die Datenartversionmatrix.xml bitte mit einem Tabellenkalkulationsprogramm, z.B. mit Excel.
+
+-----------------------------------------------------------------------------
+4) ERiC-Tutorial.pdf            [~~\Dokumentation\Tutorial\ERiC-Tutorial.pdf]
+-----------------------------------------------------------------------------
+Siehe oben im Abschnitt „Womit starte ich am besten?“.
+
+-----------------------------------------------------------------------------
+5) ERiC API-Referenz    [~~\Dokumentation\API-Referenz\
+                                                      \HTML\<dateien>.html
+                                                      \ERiC-API-Referenz.pdf]
+-----------------------------------------------------------------------------
+Die API-Referenz enthält die Beschreibungen aller ERiC-API-Funktionen, ihrer Parameter und Rückgabewerte sowie Typdefinitionen, Aufzählungen und Datenstrukturen.
+
+HTML und PDF der ERiC-API-Referenz sind inhaltlich identisch, wobei die PDF-Datei der Volltextsuche dient. Hingegen ermöglicht die Such-Funktion in den HTML-Dateien nur eine Suche nach Symbolen.
+
+     ++ HINWEIS ++
+Für jedes ERiC-Release wird die ERiC-API-Referenz aus C-Headerdateien generiert, die wir Ihnen im Release-Umfang auch mitliefern.
+
+Sie finden die C-Headerdateien unter:
+[ERiC-<version>\<plattform>\include\<headerdatei>.h]
+
+Windows-Beispiel:
+[ERiC-42.3.2.0\Windows-x86_64\include\ericapi.h]
+
+===== Wie verschaffe ich mir einen Überblick über neue bzw. geänderte Features? ===== 
+1) Ihre erste Anlaufstelle dafür sollten die ERiC-Release Notes sein [~~\Dokumentation\ERiC-Releasenotes.pdf].
+
+2) Gehen Sie danach am besten die gelben bzw. grünen Änderungsmarkierungen im Inhaltsverzeichnis des ERiC-Entwicklerhandbuchs durch. [~~\Dokumentation\ERiC-Entwicklerhandbuch.pdf]
+
+2.1) Das Inhaltsverzeichnis enthält die Kapitelüberschriften der Ebenen 1 bis 3.
+
+2.2) Neue Kapitel bzw. Kapitel mit Änderungen sind markiert.
+
+2.3) Bitte beachten Sie:
+
+* Grüne und gelbe Änderungsmarkierungen sind nur im ERiC-Entwicklerhandbuch vorgesehen.
+
+* Die Bedeutung der grünen und gelben Änderungsmarkierungen ist im Kap. „Typographische und andere Konventionen“ beschrieben.
+
+3) Springen Sie zu den einzelnen Kapiteln, um sich die Änderungen im Detail anzuschauen.
+
+4) Wenn sich die Änderungen in einem Kap. auf Ebene 4 oder 5 befinden, dann bitte ab Kapitelüberschrift auf Ebene 3 einfach weiterscrollen, bis die Änderungen bzw. Neuerungen angezeigt werden.
+
+5) Wichtige kurzfristige Änderungen und Ankündigungen werden über den ERiC Newsletter kommuniziert.

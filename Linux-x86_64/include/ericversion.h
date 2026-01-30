@@ -7,12 +7,27 @@
 
 /**
  * @file
- * @brief Bereitstellung der ERiC API-Version über C-Präprozessor Makros. Die ERiC API-Version entspricht nicht unbedingt der Version des Setup-Pakets.
- * 
+ * @details Bereitstellung der ERiC API-Version über C-Präprozessor Makros. Die ERiC API-Version entspricht nicht unbedingt der Version des Setup-Pakets.
  */
 
-#define ERIC_MAJOR_VERSION  42
-#define ERIC_MINOR_VERSION  1
-#define ERIC_PATCH_VERSION  8
+
+/**
+ * @details Steht für die Hauptversionsnummer.
+ *        
+ */
+#define ERIC_MAJOR_VERSION  43
+
+
+/**
+ * @details Steht für die untergeordnete Versionsnummer.
+ *        
+ */
+#define ERIC_MINOR_VERSION  2
+
+/**
+ * @details Steht für die Patch-Versionsnummer.
+ *        
+ */
+#define ERIC_PATCH_VERSION  6
 
 #endif

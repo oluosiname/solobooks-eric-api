@@ -1,0 +1,117 @@
+##############################################################################
+                                 Willkommen!
+##############################################################################
+
+ericdemo ist ein Beispielprogramm, das Ihnen zeigt, wie Sie die ERiC-
+Funktionen in einer Java-Anwendung nutzen können.
+
+In ericdemo werden folgende Aspekte beispielhaft implementiert:
+
+  - Registrierung der Nachrichten- und Fortschrittsbalken-Callbacks
+  - Auslesen von Zertifikatsinformationen
+  - Auslesen eines Datensatzes aus einer Datei
+  - Aufruf der Funktion EricBearbeiteVorgang
+     - Validieren eines XML-Datensatzes
+     - Versenden eines Datensatzes, mit Zertifikat authentifiziert oder
+       unsigniert
+     - PDF-Erstellung nach dem Versenden
+  - Entschlüsseln eines Datensatzes
+
+Den Quellcode des Beispielprogramms finden Sie im Verzeichnis 'src'.
+
+Das Hauptprogramm beginnt in der Datei src/de/elster/eric/demo/Main.java
+
+Die folgenden Abschnitte beschreiben, wie Sie das Beispielprogramm unter
+Windows, Linux, AIX und macOS erstellen und ausführen können.
+
+Voraussetzung:
+============== 
+
+Für die Nutzung des mitgelieferten XML-Beispieldatensatzes "ESt_2020.xml"  
+gilt ab dem ERiC-Release 39.4.x folgende Voraussetzung:
+
+Die Hersteller-ID "74931" im Element <HerstellerID>...</HerstellerID> 
+muss durch die eigene Hersteller-ID ersetzt werden. 
+Die Hersteller-ID "74931" dient nur noch zur Illustration und kann auch zu 
+Testzwecken grundsätzlich nicht mehr verwendet werden!
+
+Nur mit der eigenen Hersteller-ID kann der XML-Beispieldatensatz  
+vom ERiC und von ELSTER verarbeitet werden.
+
+Im Fehlerfall wird der Fehlercode "610301202 ERIC_IO_TESTHERSTELLERID_GESPERRT"
+ausgegeben, und folgende Fehlermeldung wird angezeigt:
+
+   "Die im XML angegebene Hersteller-ID ist gesperrt. 
+    Bitte verwenden Sie Ihre eigene Hersteller-ID auch für Testfälle."
+
+Die "ESt_2020.xml" befindet sich im selben Ordner wie diese Liesmich.txt.
+
+Installieren Sie ein aktuelles Java Development Kit und setzen Sie die Umgebungsvariable
+JAVA_HOME auf dieses Development Kit (wird für Javadoc benötigt).
+Installieren Sie das Buildsystem Ant und bauen Sie das Projekt durch einen Aufruf
+von "ant" im aktuellen Verzeichnis.
+
+Alternativ kann auch Maven als Buildsystem verwendet werden.
+Installieren Sie dazu Maven und bauen Sie das Projekt durch einen Aufruf
+von "mvn package" im aktuellen Verzeichnis.
+Hinweis: Achten Sie darauf, das für den Build verwendete JDK auch in der globalen
+Variable JAVA_HOME zu setzen, damit sie von Maven und bei der Javadoc-Generierung
+gefunden wird.
+Der aktuelle Wert kann wie folgt geprüft werden:
+Windows: "echo %JAVA_HOME%"
+Linux: "echo $JAVA_HOME"
+Um zu prüfen, welches JDK von Maven verwendet wird:
+"mvn -v"
+
+Als weitere Alternative können Sie auch die Entwicklungsumgebung Eclipse benutzen
+und das EricDemoJava-Projekt importieren (Die Umgebungsvariable PATH muss für die 
+Generierung mit Javadoc um den Pfad zum Unterverzeichnis "bin" des JDKs erweitert
+werden, falls Sie das ant-Build-Skript aus Eclipse benutzen wollen).
+
+Zur Ausführung muss das Java-Executable im Pfad liegen und
+in der gleichen CPU-Architektur vorliegen wie ERiC.
+
+Ausführen:
+==========
+
+ericdemo ist eine Konsolenanwendung. Zum Ausführen unter Windows ist das 
+64-Bit Visual C++ Redistributable Package für Visual Studio 2022 
+notwendig. Download: https://www.visualstudio.com/downloads/
+
+Sie können ericdemo wie folgt ausführen:
+
+*       Unter Windows:
+        "starte-ericdemo.bat"
+
+*       Unter Linux, AIX und macOS:
+        "sh starte-ericdemo.sh"
+
+Diese Startskripte können auch mit folgenden Optionen aufgerufen werden: 
+
+Optionen:
+    --help               Hilfetext anzeigen
+    -v <datenartversion> Datenartversion
+    -x <xml>             Pfad zur Datensatzdatei
+    -c <certificate>     Pfad zu einem Benutzerzertifikat, _NULL (Nullzeiger) für kein Benutzerzertifikat
+    -p <pin>             PIN für das Benutzerzertifikat, _NULL (Nullzeiger) für keine PIN
+    -d <dir>             Pfad zum Verzeichnis mit den ERiC-Bibliotheken
+    -l <log>             Pfad zum Verzeichnis, in dem die ERiC-Protokolldateien geschrieben werden
+    -s <dateipfad>       Serverantwort oder - wenn nicht vorhanden - das Ergebnis in die angegebene Datei schreiben
+    -t <transferhandle>  Transferhandle, das an die Server übermittelt wird (nur bei Datenabholungen anzugeben)
+    -n                   Daten werden nicht versendet, sondern nur validiert
+    -e                   Der Datensatz wird nicht validiert oder versendet, sondern entschlüsselt
+
+Beispiele:
+     <starte-ericdemo>
+     <starte-ericdemo> --help
+     <starte-ericdemo> -v ESt_2020 -x ESt_2020.xml -n
+     <starte-ericdemo> -v ESt_2020 -x ESt_2020.xml -c test-softidnr-pse.pfx -p 123456
+nPA: <starte-ericdemo> -v Kontoinformation -x kontoinformation.xml -c "http://127.0.0.1:24727/eID-Client?testmerker=520000000" -p _NULL 
+     <starte-ericdemo> -v MitteilungAbholung -x MitteilungAbholungAnfrage.xml -t 0
+     <starte-ericdemo> -e -x Abholdaten.b64 -s Abholdaten.xml
+
+<starte-ericdemo>: 
+Alternativ zu den Startskripten können Sie ericdemo auch direkt mit "java -jar ericdemo.jar" aufrufen. 
+Unter AIX müssen Sie in diesem Fall die globale Umgebungsvariable LIBPATH auf das Verzeichnis 
+setzen, in dem die libericapi.so liegt, und die Umgebungsvariable "LDR_PRELOAD64" auf den Pfad der libc++. Beispiel:
+    export LDR_PRELOAD64="/usr/lib/libc++.a(shr_64.o)"

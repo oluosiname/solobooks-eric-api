@@ -31,8 +31,10 @@ Step-by-step guide to deploy the ERIC API to Hetzner Cloud using Docker.
 ### 1.2 Test SSH Connection
 
 ```bash
-ssh root@YOUR_SERVER_IP
+ssh -i /path/to/your/ssh/key root@YOUR_SERVER_IP
 ```
+
+**Note**: Replace `/path/to/your/ssh/key` with the actual path to your SSH private key file.
 
 ## Step 2: Server Initial Setup
 
@@ -318,9 +320,10 @@ API key authentication is planned but not yet implemented. See `API_KEY_IMPLEMEN
 
 From your **local machine**:
 
+**Using rsync with SSH key file:**
 ```bash
 # Create deployment package (exclude unnecessary files)
-rsync -avz --progress \
+rsync -avz --progress -e "ssh -i /path/to/your/ssh/key" \
     --exclude '.git' \
     --exclude '__pycache__' \
     --exclude '*.pyc' \
@@ -332,24 +335,27 @@ rsync -avz --progress \
     ./ root@YOUR_SERVER_IP:/opt/eric-api/
 ```
 
-Or use SCP:
-
+**Or use SCP with SSH key file:**
 ```bash
-scp -r \
+scp -i /path/to/your/ssh/key -r \
     --exclude='.git' \
     --exclude='__pycache__' \
     --exclude='logs' \
     ./ root@YOUR_SERVER_IP:/opt/eric-api/
 ```
 
+**Note**: Replace `/path/to/your/ssh/key` with the actual path to your SSH private key file (e.g., `~/.ssh/id_rsa` or `~/.ssh/id_rsa_solobooks`).
+
 ### 4.2 Set Up Environment on Server
 
 SSH into your server:
 
 ```bash
-ssh root@YOUR_SERVER_IP
+ssh -i /path/to/your/ssh/key root@YOUR_SERVER_IP
 cd /opt/eric-api
 ```
+
+**Note**: Replace `/path/to/your/ssh/key` with the actual path to your SSH private key file.
 
 Create `.env.prod` file:
 

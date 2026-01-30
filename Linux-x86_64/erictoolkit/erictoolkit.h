@@ -133,6 +133,17 @@
 #    define STDCALL
 #  endif
 
+
+
+
+/**
+ * @details Dieses Makro ist nur für die Kompilierung unter Windows von Belang. Auf allen anderen Plattformen ist es leer definiert.
+ * 
+ * Unter Windows gibt es bei Einbindung der erictoolkit.h in fremden Code an, dass die deklarierten Funktionen zu importieren sind (dllimport).       
+ *
+ * @see 
+ *      - ::ERICAPI_IMPORT 
+ */
 #if defined(WINDOWS_OS) && !defined(ERICTOOLKIT_DLL)
 #define ETKAPI_DECL __declspec(dllimport)
 #else
@@ -174,8 +185,7 @@ extern "C"
     /**
      * @brief Die @c bic wird auf Gültigkeit überprüft.
      *
-     * Die Prüfung erfolgt in zwei Schritten:
-     *
+     * Die Prüfung erfolgt in zwei Schritten: @mAbsatz
      * -# Formale Prüfung auf gültige Zeichen und richtige Länge
      * -# Prüfung, ob das Länderkennzeichen für BIC gültig ist.
      *
@@ -210,8 +220,7 @@ extern "C"
     /**
      * @brief Die @c iban wird auf Gültigkeit überprüft.
      *
-     * Die Prüfung erfolgt in vier Schritten:
-     *
+     * Die Prüfung erfolgt in vier Schritten: @mAbsatz
      * -# Formale Prüfung auf gültige Zeichen und richtige Länge.
      * -# Prüfung, ob das Länderkennzeichen für IBAN gültig ist.
      * -# Prüfung, ob das länderspezifische Format gültig ist.
@@ -297,7 +306,8 @@ extern "C"
     * Die Produktversion wird in den bereitgestellten Speicher als NULL-terminierte C Zeichenkette zurückgegeben.
     * Der Speicher muss/darf von der Anwendung nicht freigegeben werden.
     *
-    * @return NULL-terminierte C Zeichenkette.
+    * @return
+    *         - NULL-terminierte C Zeichenkette.
 	* 
     */
     ETKAPI_DECL const char* STDCALL EtkHoleProduktVersion();
@@ -308,7 +318,8 @@ extern "C"
     * Die Dateiversion wird in den bereitgestellten Speicher als NULL-terminierte C Zeichenkette zurückgegeben.
     * Der Speicher muss/darf von der Anwendung nicht freigegeben werden.
     *
-    * @return NULL-terminierte C Zeichenkette.
+    * @return 
+	*         - NULL-terminierte C Zeichenkette.
     * 
     */
     ETKAPI_DECL const char* STDCALL EtkHoleDateiVersion();

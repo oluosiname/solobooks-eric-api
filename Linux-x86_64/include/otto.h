@@ -53,28 +53,35 @@ extern "C" {
  *             Der Parameter darf @c NULL sein.
  *
  * @param[in]  logCallbackBenutzerdaten
- *             Beliebiger Zeiger auf Daten, den Otto beim Aufruf eines
- *             @p logCallback an den Callback weiterreicht.
- *             Über diesen Weg kann sich eine Anwendung eigene Daten an
- *             ihre Log-Callback-Funktion übergeben lassen.
- *             Der Parameter darf @c NULL sein.
+ *      @parblock
+ *              Beliebiger Zeiger auf Daten, den Otto beim Aufruf eines
+ *              @p logCallback an den Callback weiterreicht.
  *
+ *              Über diesen Weg kann sich eine Anwendung eigene Daten an
+ *              ihre Log-Callback-Funktion übergeben lassen.
+ *              Der Parameter darf @c NULL sein.
+ *      @endparblock
  * @param[out] instanz
  *             Handle der erzeugten Otto-Instanz
  *
- * @note       Kann kein otto.log angelegt werden, wird eine entsprechende
+ * @note
+ *     @parblock
+ *             Kann kein otto.log angelegt werden, wird eine entsprechende
  *             Fehlermeldung auf die Konsole (stderr) geschrieben und an den
  *             Windows-Ereignisdienst bzw. den syslogd-Dienst (Linux, AIX, macOS)
  *             geschickt.
+ *
  *             Für Linux, AIX und macOS ist zu beachten, dass der syslogd-Dienst
  *             gegebenenfalls erst noch zu aktivieren und für die Protokollierung
  *             von Meldungen der Facility "User" zu konfigurieren ist.
  *             Suchkriterien für Otto-Meldungen in der Windows-Ereignisansicht
  *             sind "ERiC (Elster Rich Client)" als Quelle und "Anwendung"
  *             als Protokoll.
+ *
  *             Suchkriterien für ERiC-Meldungen in den Systemlogdateien
  *             unter Linux, AIX und macOS sind die Facility "User" und
  *             der Ident "ERiC (Elster Rich Client)".
+ *     @endparblock
  *
  * @return
  *             - siehe otto_statuscode.h
@@ -110,8 +117,8 @@ OttoStatusCode C_DECL OttoInstanzFreigeben(OttoInstanzHandle instanz);
  * @brief      Erstellt ein Otto-Zertifikatsobjekt für ein Sicherheitstoken.
  *
  * Das Zertifikatsobjekt ist an die Otto-Instanz gebunden, für die es erzeugt
- * wurde und darf nicht zusammen mit einer anderen Otto-Instanz oder mit
- * Objekten anderen Otto-Instanzen verwendet werden.
+ * wurde, und darf nicht zusammen mit einer anderen Otto-Instanz oder mit
+ * Objekten anderer Otto-Instanzen verwendet werden.
  * Soll ein Sicherheitstoken von mehreren Otto-Instanzen verwendet werden, so
  * sind hierfür mehrere Zertifikatsobjekte zu erstellen: für jede Instanz eines.
  *
@@ -119,41 +126,44 @@ OttoStatusCode C_DECL OttoInstanzFreigeben(OttoInstanzHandle instanz);
  *             Handle der Otto-Instanz, die das Zertifikatsobjekt verwenden soll.
  *
  * @param[in]  zertifikatsPfad
- *             Pfad zum Sicherheitstoken, folgende Angaben sind möglich:
- *             1. Clientseitig erzeugtes Zertifikat: <br>
- *               Pfad zum Verzeichnis, in dem sich die Zertifikats-Datei (.cer)
- *               und die Datei mit dem privaten Schlüssel (.p12) befinden.
- *               Diese Sicherheitstokens wurden mit EricMtCreateKey() bzw. EricCreateKey() erzeugt.
- *               Der Pfad zum Verzeichnis ist bei clientseitig erzeugten
- *               Zertifikaten relativ zum aktuellen Arbeitsverzeichnis oder absolut
- *               anzugeben.
- *             2. Software-Portalzertifikat: <br>
- *               Pfad zur Software-Zertifikatsdatei (i.d.R. mit der Endung .pfx).
- *               Der Pfad zur Datei ist bei Software-Zertifikaten relativ zum
- *               aktuellen Arbeitsverzeichnis oder absolut anzugeben.
- *             3. Sicherheitsstick: <br>
- *               Pfad zur Treiberdatei, siehe (*). Bitte beachten, dass der Treiber
- *               betriebssystemabhängig sein kann. Weitere Informationen in der
- *               Anleitung zum Sicherheitsstick oder unter
- *               \linkExt{https://www.sicherheitsstick.de,https://www.sicherheitsstick.de}.
- *             4. Signaturkarte: (**) <br>
- *               Pfad zur Treiberdatei, welcher einen Zugriff auf die
- *               Signaturkarte ermöglicht, siehe (*). Weitere Informationen in
- *               der Anleitung zur Signaturkarte.
- *             5. Elektronischer Personalausweis (nPA) oder Aufenthaltstitel (eAT): <br>
- *               Die URL des eID-Clients wie zum Beispiel der AusweisApp 2.
- *               In den meisten Fällen lautet diese URL: http://127.0.0.1:24727/eID-Client
- *               Optional kann auf die folgende Weise noch ein Testmerker angehängt werden:
- *               http://127.0.0.1:24727/eID-Client?testmerker=520000000
- *               Zu den verfügbaren Testmerkern siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf},
- *               Kap. "Testunterstützung bei der ERiC-Anbindung".
- *               \n\b Wichtig: Das Ad-hoc-Zertifikat, das in diesem Fall für den elektronischen
- *                        Personalausweis erzeugt wird, ist nur 24 Stunden gültig.
+ *      @parblock
+ *              Pfad zum Sicherheitstoken, folgende Angaben sind möglich: @mAbsatz
+ *              1. Clientseitig erzeugtes Zertifikat: @mLB<a>Pfad
+ *                Verzeichnis, in dem sich die Zertifikats-Datei (.cer)
+ *                und die Datei mit dem privaten Schlüssel (.p12) befinden.
+ *                Diese Sicherheitstokens wurden mit EricMtCreateKey() bzw. EricCreateKey() erzeugt.
+ *                Der Pfad zum Verzeichnis ist bei clientseitig erzeugten
+ *                Zertifikaten relativ zum aktuellen Arbeitsverzeichnis oder absolut
+ *                anzugeben.
+ *              2. Software-Portalzertifikat: @mLB<a>Pfad
+ *                zur Software-Zertifikatsdatei (i.d.R. mit der Endung .pfx).
+ *                Der Pfad zur Datei ist bei Software-Zertifikaten relativ zum
+ *                aktuellen Arbeitsverzeichnis oder absolut anzugeben.
+ *              3. Sicherheitsstick: @mLB<a>Pfad
+ *                zur Treiberdatei, siehe (*). Bitte beachten, dass der Treiber
+ *                betriebssystemabhängig sein kann. Weitere Informationen in der
+ *                Anleitung zum Sicherheitsstick oder unter
+ *                \linkExt{https://www.sicherheitsstick.de,https://www.sicherheitsstick.de}.
+ *              4. Signaturkarte: (**) @mLB<a>Pfad
+ *                zur Treiberdatei, welcher einen Zugriff auf die
+ *                Signaturkarte ermöglicht, siehe (*). Weitere Informationen in
+ *                der Anleitung zur Signaturkarte.
+ *              5. Elektronischer Personalausweis (nPA) oder Aufenthaltstitel (eAT): @mLB<a>Die
+ *                URL des eID-Clients wie zum Beispiel der AusweisApp 2.
+ *                In den meisten Fällen lautet diese URL: http://127.0.0.1:24727/eID-Client
+ *                Optional kann auf die folgende Weise noch ein Testmerker angehängt werden:
+ *                http://127.0.0.1:24727/eID-Client?testmerker=520000000. @mLB<a>Zu
+ *                den verfügbaren Testmerkern siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf},
+ *                Kap. "Testunterstützung bei der ERiC-Anbindung".
  *
+ *                <B>Wichtig:</B>
+ *                Das Ad-hoc-Zertifikat, das in diesem Fall für den elektronischen
+ *                Personalausweis erzeugt wird, ist nur 24 Stunden gültig.
+ *      @endparblock
  *             (*) Wird der Dateipfad eines Treibers angegeben, ist der Suchmechanismus zu
  *             beachten, mit dem das jeweilige Betriebssystem dynamische Bibliotheken lädt.
  *             Weitere Informationen sind der Systemdokumentation zu den Betriebssystemfunktionen
- *             LoadLibrary() (Windows) bzw. dlopen() (Linux, AIX und macOS) zu entnehmen.
+ *             <tt>LoadLibrary()</tt> (Windows) bzw. <tt>dlopen()</tt> (Linux, AIX und macOS) zu entnehmen.
  *
  *             (**) Bei Signaturkarten erfolgt eine PIN-Abfrage nicht beim Aufruf von
  *             OttoZertifikatOeffnen(), sondern beim Aufruf von OttoPruefsummeSignieren(),
@@ -164,6 +174,7 @@ OttoStatusCode C_DECL OttoInstanzFreigeben(OttoInstanzHandle instanz);
  *             und auf macOS in der "decomposed form" von UTF-8 übergeben werden.
  *             Bitte weitere Betriebssystemspezifika bzgl. nicht erlaubter Zeichen in
  *             Pfaden und Pfadtrennzeichen beachten.
+ *
  *             Für Details zu Pfaden im ERiC siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kapitel
  *             "Übergabe von Pfaden an ERiC API-Funktionen".
  *
@@ -181,11 +192,52 @@ OttoStatusCode C_DECL OttoInstanzFreigeben(OttoInstanzHandle instanz);
  *
  * @see
  *             - OttoZertifikatSchliessen()
+ *             - OttoZertifikatOeffnenAusBytes()
  */
 OttoStatusCode C_DECL OttoZertifikatOeffnen(OttoInstanzHandle instanz,
                                             const byteChar *zertifikatsPfad,
                                             const byteChar *zertifikatsPasswort,
                                             OttoZertifikatHandle *zertifikat);
+
+/**
+ * @brief      Erstellt ein Otto-Zertifikatsobjekt für ein PKCS#12-Sicherheitstoken,
+ *             das im Hauptspeicher übergeben wird.
+ *
+ * Das Zertifikatsobjekt ist an die Otto-Instanz gebunden, für die es erzeugt
+ * wurde, und darf nicht zusammen mit einer anderen Otto-Instanz oder mit
+ * Objekten anderer Otto-Instanzen verwendet werden.
+ * Soll ein PKCS#12-Container von mehreren Otto-Instanzen verwendet werden, so
+ * sind hierfür mehrere Zertifikatsobjekte zu erstellen: für jede Instanz eines.
+ *
+ * @param[in]  instanz
+ *             Handle der Otto-Instanz, die das Zertifikatsobjekt verwenden soll.
+ *
+ * @param[in]  pkcs12Container
+ *             Adresse des PKCS#12-Containers im Hauptspeicher.
+ *             Es werden nur passwortgeschützte PKCS#12-Container akzeptiert.
+ *
+ * @param[in]  containerGroesse
+ *             Größe des PKCS#12-Containers in Bytes
+ *
+ * @param[in]  zertifikatsPasswort
+ *             Das Passwort oder die PIN des PKCS#12-Containers.
+ *             Dieser Parameter darf nicht NULL sein.
+ *
+ * @param[out] zertifikat
+ *             Handle auf das erstellte Zertifikatsobjekt
+ *
+ * @return
+ *             - siehe otto_statuscode.h
+ *
+ * @see
+ *             - OttoZertifikatSchliessen()
+ *             - OttoZertifikatOeffnen()
+ */
+OttoStatusCode C_DECL OttoZertifikatOeffnenAusBytes(OttoInstanzHandle instanz,
+                                                    const byteChar *pkcs12Container,
+                                                    uint32_t containerGroesse,
+                                                    const byteChar *zertifikatsPasswort,
+                                                    OttoZertifikatHandle *zertifikat);
 
 /**
  * @brief      Schließt das Otto-Zertifikatsobjekt zu einem Sicherheitstoken.
@@ -363,11 +415,12 @@ OttoStatusCode C_DECL OttoPruefsummeAktualisieren(OttoPruefsummeHandle pruefsumm
 
 /**
  * @brief      Erstellt eine Signatur über eine Prüfsumme.
- *             Die Signierung der Prüfsumme ist nur dann möglich,
- *             wenn diese über die Mindestdatenmenge für eine Übermittlung
- *             an den OTTER-Server berechnet wurde. (20 MiB)
- *             Eine Prüfsumme kann nur einmalig signiert werden.
- *             Danach muß das Prüfsummenobjekt freigegeben werden.
+ *
+ * Die Signierung der Prüfsumme ist nur dann möglich,
+ * wenn diese über die Mindestdatenmenge für eine Übermittlung
+ * an den OTTER-Server berechnet wurde. (20 MiB)
+ * Eine Prüfsumme kann nur einmalig signiert werden.
+ * Danach muß das Prüfsummenobjekt freigegeben werden.
  *
  * @param[in]  pruefsumme
  *             Handle der Prüfsumme, die signiert werden soll.
@@ -425,7 +478,8 @@ OttoStatusCode C_DECL OttoPruefsummeFreigeben(OttoPruefsummeHandle pruefsumme);
  * OttoVersandFortsetzen() übergeben, um Daten blockweise hochzuladen.
  * Sind alle Daten versendet, ist OttoVersandAbschliessen() aufzurufen, womit
  * der Versand abgeschlossen wird.
- * Zum Freigeben des Versandobjekts ist OttoVersandBeenden() aufzurufen.<br>
+ * Zum Freigeben des Versandobjekts ist OttoVersandBeenden() aufzurufen.
+ *
  * Bevor der Versand begonnen werden kann, muss eine Prüfsumme über alle zu
  * versendenen Daten gebildet (siehe OttoPruefsummeErzeugen()) und mit
  * OttoPruefsummeSignieren() signiert werden.
@@ -439,11 +493,13 @@ OttoStatusCode C_DECL OttoPruefsummeFreigeben(OttoPruefsummeHandle pruefsumme);
  *             Handle der Otto-Instanz, auf der diese Funktion ausgeführt werden soll.
  *
  * @param[in]  signiertePruefsumme
- *             Signierte Prüfsumme über die Gesamtheit der Daten, die in diesem Versand
- *             versendet werden sollen.
- *             Die signierte Prüfsumme wird als base64-codierte, nullterminierte Zeichenfolge erwartet,
- *             wie sie von OttoPruefsummeSignieren() zurückgeliefert wird.
+ *      @parblock
+ *              Signierte Prüfsumme über die Gesamtheit der Daten, die in diesem Versand
+ *              versendet werden sollen.
  *
+ *              Die signierte Prüfsumme wird als base64-codierte, nullterminierte Zeichenfolge erwartet,
+ *              wie sie von OttoPruefsummeSignieren() zurückgeliefert wird.
+ *      @endparblock
  * @param[in]  herstellerId
  *             Hersteller-ID des Softwareproduktes
  *
@@ -472,7 +528,8 @@ OttoStatusCode C_DECL OttoVersandBeginnen(OttoInstanzHandle instanz,
  * Wenn @c OTTO_OK zurückgegeben wird, kann diese Funktion erneut mit einem weiteren
  * Datenblock aufgerufen werden. Dies ist zu wiederholen, bis Otto alle zu diesem Versand
  * gehörigen Daten erhalten hat. Falls nicht @c OTTO_OK zurückgegeben wird, ist der
- * Versand fehlgeschlagen.<br>
+ * Versand fehlgeschlagen.
+ *
  * Ist das Ende der Daten erreicht, muss OttoVersandAbschliessen() aufgerufen werden.
  *
  * @param[in]  versand
@@ -501,7 +558,8 @@ OttoStatusCode C_DECL OttoVersandFortsetzen(OttoVersandHandle versand,
 /**
  * @brief      Schließt einen Versand ab und gibt die Objekt-ID zurück
  *
- * Mit dieser Funktion wird das Ende der Daten gekennzeichnet und der Datenversand abgeschlossen.<br>
+ * Mit dieser Funktion wird das Ende der Daten gekennzeichnet und der Datenversand abgeschlossen.
+ *
  * Im Erfolgsfall wird die vom OTTER-Server vergebene Objekt-ID zurückgegeben, über die die
  * versendeten Daten bei OTTER referenziert werden.
  *
@@ -626,7 +684,7 @@ OttoStatusCode C_DECL OttoEmpfangBeginnen(OttoInstanzHandle instanz,
  *             Handle auf das Empfangsobjekt. Im Fehlerfall wird kein Empfangobjekt erzeugt.
  *
  * @return
- *             - siehe otto_statuscode.h    
+ *             - siehe otto_statuscode.h
  *
  * @see
  *             - OttoEmpfangFortsetzen()
@@ -645,7 +703,7 @@ OttoStatusCode C_DECL OttoEmpfangBeginnenAbholzertifikat(OttoInstanzHandle insta
  * @brief      Empfängt einen Datenblock vom OTTER-Server
  *
  * Otto empfängt Daten vom OTTER-Server und gibt sie blockweise an den Aufrufer zurück.
- * Wird @c OTTO_OK zurückgegeben, kann diese Funktion erneut aufgerufen werden und weitere
+ * Wird \c OTTO_OK zurückgegeben, kann diese Funktion erneut aufgerufen werden und weitere
  * Datenblöcke empfangen werden. Werden leere Daten zurückgegeben, ist der Empfang beendet
  * und alle Daten wurden empfangen. Dann muss OttoEmpfangBeenden() aufgerufen werden.
  *
@@ -653,9 +711,12 @@ OttoStatusCode C_DECL OttoEmpfangBeginnenAbholzertifikat(OttoInstanzHandle insta
  *             Ein mit OttoEmpfangBeginnen() erzeugtes Handle.
  *
  * @param[out] datenBlock
+ *      @parblock
  *             Rückgabepuffer mit allen oder einem Teil der empfangenen Daten. Falls leer, ist der Empfang beendet.
+ *
  *             Der Inhalt des Rückgabepuffers darf nicht als null-terminierte Zeichenkette interpretiert werden, da die
  *             empfangenen Daten weitere Null-Bytes enthalten können.
+ *      @endparblock
  *
  * @return
  *             - ::OTTO_OK
@@ -707,55 +768,61 @@ OttoStatusCode C_DECL OttoEmpfangBeenden(OttoEmpfangHandle empfang);
  *             ID des Datenobjekts, das vom OTTER-Server abgeholt werden soll.
  *
  * @param[in]  objektGroesse
- *             Die erwartete Größe des Datenobjekts, das vom OTTER-Server abgeholt werden soll, in Bytes.
- *             Diesen Wert findet die Anwendung zusammen mit der Objekt-ID im Rückgabe-XML zu einer
- *             PostfachAnfrage.
- *             Wenn die Größe zu gering angegeben wird, geht dies zwar zu Lasten der Geschwindigkeit und
- *             des Hauptspeicherbedarfs, weil dann der Rückgabepuffer von Otto intern sukzessive vergrößert
- *             werden muß, aber es führt nicht zu einem Fehler.
+ *      @parblock
+ *              Die erwartete Größe des Datenobjekts, das vom OTTER-Server abgeholt werden soll, in Bytes.
+ *              Diesen Wert findet die Anwendung zusammen mit der Objekt-ID im Rückgabe-XML zu einer
+ *              PostfachAnfrage.
  *
+ *              Wenn die Größe zu gering angegeben wird, geht dies zwar zu Lasten der Geschwindigkeit und
+ *              des Hauptspeicherbedarfs, weil dann der Rückgabepuffer von Otto intern sukzessive vergrößert
+ *              werden muß, aber es führt nicht zu einem Fehler.
+ *      @endparblock
  * @param[in]  zertifikatsPfad
- *             Pfad zum Sicherheitstoken, folgende Angaben sind möglich:
- *             1. Clientseitig erzeugtes Zertifikat: <br>
- *               Pfad zum Verzeichnis, in dem sich die Zertifikats-Datei (.cer)
- *               und die Datei mit dem privaten Schlüssel (.p12) befinden.
- *               Diese Sicherheitstokens wurden mit EricMtCreateKey() bzw. EricCreateKey() erzeugt.
- *               Der Pfad zum Verzeichnis ist bei clientseitig erzeugten
- *               Zertifikaten relativ zum aktuellen Arbeitsverzeichnis oder absolut
- *               anzugeben.
- *             2. Software-Portalzertifikat: <br>
- *               Pfad zur Software-Zertifikatsdatei (i.d.R. mit der Endung .pfx).
- *               Der Pfad zur Datei ist bei Software-Zertifikaten relativ zum
- *               aktuellen Arbeitsverzeichnis oder absolut anzugeben.
- *             3. Sicherheitsstick: <br>
- *               Pfad zur Treiberdatei, siehe (*). Bitte beachten, dass der Treiber
- *               betriebssystemabhängig sein kann. Weitere Informationen in der
- *               Anleitung zum Sicherheitsstick oder unter
- *               \linkExt{https://www.sicherheitsstick.de,https://www.sicherheitsstick.de}.
- *             4. Signaturkarte: (*) <br>
- *               Pfad zur Treiberdatei, welcher einen Zugriff auf die
- *               Signaturkarte ermöglicht. Weitere Informationen in
- *               der Anleitung zur Signaturkarte.
- *             5. Elektronischer Personalausweis (nPA) oder Aufenthaltstitel (eAT): <br>
- *               Die URL des eID-Clients wie zum Beispiel der AusweisApp 2.
- *               In den meisten Fällen lautet diese URL: http://127.0.0.1:24727/eID-Client.
- *               Optional kann auf die folgende Weise noch ein Testmerker angehängt werden:
- *               http://127.0.0.1:24727/eID-Client?testmerker=520000000.
- *               Zu den verfügbaren Testmerkern siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf},
- *               Kap. "Testunterstützung bei der ERiC-Anbindung".
- *               \n\b Wichtig: Das Ad-hoc-Zertifikat, das in diesem Fall für den elektronischen
- *                        Personalausweis erzeugt wird, ist nur 24 Stunden gültig.
+ *      @parblock
+ *              Pfad zum Sicherheitstoken, folgende Angaben sind möglich: @mAbsatz
+ *              1. Clientseitig erzeugtes Zertifikat: @mLB<a>Pfad
+ *                zum Verzeichnis, in dem sich die Zertifikats-Datei (.cer)
+ *                und die Datei mit dem privaten Schlüssel (.p12) befinden.
+ *                Diese Sicherheitstokens wurden mit EricMtCreateKey() bzw. EricCreateKey() erzeugt.
+ *                Der Pfad zum Verzeichnis ist bei clientseitig erzeugten
+ *                Zertifikaten relativ zum aktuellen Arbeitsverzeichnis oder absolut
+ *                anzugeben.
+ *              2. Software-Portalzertifikat: @mLB<a>Pfad
+ *                zur Software-Zertifikatsdatei (i.d.R. mit der Endung .pfx).
+ *                Der Pfad zur Datei ist bei Software-Zertifikaten relativ zum
+ *                aktuellen Arbeitsverzeichnis oder absolut anzugeben.
+ *              3. Sicherheitsstick: @mLB<a>Pfad
+ *                zur Treiberdatei, siehe (*). Bitte beachten, dass der Treiber
+ *                betriebssystemabhängig sein kann. Weitere Informationen in der
+ *                Anleitung zum Sicherheitsstick oder unter
+ *                \linkExt{https://www.sicherheitsstick.de,https://www.sicherheitsstick.de}.
+ *              4. Signaturkarte: (*) @mLB<a>Pfad
+ *                zur Treiberdatei, welcher einen Zugriff auf die
+ *                Signaturkarte ermöglicht. Weitere Informationen in
+ *                der Anleitung zur Signaturkarte.
+ *              5. Elektronischer Personalausweis (nPA) oder Aufenthaltstitel (eAT): @mLB<a>Die
+ *                URL des eID-Clients wie zum Beispiel der AusweisApp 2.
+ *                In den meisten Fällen lautet diese URL: http://127.0.0.1:24727/eID-Client.
+ *                Optional kann auf die folgende Weise noch ein Testmerker angehängt werden:
+ *                http://127.0.0.1:24727/eID-Client?testmerker=520000000. @mLB<a>Zu
+ *                den verfügbaren Testmerkern siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf},
+ *                Kap. "Testunterstützung bei der ERiC-Anbindung".
  *
+ *                <B>Wichtig:</B>
+ *                Das Ad-hoc-Zertifikat, das in diesem Fall für den elektronischen
+ *                Personalausweis erzeugt wird, ist nur 24 Stunden gültig.
+ *      @endparblock
  *             (*) Wird der Dateipfad eines Treibers angegeben, ist der Suchmechanismus zu
  *             beachten, mit dem das jeweilige Betriebssystem dynamische Bibliotheken lädt.
  *             Weitere Informationen sind der Systemdokumentation zu den Betriebssystemfunktionen
- *             LoadLibrary() (Windows) bzw. dlopen() (Linux, AIX und macOS) zu entnehmen.
+ *             <tt>LoadLibrary()</tt> (Windows) bzw. <tt>dlopen()</tt> (Linux, AIX und macOS) zu entnehmen.
  *
  *             Pfade müssen auf Windows in der für Datei-Funktionen benutzten ANSI-Codepage,
  *             auf Linux, AIX und Linux Power in der für das Dateisystem benutzten Locale
  *             und auf macOS in der "decomposed form" von UTF-8 übergeben werden.
  *             Bitte weitere Betriebssystemspezifika bzgl. nicht erlaubter Zeichen in
  *             Pfaden und Pfadtrennzeichen beachten.
+ *
  *             Für Details zu Pfaden im ERiC siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kapitel
  *             "Übergabe von Pfaden an ERiC API-Funktionen".
  *
@@ -767,20 +834,22 @@ OttoStatusCode C_DECL OttoEmpfangBeenden(OttoEmpfangHandle empfang);
  *
  * @param[in]  herstellerId
  *             Hersteller-ID des Softwareproduktes
- *
  * @param[in]  abholzertifikat
- *             Base64-kodierter Teil eines X.509-v3-Zertifikats im PEM-Format.
- *             Die Angabe eines Abholzertifikats ist optional und nur erlaubt,
- *             wenn im Parameter zertifikatsPfad kein clientseitig erzeugtes Zertifikat (CEZ)
- *             angegeben wurde.
- *             Wird ein Abholzertifikat übergeben, so werden die Abholdaten
- *             vom Server auf den öffentlichen Schlüssel des Zertifikats umgeschlüsselt.
- *             Diese Daten werden vom Otto nicht entschlüsselt und OttoDatenAbholen() gibt
- *             lediglich die verschlüsselten Daten zurück.
- *             Wenn eine nicht bei ELSTER registrierte Signaturkarte zur Authentifizierung
- *             verwendet wird, muss dieser Parameter gesetzt werden,
- *             ansonsten kann hier NULL übergeben werden.
+ *      @parblock
+ *              Base64-kodierter Teil eines X.509-v3-Zertifikats im PEM-Format.
+ *              Die Angabe eines Abholzertifikats ist optional und nur erlaubt,
+ *              wenn im Parameter zertifikatsPfad kein clientseitig erzeugtes Zertifikat (CEZ)
+ *              angegeben wurde.
  *
+ *              Wird ein Abholzertifikat übergeben, so werden die Abholdaten
+ *              vom Server auf den öffentlichen Schlüssel des Zertifikats umgeschlüsselt.
+ *              Diese Daten werden vom Otto nicht entschlüsselt und OttoDatenAbholen() gibt
+ *              lediglich die verschlüsselten Daten zurück.
+ *
+ *              Wenn eine nicht bei ELSTER registrierte Signaturkarte zur Authentifizierung
+ *              verwendet wird, muss dieser Parameter gesetzt werden,
+ *              ansonsten kann hier NULL übergeben werden.
+ *      @endparblock
  * @param[out] abholDaten
  *             Rückgabepuffer mit den abgeholten Daten.
  *             Der Inhalt des Rückgabepuffers darf nicht als null-terminierte Zeichenkette interpretiert werden,
@@ -807,8 +876,8 @@ OttoStatusCode C_DECL OttoDatenAbholen(OttoInstanzHandle instanz,
  * @param[in]   statuscode Statuscode
  *
  * @return
-                - Zeiger auf einen statischen Puffer mit der Klartextmeldung zu einem Statuscode
-                  als null-terminierte, UTF-8-kodierte Zeichenkette.
+ *              - Zeiger auf einen statischen Puffer mit der Klartextmeldung zu einem Statuscode
+ *                als null-terminierte, UTF-8-kodierte Zeichenkette.
  *              - @c NULL, falls kein Text ermittelt werden konnte.
  */
 const char* C_DECL OttoHoleFehlertext(OttoStatusCode statuscode);

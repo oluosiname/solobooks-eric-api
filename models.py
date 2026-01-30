@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 class ValidationRequest(BaseModel):
     """Request model for XML validation"""
     xml: str = Field(..., description="The XML content to validate")
-    datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025, ZM_2025). Auto-detected if not provided.")
+    datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025, ZM_2025, EUER_2025). Auto-detected if not provided.")
 
 
 class ValidationResult(BaseModel):
@@ -23,7 +23,7 @@ class SubmissionRequest(BaseModel):
     xml: str = Field(..., description="The XML content to submit")
     cert_base64: str = Field(..., description="Base64-encoded certificate (.pfx file)")
     password: str = Field(..., description="Certificate password")
-    datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025, ZM_2025). Auto-detected if not provided.")
+    datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025, ZM_2025, EUER_2025). Auto-detected if not provided.")
     return_pdf: bool = Field(True, description="Whether to return PDF as file download (true) or base64 in JSON (false)")
 
 

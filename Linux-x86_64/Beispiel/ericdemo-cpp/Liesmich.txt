@@ -1,0 +1,217 @@
+##############################################################################
+                                 Willkommen!
+##############################################################################
+
+ericdemo ist ein Beispielprogramm, das Ihnen zeigt, wie Sie die ERiC-
+Funktionen in einer C++-Anwendung nutzen können.
+
+In ericdemo werden folgende Aspekte beispielhaft implementiert:
+
+  - Registrierung der Nachrichten- und Fortschrittsbalken-Callbacks
+    (callbackhandler.cpp)
+  - Auslesen von Zertifikatsinformationen (ericzertifikat.cpp)
+  - Auslesen eines XML-Datensatzes aus einer Datei (datensatzleser.cpp)
+  - Aufruf der Funktion EricBearbeiteVorgang (ericvorgang.cpp)
+     - Validieren eines Datensatzes
+     - Versenden eines Datensatzes, mit Zertifikat authentifiziert oder
+       unsigniert
+     - PDF-Erstellung nach dem Versenden
+  - Entschlüsseln eines Datensatzes
+
+Den Quellcode des Beispielprogramms finden Sie im Verzeichnis:
+
+*       ericdemo
+
+Das Hauptprogramm beginnt in der Datei ericdemo.cpp.
+
+Die folgenden Abschnitte beschreiben, wie Sie das Beispielprogramm unter
+Windows, Linux, AIX und macOS erstellen und ausführen können.
+
+Voraussetzung:
+============== 
+
+Für die Nutzung des mitgelieferten XML-Beispieldatensatzes "ESt_2020.xml"  
+gilt ab dem ERiC-Release 39.4.x folgende Voraussetzung:
+
+Die Hersteller-ID "74931" im Element <HerstellerID>...</HerstellerID> 
+muss durch die eigene Hersteller-ID ersetzt werden. 
+Die Hersteller-ID "74931" dient nur noch zur Illustration und kann auch zu 
+Testzwecken grundsätzlich nicht mehr verwendet werden!
+
+Nur mit der eigenen Hersteller-ID kann der XML-Beispieldatensatz  
+vom ERiC und von ELSTER verarbeitet werden.
+
+Im Fehlerfall wird der Fehlercode "610301202 ERIC_IO_TESTHERSTELLERID_GESPERRT"
+ausgegeben, und folgende Fehlermeldung wird angezeigt:
+
+   "Die im XML angegebene Hersteller-ID ist gesperrt. 
+    Bitte verwenden Sie Ihre eigene Hersteller-ID auch für Testfälle."
+
+Die "ESt_2020.xml" befindet sich im selben Ordner wie diese Liesmich.txt.
+
+Windows:
+========
+
+ericdemo ist eine Windows-Konsolenanwendung, die mit
+Visual C++ 2017 oder neuer compiliert werden kann.
+Zum Ausführen einer ERiC-Anwendung ist das 32-Bit (x86) bzw. 64-Bit (x64)
+Redistributable Package für Visual Studio 2022 notwendig.
+Download: https://www.visualstudio.com/downloads/
+
+Das ausführbare Programm ericdemo erstellen:
+
+*       Datei "ericdemo-2017-x86.sln" (32-Bit-Architektur)
+*       Datei "ericdemo-2017-x64.sln" (64-Bit-Architektur)
+
+Öffnen Sie die ericdemo Visual-Studio-Projektmappe mit einem Doppelklick.
+Das setzt voraus, dass Visual C++ 2017 oder neuer installiert ist.
+
+Mit "Erstellen -> Projektmappe erstellen" können Sie das Programm erstellen.
+
+Beachten Sie:
+Zum Erstellen und Ausführen der ericdemo brauchen Sie Schreibrechte im
+ericdemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis an eine andere
+Stelle kopieren, an der Sie Schreibrechte besitzen. Danach sind folgende
+Anpassungen notwendig:
+
+*       Datei "starte-ericdemo-x86.bat" bzw. "starte-ericdemo-x64.bat"
+        Das Verzeichnis der ERiC-Bibliotheken ist als Wert der Option /d zu
+        setzen.
+
+*       Visual Studio Projektdatei
+        Öffnen Sie die Projektmappe mit Visual C++ und ändern Sie die
+        Eigenschaften des Projekts ericdemo:
+        Im Reiter C/C++ muss unter Allgemein als zusätzliches Include-
+        Verzeichnis der Pfad zum installierten ERiC Include-Verzeichnis
+        eingetragen werden.
+
+Linux (Unix Makefile):
+======================
+
+ericdemo ist eine Konsolenanwendung, die mit gcc und GNU make
+compiliert werden kann. Unter Ubuntu und anderen Debian-Derivaten können Sie
+die notwendigen Pakete mit "apt-get install build-essential" installieren.
+
+Zum Erstellen der ericdemo kann
+
+*       make
+
+aufgerufen werden.
+
+Beachten Sie:
+Zum Erstellen und Ausführen der ericdemo brauchen Sie Schreibrechte im
+ericdemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis an eine andere
+Stelle kopieren, an der Sie Schreibrechte besitzen. Danach sind folgende
+Anpassungen notwendig:
+
+*       Datei "starte-ericdemo.sh"
+        Das Verzeichnis der ERiC-Bibliotheken ist als Wert der Option -d zu
+        setzen.
+
+*       Datei "Makefile"
+        Die Variable ERIC_INSTALL muss auf das ERiC-Installationsverzeichnis
+        gesetzt werden.
+
+macOS (XCode Projekt):
+=====================
+
+Im ERiC Beispiel-Verzeichnis wird eine ericdemo-Version mitgeliefert, die mit
+XCode (ab Version 10) erstellt wurde. Sie können die aktuellste Version
+der XCode-Umgebung kostenfrei oder eine ältere Version als registrierter
+Developer von Ihrem AppStore herunterladen und installieren.
+
+Das ausführbare Programm ericdemo erstellen:
+
+*       ericdemo.xcodeproj
+
+Öffnen Sie die ericdemo XCode-Projektdatei mit einem Doppelklick oder laden Sie
+diese in Ihre XCode-Umgebung. Das setzt voraus, dass Sie eine XCode-Umgebung (ab
+Version 10) installiert haben. Mit "Build" können Sie dann das ausführbare
+Programm erstellen.
+
+Mit Klick auf das Pfeil-Icon wird das Programm erstellt und ausgeführt.
+
+Zum Erstellen und Ausführen der ericdemo brauchen Sie Schreibrechte im
+ericdemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis an eine andere
+Stelle kopieren, an der Sie Schreibrechte besitzen. Danach sind folgende
+Anpassungen notwendig:
+
+*       Im Target ericdemo den "Header Search Path" anpassen, so dass dieser
+        auf das Verzeichnis mit den ERiC-Headern verweist.
+
+*       Unter dem Menu Produkt -> Scheme -> "Edit Scheme" in dem Punkt Run den Parameter 
+        -d "${SRC_ROOT}/../../lib" auf den Pfad zu den ERiC-Bibliotheken setzen.
+
+AIX (Build-Shellscript):
+========================
+
+ericdemo ist eine Konsolenanwendung, die mit xlC_r oder xlclang++
+compiliert werden kann.
+
+Zum Erstellen der ericdemo kann
+
+*       ./build-AIX.sh
+
+aufgerufen werden.
+
+Beachten Sie:
+Zum Erstellen und Ausführen der ericdemo brauchen Sie Schreibrechte im
+ericdemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis an eine andere
+Stelle kopieren, an der Sie Schreibrechte besitzen. Danach sind folgende
+Anpassungen notwendig:
+
+*       Datei "starte-ericdemo.sh"
+        Das Verzeichnis der ERiC-Bibliotheken ist als Wert der Option -d zu
+        setzen.
+
+*       Datei "build-AIX.sh"
+        Die Variable ERIC_INSTALL muss auf das ERiC-Installationsverzeichnis
+        gesetzt werden.
+
+
+Ausführen:
+==========
+
+Sie können ericdemo wie folgt ausführen:
+
+*       Unter Windows, 32-Bit-Architektur:
+        starte-ericdemo-x86.bat
+
+*       Unter Windows, 64-Bit-Architektur
+        starte-ericdemo-x64.bat
+
+*       Unter Linux, AIX und macOS:
+        sh starte-ericdemo.sh
+
+Diese Startskripte können auch mit folgenden Optionen aufgerufen werden:
+
+Optionen unter Windows:
+    /?                   Hilfetext anzeigen
+    /v <datenartversion> Datenartversion
+    /x <xml>             Pfad zur Datensatzdatei
+    /c <certificate>     Pfad zu einem Benutzerzertifikat, _NULL (Nullzeiger) für kein Benutzerzertifikat
+    /p <pin>             PIN für das Benutzerzertifikat, _NULL (Nullzeiger) für keine PIN
+    /d <dir>             Pfad zum Verzeichnis mit den ERiC-Bibliotheken
+    /l <log>             Pfad zum Verzeichnis, in dem die ERiC-Protokolldateien geschrieben werden
+    /s <dateipfad>       Serverantwort oder - wenn nicht vorhanden - das Ergebnis in die angegebene Datei schreiben
+    /t <transferhandle>  Transferhandle, das an die Server übermittelt wird (nur bei Datenabholungen anzugeben)
+    /n                   Daten werden nicht versendet, sondern nur validiert
+    /e                   Der Datensatz wird nicht validiert oder versendet, sondern entschlüsselt
+
+Unter Linux, AIX und macOS werden die Optionen mit einem Bindestrich "-" statt einem
+Schrägstrich "/" eingeleitet.
+
+Beispiele:
+     <starte-ericdemo>
+     <starte-ericdemo> /?
+     <starte-ericdemo> /v ESt_2020 /x ESt_2020.xml /n
+     <starte-ericdemo> /v ESt_2020 /x ESt_2020.xml /c test-softidnr-pse.pfx /p 123456
+     <starte-ericdemo> /v MitteilungAbholung /x MitteilungAbholungAnfrage.xml /t 0
+     <starte-ericdemo> /e /x Abholdaten.b64 /s Abholdaten.xml     
+nPA: <starte-ericdemo> /v Kontoinformation /x kontoinformation.xml /c "http://127.0.0.1:24727/eID-Client?testmerker=520000000" /p _NULL
+
+<starte-ericdemo>:
+Alternativ zu den Startskripten können Sie ericdemo auch direkt aufrufen.
+Unter AIX müssen Sie in diesem Fall die globale Umgebungsvariable LIBPATH auf das Verzeichnis
+setzen, in dem die libericapi.so liegt, und die Umgebungsvariable "LDR_PRELOAD64" auf den Pfad der libc++. Beispiel:
+    export LDR_PRELOAD64="/usr/lib/libc++.a(shr_64.o)"

@@ -9,24 +9,24 @@
 
 /**
  * @file
- * @brief Konstanten und Definitionen für Übergabeparameter
+ * @details Konstanten und Definitionen für Übergabeparameter
  */
 
 /**
- * @brief Definition der maximalen Länge des
+ * @details Definition der maximalen Länge des
  *        Fusstextes in #eric_druck_parameter_t + Nullterminierer
  */
 #define ERIC_MAX_LAENGE_FUSSTEXT (30)
 
 /**
- * @brief Definition des Standard Testmerkers. Bei der Verwendung dieses Testmerkers werden die
+ * @details Definition des Standard Testmerkers. Bei der Verwendung dieses Testmerkers werden die
  *        Fälle in der Clearingstelle aussortiert und verworfen. Es findet keine Verarbeitung
  *        im Finanzamt statt.
  */
 #define ERIC_TESTMERKER_CLEARINGSTELLE "700000004"
 
 /**
- * @brief Definition des Testmerkers für das ECC. Bei der Verwendung dieses Testmerkers werden die
+ * @details Definition des Testmerkers für das ECC. Bei der Verwendung dieses Testmerkers werden die
  *        Fälle in der Landeskopfstelle bzw. dem ECC aussortiert und verworfen. Es findet keine Verarbeitung
  *        im Finanzamt statt.
  */

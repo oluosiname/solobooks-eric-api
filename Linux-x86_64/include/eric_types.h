@@ -16,25 +16,29 @@
  *
  * ERiC-Instanzen werden von der Multithreading-API angelegt,
  * verwendet und wieder freigegeben, siehe ericmtapi.h.
- * \n Alle API-Funktionen der Multithreading-API nehmen einen Zeiger auf eine
+ *
+ * Alle API-Funktionen der Multithreading-API nehmen einen Zeiger auf eine
  * ERiC-Instanz entgegen und verrichten ihre Aufgaben auf dieser ERiC-Instanz.
  * Die EricInstanz enthält sämtliche veränderlichen Zustände des ERiC.
  * Dies sind ERiC-Einstellungen, Plugin- und Log-Verzeichnis, Proxyeinstellungen,
  * Zertifikatshandle, Rückgabepuffer, etc.
- * \n Es können mehrere ERiC-Instanzen parallel angelegt werden. Jede dieser
+ *
+ * Es können mehrere ERiC-Instanzen parallel angelegt werden. Jede dieser
  * ERiC-Instanzen ist unabhängig von allen anderen ERiC-Instanzen. Verfügen
  * mehrere Threads jeweils über ihre eigene ERiC-Instanz, können sie diese
  * parallel verwenden. Dazu müssen die Threads den API-Funktionen der
  * Multithreading-API ihre jeweils eigene ERiC-Instanz übergeben.
- * \n ERiC-Instanzen sollen nicht für jede Aufgabe neu erstellt und konfiguriert
- * werden. Das Erstellen und Zerstören einer ERiC-Instanz ist ressourcen- und zeitintensiv.
- * Die Lebenszeit einer ERiC-Instanz sollte beispielsweise eher der Lebenszeit
- * eines Arbeiter-Threads in einem Pool entsprechen, als der Verarbeitungsdauer
- * einer einzelnen Aufgabe an einen Arbeiter-Thread.
- * \n ERiC-Instanzen können zwischen Threads ausgetauscht werden. Eine
+ *
+ * ERiC-Instanzen sollten nicht für jede Verarbeitung eines Steuerfalls
+ * neu erstellt und konfiguriert werden.
+ * Siehe hierzu @typeDokumentation{ERiC-Entwicklerhandbuch.pdf},
+ * Kap. "Hinweise zum optimierten Einsatz von ERiC-Instanzen und Plugins"
+ *
+ * ERiC-Instanzen können zwischen Threads ausgetauscht werden. Eine
  * ERiC-Instanz darf aber nicht in zwei Threads gleichzeitig verwendet werden.
  *
  * @see
+ *       - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Hinweise zum optimierten Einsatz von ERiC-Instanzen und Plugins"
  *       - ::EricMtInstanzErzeugen()
  *       - ::EricMtInstanzFreigeben()
  */
@@ -66,10 +70,12 @@ typedef uint32_t EricZertifikatHandle;
 * Das von ::EricBearbeiteVorgang() zurückgegebene Handle ist dann
 * bei allen Folgevorgängen derselben Datenabholung unverändert
 * wieder zu übergeben.
-* \n Wird bei einer Datenabholung NULL oder ein ungültiger Zeiger
+*
+* Wird bei einer Datenabholung NULL oder ein ungültiger Zeiger
 * als Handle übergeben, gibt ::EricBearbeiteVorgang()
 * den Fehlercode ::ERIC_GLOBAL_TRANSFERHANDLE zurück.
-* \n Bei allen Verfahren außer der Datenabholung sollte das Transferhandle
+*
+* Bei allen Verfahren außer der Datenabholung sollte das Transferhandle
 * beim Aufruf der ::EricBearbeiteVorgang() NULL sein. Wird bei solchen
 * Verfahren ein Handle übergeben, so wird dieses ignoriert.
 *
@@ -149,9 +155,9 @@ struct EricReturnBufferApi;
  *
  * Rückgabepuffer sind der Singlethreading-API bzw. einer ERiC-Instanz der
  * Multithreading-API fest zugeordnet. Die Funktionen der ERiC API, die einen
- * Rückgabepuffer entgegen nehmen, geben den Fehlercode
+ * Rückgabepuffer entgegennehmen, geben den Fehlercode
  * ::ERIC_GLOBAL_PUFFER_UNGLEICHER_INSTANZ zurück, wenn der übergebene
- * Rückgabepuffer
+ * Rückgabepuffer: @mAbsatz
  *      - mit der Singlethreading-API erzeugt worden ist und dann mit der
  *        Multithreading-API verwendet wird
  *      - mit der Multithreading-API erzeugt worden ist und dann mit der
@@ -174,14 +180,17 @@ typedef struct EricReturnBufferApi* EricRueckgabepufferHandle;
 * Wenn diese Callback-Funktion im @c eric_druck_parameter_t angegeben wird
 * werden PDFs vom ERiC nicht in eine Datei geschrieben, sondern an diese
 * Callback-Funktion übergeben.
-* *
-* @param[in] pdfBezeichner Bezeichner für das PDF
-*                          Für ein PDF, das Inhalte aus einem Nutzdatenblock enthält,
-*                          wird hier das Nutzdatenticket aus dem Nutzdatenblock übergeben,
-*                          für sonstige PDFs das Wort "Uebertragungsprotokoll".
-*                          Bei der Erstellung mehrerer PDFs ermöglicht das Nutzdatenticket
-*                          die Zuordnung eines PDFs zu einem bestimmten Nutzdatenblock.
 *
+* @param[in] pdfBezeichner
+*      @parblock
+*              Bezeichner für das PDF.
+*              Für ein PDF, das Inhalte aus einem Nutzdatenblock enthält,
+*              wird hier das Nutzdatenticket aus dem Nutzdatenblock übergeben,
+*              für sonstige PDFs das Wort "Uebertragungsprotokoll".
+*
+*              Bei der Erstellung mehrerer PDFs ermöglicht das Nutzdatenticket
+*              die Zuordnung eines PDFs zu einem bestimmten Nutzdatenblock.
+*      @endparblock
 * @param[in] pdfDaten Der Inhalt des PDFs.
 *                     Zu beachten: es handelt sich um binäre Daten,
 *                     die Nullbytes enthalten können.
@@ -191,10 +200,11 @@ typedef struct EricReturnBufferApi* EricRueckgabepufferHandle;
 * @param[in] benutzerDaten Der Datenzeiger, der dem ERiC von der Anwendung im
 *                          @c eric_druck_parameter_t übergeben wurde.
 *
-* @return 0 wenn kein Fehler aufgetreten ist
-*         Ein beliebiger Wert ungleich 0 wenn ein Fehler aufgetreten ist.
-*         Der zurückgegebene Wert wird im Fehlerfall in die Datei eric.log
-*         protokolliert.
+* @return
+*      - 0, wenn kein Fehler aufgetreten ist.
+*        Ein beliebiger Wert ungleich 0, wenn ein Fehler aufgetreten ist.
+*        Der zurückgegebene Wert wird im Fehlerfall in die Datei eric.log
+*        protokolliert.
 *
 * @see
 *      - eric_druck_parameter_t
@@ -227,6 +237,7 @@ typedef struct
     /**
      * @brief Soll ein Vorschau-PDF erstellt werden?
      *
+     * @details Anwendungsfälle: @mAbsatz
      * - vorschau = 1: Ein Vorschau-PDF wird erzeugt und als solches gekennzeichnet.
      * - vorschau = 0: Es wird kein Vorschau-PDF erzeugt.
      *
@@ -238,6 +249,7 @@ typedef struct
     /**
      * @brief Soll die PDF-Datei für einen doppelseitigen Ausdruck mit Heftrand zum Lochen vorbereitet werden?
      *
+     * @details Anwendungsfälle: @mAbsatz
      * - duplexDruck = 1: Die geraden Seiten werden für einen Heftrand zum Lochen nach links eingerückt. Für Details siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}.
      * - duplexDruck = 0: Es erfolgt keine Einrückung der geraden Seiten. Das erstellte PDF ist nur zum blattweisen Ausdruck der Seiten vorgesehen.
      *
@@ -245,7 +257,7 @@ typedef struct
      */
     uint32_t duplexDruck;
 
-	/**
+    /**
      * @brief Pfad der erzeugten PDF-Datei.
      *
      * Pfade müssen auf Windows in der für Dateifunktionen benutzten ANSI-Codepage,
@@ -255,20 +267,18 @@ typedef struct
      * Pfaden und Pfadtrennzeichen, relative Pfadangabe, etc. siehe
      * @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Übergabe von Pfaden an ERiC API-Funktionen".
      *
-     * <b>Windows-Beispiel:</b> "c:\\test\\ericprint.pdf"
+     * <b>Windows-Beispiel:</b> \c "c:\\test\\ericprint.pdf" @mLB<a>Soll
+     * eine PDF-Datei angelegt werden, ist der \c pdfName zwingend erforderlich.
      *
-     * Soll eine PDF-Datei angelegt werden, ist der pdfName zwingend erforderlich
+     * <b>Besonderheiten bei Sammeldaten:</b> @mLB<a>Für
+     * Sammeldaten wird dem PDF-Dateinamen vor der Dateiendung das Nutzdatenticket
+     * angefügt: @mLB<tt><PDF-Dateiname>_<Nutzdatenticket>.pdf</tt>
      *
-     * <B> Besonderheiten bei Sammeldaten </B>
-     * Für Sammeldaten wird dem PDF-Dateinamen vor der Dateiendung das Nutzdatenticket
-     * angefügt:
-     * \n <PDF-Dateiname>_<Nutzdatenticket>.pdf
      * Optional kann der PDF-Dateiname den Platzhalter "%t" enthalten, der dann
-     * durch das Nutzdatenticket ersetzt wird:
-     * \n "%t_ericprint.pdf" --> "<Nutzdatenticket>_ericprint.pdf"
+     * durch das Nutzdatenticket ersetzt wird: @mLB<tt>"%t_ericprint.pdf"</tt> --> <tt>"<Nutzdatenticket>_ericprint.pdf"</tt>
      *
      * @note Es ist sicherzustellen, dass alle PDF-Dateien im Dateisystem
-     * erstellt bzw. geschrieben werden können.  Falls es beim Erstellen der
+     * erstellt bzw. geschrieben werden können. Falls es beim Erstellen der
      * PDF-Dokumente einen Fehler gibt oder falls diese nicht geschrieben
      * werden können, wird die Bearbeitung abgebrochen, eine Log-Ausgabe
      * erstellt, aus der hervorgeht, welcher Steuerfall nicht gedruckt werden
@@ -276,7 +286,7 @@ typedef struct
      */
     const byteChar* pdfName;
 
-	/**
+    /**
      * @brief Fußtext der auf dem Ausdruck verwendet werden soll (optional).
      * @details Wenn der übergebene Text länger als #ERIC_MAX_LAENGE_FUSSTEXT
      * Zeichen ist, dann bricht der Druck mit Fehlerkode
@@ -329,12 +339,12 @@ typedef struct
     /**
      * @brief PIN für den KeyStore.
      */
-    const char *pin;
+    const byteChar *pin;
 } eric_verschluesselungs_parameter_t;
 
 
 /**
- * @brief Struktur mit Informationen zur Erzeugung von Zertifikaten mit #EricCreateKey.
+ * @brief Struktur mit Informationen zur Erzeugung von Zertifikaten mit EricCreateKey().
  *
  * Die Elemente der Struktur beschreiben den Anwender, für den ein Schlüssel erstellt werden soll.
  * Unbenutzte Parameter müssen mit NULL oder Leerstring initialisiert werden.
@@ -508,13 +518,16 @@ enum
  *
  * @param max Maximalwert des aktuellen Fortschritts \c pos
  *
- * @param benutzerdaten Der Zeiger, der bei der Registrierung mit
- *                      ::EricRegistriereGlobalenFortschrittCallback() oder
- *                      ::EricRegistriereFortschrittCallback() übergeben
- *                      worden ist, wird in diesem Parameter vom ERiC
- *                      unverändert übergeben.
+ * @param benutzerdaten
+ *      @parblock
+ *              Der Zeiger, der bei der Registrierung mit
+ *              ::EricRegistriereGlobalenFortschrittCallback() oder
+ *              ::EricRegistriereFortschrittCallback() übergeben
+ *              worden ist, wird in diesem Parameter vom ERiC
+ *              unverändert übergeben.
+ *      @endparblock
  *
- * @details Es gilt stets, dass:
+ * Es gilt stets, dass: @mAbsatz
  *           - \c pos größer oder gleich 0 und kleiner oder gleich \c max ist
  *           - \c max ist immer größer als 0
  */

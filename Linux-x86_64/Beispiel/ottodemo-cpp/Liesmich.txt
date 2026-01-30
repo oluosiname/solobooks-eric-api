@@ -1,0 +1,161 @@
+##############################################################################
+                                 Willkommen!
+##############################################################################
+
+ottodemo ist ein Beispielprogramm, das Ihnen zeigt, wie Sie die Otto API-
+Funktionen in einer C++-Anwendung nutzen können.
+
+In ottodemo werden folgende Aspekte beispielhaft implementiert:
+
+  - Empfang einer Datei mit einer Objekt-ID von OTTER
+  - Senden einer mindestens 20 MiB großen Datei zum OTTER mit Rückgabe der 
+    erhaltenen Objekt-ID
+
+Den Quellcode des Beispielprogramms finden Sie im Verzeichnis:
+
+*       ottodemo
+
+Das Hauptprogramm beginnt in der Datei ottodemo.cpp.
+
+Die folgenden Abschnitte beschreiben, wie Sie das Beispielprogramm unter
+Windows, Linux und macOS erstellen und ausführen können.
+
+Voraussetzung:
+============== 
+
+Die Hersteller-ID muss über den Parameter -i der ottodemo übergeben werden.
+Wird kein -i Parameter angegeben, wird die Hersteller-ID in der Konsole abgefragt.
+Es muss hier die eigene Hersteller-ID verwendet werden. 
+
+
+Bauen unter Windows:
+====================
+
+ottodemo ist eine Windows-Konsolenanwendung, die mit
+Visual C++ 2017 oder neuer kompiliert werden kann.
+Zum Ausführen der Anwendung ist das 32-Bit (x86) bzw. 64-Bit (x64)
+Redistributable Package für Visual Studio 2017 notwendig.
+Download: https://www.visualstudio.com/downloads/
+
+Das ausführbare Programm ottodemo erstellen:
+
+*       Datei "ottodemo-2017-x86.sln" (32-Bit-Architektur)
+*       Datei "ottodemo-2017-x64.sln" (64-Bit-Architektur)
+
+Öffnen Sie die ottodemo-Visual-Studio-Projektmappe mit einem Doppelklick.
+Das setzt voraus, dass Visual C++ 2017 oder neuer installiert ist.
+
+Mit "Erstellen -> Projektmappe erstellen" können Sie das Programm erstellen.
+
+Beachten Sie:
+Zum Erstellen und Ausführen der ottodemo brauchen Sie Schreibrechte im
+ottodemo-Verzeichnis.
+
+Bauen unter Linux (Unix Makefile):
+==================================
+
+ottodemo ist eine Konsolenanwendung, die mit gcc und GNU make
+kompiliert werden kann. Unter Ubuntu und anderen Debian-Derivaten können Sie
+die notwendigen Pakete mit "apt-get install build-essential" installieren.
+
+Zum Erstellen der ottodemo kann
+
+*       make
+
+aufgerufen werden.
+
+Beachten Sie:
+Zum Erstellen und Ausführen der ottodemo brauchen Sie Schreibrechte im
+ottodemo-Verzeichnis.
+
+macOS (XCode Projekt):
+=====================
+
+Im ERiC Beispiel-Verzeichnis wird eine ottodemo-Version mitgeliefert, die mit
+XCode (ab Version 10) erstellt wurde. Sie können die aktuellste Version
+der XCode-Umgebung kostenfrei oder eine ältere Version als registrierter
+Developer von Ihrem AppStore herunterladen und installieren.
+
+Das ausführbare Programm ottodemo erstellen:
+
+*       ottodemo.xcodeproj
+
+Öffnen Sie die ottodemo XCode-Projektdatei mit einem Doppelklick oder laden Sie
+diese in Ihre XCode-Umgebung. Das setzt voraus, dass Sie eine XCode-Umgebung (ab
+Version 10) installiert haben. Mit "Build" können Sie dann das ausführbare
+Programm erstellen.
+
+Mit Klick auf das Pfeil-Icon wird das Programm erstellt und ausgeführt.
+
+Beachten Sie:
+Zum Erstellen und Ausführen der ottodemo brauchen Sie Schreibrechte im
+ottodemo-Verzeichnis.
+
+AIX (Build-Shellscript):
+========================
+
+ottodemo-cpp ist eine Konsolenanwendung, die einen moderneren C++ Standard einsetzt und
+daher einen Compiler mit C++14 Unterstützung erfordert.
+Geeignete Compiler sind der xlclang und der g++. Der xlC wird nicht mehr unterstützt.
+
+Zum Erstellen der ericdemo kann
+
+*       ./build-AIX.sh
+
+aufgerufen werden.
+
+Beachten Sie:
+Zum Erstellen und Ausführen der ericdemo brauchen Sie Schreibrechte im
+ericdemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis an eine andere
+Stelle kopieren, an der Sie Schreibrechte besitzen. Danach sind folgende
+Anpassungen notwendig:
+
+*       Datei "starte-ottodemo.sh"
+        Das Verzeichnis der ERiC-Bibliotheken ist als Wert der Option -d zu
+        setzen.
+
+*       Datei "build-AIX.sh"
+        Die Variable ERIC_INSTALL muss auf das ERiC-Installationsverzeichnis
+        gesetzt werden.
+
+
+Ausführen:
+==========
+
+Sie können ottodemo wie folgt ausführen:
+
+*       Unter Windows, 32-Bit-Architektur:
+        starte-ottodemo-x86.bat
+
+*       Unter Windows, 64-Bit-Architektur
+        starte-ottodemo-x64.bat
+
+*       Unter Linux, AIX und macOS:
+        sh starte-ottodemo.sh
+
+Diese Startskripte können auch mit folgenden Optionen aufgerufen werden:
+
+Optionen:
+    /?                   Hilfetext anzeigen
+    /h                   Hilfetext anzeigen
+    /e <dateipfad>       Empfange Daten und speichere diese in der angegebenen Datei.
+    /s <dateipfad>       Sende die angegebene Datei und gib die erhaltene Objekt-ID zurück.
+    /o Objekt-ID         OTTER-Objekt-ID der abzuholenden Datei (nur bei Empfang anzugeben)
+    /c <certificate>     Pfad zu einem Benutzerzertifikat
+    /p <pin>             PIN für das Benutzerzertifikat, _NULL (Nullzeiger) für keine PIN
+    /d <dir>             Pfad zum Verzeichnis mit den Otto-Bibliotheken
+    /l <log>             Pfad zum Verzeichnis, in das die Otto-Protokolldateien geschrieben werden
+    /i Hersteller-ID     ID des Softwareherstellers. Falls die Option nicht gesetzt ist, wird die Hersteller-ID interaktiv abgefragt
+    
+
+Unter Linux und macOS werden die Optionen mit einem Bindestrich "-" statt einem
+Schrägstrich "/" eingeleitet.
+
+Beispiele:
+     <starte-ottodemo>
+     <starte-ottodemo> /?
+     <starte-ottodemo> /e Empfang.xml /o 7090bc69-be5e-4fd0-b91a-2128021295d6 /c test-softidnr-pse /p 123456 /i <Hersteller-ID>
+     <starte-ottodemo> /s <Datei> /c "http://127.0.0.1:24727/eID-Client?testmerker=520000000" /i <Hersteller-ID>
+
+<starte-ottodemo>:
+Alternativ zu den Startskripten können Sie ottodemo auch direkt aufrufen.

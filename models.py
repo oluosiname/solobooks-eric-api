@@ -30,7 +30,10 @@ class SubmissionRequest(BaseModel):
 class SubmissionResult(BaseModel):
     """Response model for tax return submission (JSON format)"""
     status: str
+    # transfer_handle is ERiC's Datenabholung bundling parameter, not a receipt.
+    # transferticket is the reference the filer quotes to the Finanzamt.
     transfer_handle: Optional[int] = None
+    transferticket: Optional[str] = None
     pdf_base64: Optional[str] = None
     server_response: Optional[str] = None
     message: str

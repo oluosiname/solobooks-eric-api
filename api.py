@@ -84,7 +84,7 @@ def submit_submission():
             return jsonify({'error': f'Invalid request: {str(e)}'}), 400
         
         # Submit XML using ERIC client
-        success, error_code, transfer_handle, error_message, pdf_data, server_response, validation_result = eric_client.submit_xml(
+        success, error_code, transfer_handle, error_message, pdf_data, server_response, validation_result, transferticket = eric_client.submit_xml(
             req.xml,
             req.cert_base64,
             req.password,
@@ -93,13 +93,14 @@ def submit_submission():
         )
         
         if not success:
+            # A rejection is a problem with the submitted data, not a server fault.
             return jsonify({
                 'error': 'ERIC submission failed',
                 'error_code': error_code,
                 'error_message': error_message,
                 'server_response': server_response,
                 'validation_result': validation_result
-            }), 500
+            }), 422
         
         # Handle PDF return based on return_pdf setting
         if req.return_pdf:
@@ -134,6 +135,7 @@ def submit_submission():
             )
             
             response.headers['X-Transfer-Handle'] = str(transfer_handle) if transfer_handle else 'N/A'
+            response.headers['X-Transferticket'] = transferticket if transferticket else 'N/A'
             response.headers['X-Submission-Status'] = 'success'
             if server_response:
                 # Remove newlines and limit length for header (headers can't contain newlines)
@@ -150,6 +152,7 @@ def submit_submission():
             result = SubmissionResult(
                 status='success',
                 transfer_handle=transfer_handle,
+                transferticket=transferticket,
                 pdf_base64=pdf_base64,
                 server_response=server_response,
                 message='Tax return submitted successfully'

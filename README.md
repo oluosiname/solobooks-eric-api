@@ -11,6 +11,34 @@ A REST API service for submitting tax returns (UStVA, EUER, etc.) to ELSTER usin
 - Automatic extraction of data type version from XML
 - Comprehensive error handling
 
+## Testing with Postman
+
+A collection covering the ESt (income tax) submission path lives at
+`postman/eric-api-SOL-503.postman_collection.json`. Import it into Postman.
+
+Start the service first:
+
+```bash
+docker compose up -d
+curl http://localhost:5000/health
+```
+
+Set the collection variables `cert_base64` (base64 of your `.pfx`) and
+`cert_password` before running the two `/submit` requests. The `/validate`
+requests need no certificate.
+
+**Every request is a TEST submission.** The XML carries `<Testmerker>700000004</Testmerker>`,
+which routes it to the ELSTER clearing house — nothing is filed with the Finanzamt.
+
+On a successful submission the Transferticket is returned as:
+
+- `X-Transferticket` response header, when `return_pdf` is `true` (body is the PDF)
+- `transferticket` JSON field, when `return_pdf` is `false`
+
+`transfer_handle` is a separate, pre-existing field: ERiC's Datenabholung bundling
+parameter, not a receipt. Do not confuse the two.
+
+
 ## Setup
 
 ### Prerequisites

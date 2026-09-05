@@ -1,0 +1,144 @@
+{
+  "info": {
+    "name": "eric-api \u2014 SOL-503",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Verifies SOL-503: real Transferticket, ESt datenart detection, 422 on rejection.\n\nStart the service first:\n  cd solobooks-eric-api && docker compose up -d\n\nTESTMERKER 700000004 marks every request as a TEST submission \u2014 nothing is filed."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "cert_base64",
+      "value": "<base64 of your .pfx>"
+    },
+    {
+      "key": "cert_password",
+      "value": "<certificate PIN>"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Expect 200 {\"status\":\"ok\"}"
+      }
+    },
+    {
+      "name": "Validate ESt (auto-detect datenart)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/validate",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "validate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterErklaerung</Verfahren>\\n    <DatenArt>ESt</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\"><NutzdatenTicket>1</NutzdatenTicket></NutzdatenHeader>\\n      <Nutzdaten>\\n        <E10 xmlns=\\\"http://finkonsens.de/elster/elstererklaerung/est/e10/v2025\\\"/>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\"\n}"
+        },
+        "description": "No datenartversion passed \u2014 SOL-503 detects ESt_2025 from the E10 namespace.\nBefore this change it fell through to a bare 'ESt', which resolves to no plugin.\n\nExpect HTTP 200 with valid:false and error_code 610301200. That is the skeleton XML\nmissing required fields \u2014 it proves libcheckESt_2025.so loaded and ran, which is\nexactly what this request verifies. A datenart failure would instead be HTTP 400."
+      }
+    },
+    {
+      "name": "Validate ESt (explicit datenartversion)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/validate",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "validate"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterErklaerung</Verfahren>\\n    <DatenArt>ESt</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\"><NutzdatenTicket>1</NutzdatenTicket></NutzdatenHeader>\\n      <Nutzdaten>\\n        <E10 xmlns=\\\"http://finkonsens.de/elster/elstererklaerung/est/e10/v2025\\\"/>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\",\n  \"datenartversion\": \"ESt_2025\"\n}"
+        },
+        "description": "Same document with datenartversion pinned to ESt_2025.\nExpect the identical 200 / valid:false / 610301200 as the auto-detect request \u2014\nthat equivalence is the point: detection and the explicit value agree."
+      }
+    },
+    {
+      "name": "Submit ESt \u2014 TEST, PDF back",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/submit",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "submit"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterErklaerung</Verfahren>\\n    <DatenArt>ESt</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\"><NutzdatenTicket>1</NutzdatenTicket></NutzdatenHeader>\\n      <Nutzdaten>\\n        <E10 xmlns=\\\"http://finkonsens.de/elster/elstererklaerung/est/e10/v2025\\\"/>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\",\n  \"cert_base64\": \"{{cert_base64}}\",\n  \"password\": \"{{cert_password}}\",\n  \"datenartversion\": \"ESt_2025\",\n  \"return_pdf\": true\n}"
+        },
+        "description": "TEST submission (Testmerker 700000004 in the XML) returning the PDF as the body.\n\nCheck the response HEADERS:\n  X-Transferticket   <- NEW in SOL-503, the real receipt\n  X-Transfer-Handle  <- pre-existing, unchanged\n\nNeeds a real ELSTER certificate in the collection variables.\nA rejection now returns 422 (was 500)."
+      }
+    },
+    {
+      "name": "Submit ESt \u2014 TEST, JSON back",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/submit",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "submit"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterErklaerung</Verfahren>\\n    <DatenArt>ESt</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\"><NutzdatenTicket>1</NutzdatenTicket></NutzdatenHeader>\\n      <Nutzdaten>\\n        <E10 xmlns=\\\"http://finkonsens.de/elster/elstererklaerung/est/e10/v2025\\\"/>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\",\n  \"cert_base64\": \"{{cert_base64}}\",\n  \"password\": \"{{cert_password}}\",\n  \"datenartversion\": \"ESt_2025\",\n  \"return_pdf\": false\n}"
+        },
+        "description": "Same, but JSON so you can see both fields in the body:\n  transferticket  <- NEW, string\n  transfer_handle <- pre-existing, int, unchanged\npdf_base64 carries the PDF."
+      }
+    }
+  ]
+}

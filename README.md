@@ -57,11 +57,12 @@ A collection covering all three submission paths lives at
 | --- | --- |
 | ESt — annual income tax return | validates, returns a PDF |
 | UStVA — VAT return | validates, returns a PDF |
-| ZMDO — Zusammenfassende Meldung | **broken**, see the folder description |
+| ZMDO — Zusammenfassende Meldung | validates, returns a PDF |
 
-ZMDO fails at ERiC with `610301006`; the same failure reproduces in production.
-Its requests are kept as a regression check — when they return 200 with a PDF,
-the bug is fixed.
+The ZM subtree carries an explicit `elster:` prefix declared on the `zm` element
+itself. Inheriting the envelope's default namespace resolves to the same
+namespace, but ERiC's reader rejects it — and a prefix declared on the envelope
+is refused outright. Fixed in SOL-507; do not "simplify" the prefixes away.
 
 Start the service first:
 

@@ -6,7 +6,7 @@
     <Vorgang>send-Auth</Vorgang>
     <Testmerker>700000004</Testmerker>
     <HerstellerID>97263</HerstellerID>
-    <DatenLieferant>Max Mustermann</DatenLieferant>
+    <DatenLieferant>Olumuyiwa Osiname</DatenLieferant>
     <Datei>
       <Verschluesselung>CMSEncryptedData</Verschluesselung>
       <Kompression>GZIP</Kompression>
@@ -20,39 +20,35 @@
         <Empfaenger id="L">BF</Empfaenger>
       </NutzdatenHeader>
       <Nutzdaten>
-        <zm version="000005">
-          <unternehmer>
-            <knri>DE123456789</knri>
-            <zulassNr>
-              <zulnr1>N</zulnr1>
-              <zulnr2>1111111</zulnr2>
-            </zulassNr>
-            <anschrift>
-              <name>Max Mustermann</name>
-              <strasse>Musterstrasse</strasse>
-              <hausnr>1</hausnr>
-              <plz>10115</plz>
-              <ort>Berlin</ort>
-              <staat>DE</staat>
-            </anschrift>
-            <zm-zeilen waehrung="1" meldeart="10">
-              <anzeige>false</anzeige>
-              <widerruf>false</widerruf>
-              <mzr>
-                <quart>1</quart>
-                <jahr>2025</jahr>
-              </mzr>
-              <zeile umsatzart="L">
-                <knre>FR12345678901</knre>
-                <betrag>5000</betrag>
-              </zeile>
-              <zeile umsatzart="L">
-                <knre>NL123456789B01</knre>
-                <betrag>2500</betrag>
-              </zeile>
-            </zm-zeilen>
-          </unternehmer>
-        </zm>
+        <elster:zm xmlns:elster="http://www.elster.de/elsterxml/schema/v11" version="000005">
+          <elster:unternehmer>
+            <elster:knri>DE364074899</elster:knri>
+            <elster:zulassNr>
+              <elster:zulnr1>N</elster:zulnr1>
+              <elster:zulnr2>1111111</elster:zulnr2>
+            </elster:zulassNr>
+            <elster:anschrift>
+              <elster:name>Olumuyiwa Osiname</elster:name>
+              <elster:strasse>Dorfstr.</elster:strasse>
+              <elster:hausnr>36D</elster:hausnr>
+              <elster:plz>13057</elster:plz>
+              <elster:ort>Berlin</elster:ort>
+              <elster:staat>DE</elster:staat>
+            </elster:anschrift>
+            <elster:zm-zeilen waehrung="1" meldeart="10">
+              <elster:anzeige>false</elster:anzeige>
+              <elster:widerruf>false</elster:widerruf>
+              <elster:mzr>
+                <elster:quart>2</elster:quart>
+                <elster:jahr>2026</elster:jahr>
+              </elster:mzr>
+              <elster:zeile umsatzart="S">
+                <elster:knre>SE559017073301</elster:knre>
+                <elster:betrag>7560</elster:betrag>
+              </elster:zeile>
+            </elster:zm-zeilen>
+          </elster:unternehmer>
+        </elster:zm>
       </Nutzdaten>
     </Nutzdatenblock>
   </DatenTeil>

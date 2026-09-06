@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Elster xmlns="http://www.elster.de/elsterxml/schema/v11">
+  <TransferHeader version="11">
+    <Verfahren>ElsterAnmeldung</Verfahren>
+    <DatenArt>UStVA</DatenArt>
+    <Vorgang>send-Auth</Vorgang>
+    <Testmerker>700000004</Testmerker>
+    <HerstellerID>97263</HerstellerID>
+    <DatenLieferant>Max Mustermann</DatenLieferant>
+    <Datei>
+      <Verschluesselung>CMSEncryptedData</Verschluesselung>
+      <Kompression>GZIP</Kompression>
+      <TransportSchluessel/>
+    </Datei>
+  </TransferHeader>
+  <DatenTeil>
+    <Nutzdatenblock>
+      <NutzdatenHeader version="11">
+        <NutzdatenTicket>1</NutzdatenTicket>
+        <Empfaenger id="F">1096</Empfaenger>
+      </NutzdatenHeader>
+      <Nutzdaten>
+        <Anmeldungssteuern xmlns="http://finkonsens.de/elster/elsteranmeldung/ustva/v2025" version="2025">
+          <Erstellungsdatum>20260906</Erstellungsdatum>
+          <DatenLieferant>
+            <Name>Max Mustermann</Name>
+            <Strasse>Musterstrasse</Strasse>
+            <PLZ>10115</PLZ>
+            <Ort>Berlin</Ort>
+          </DatenLieferant>
+          <Steuerfall>
+            <Umsatzsteuervoranmeldung>
+              <Jahr>2025</Jahr>
+              <Zeitraum>01</Zeitraum>
+              <Steuernummer>1096081508152</Steuernummer>
+              <Kz09>97263</Kz09>
+              <Kz83>1500.00</Kz83>
+            </Umsatzsteuervoranmeldung>
+          </Steuerfall>
+        </Anmeldungssteuern>
+      </Nutzdaten>
+    </Nutzdatenblock>
+  </DatenTeil>
+</Elster>

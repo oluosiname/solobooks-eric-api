@@ -50,8 +50,18 @@ For interactive exploration use the Postman collection described above.
 
 ## Testing with Postman
 
-A collection covering the ESt (income tax) submission path lives at
-`postman/eric-api-SOL-503.postman_collection.json`. Import it into Postman.
+A collection covering all three submission paths lives at
+`postman/eric-api.postman_collection.json`. Import it into Postman.
+
+| Folder | Status |
+| --- | --- |
+| ESt — annual income tax return | validates, returns a PDF |
+| UStVA — VAT return | validates, returns a PDF |
+| ZMDO — Zusammenfassende Meldung | **broken**, see the folder description |
+
+ZMDO fails at ERiC with `610301006`; the same failure reproduces in production.
+Its requests are kept as a regression check — when they return 200 with a PDF,
+the bug is fixed.
 
 Start the service first:
 

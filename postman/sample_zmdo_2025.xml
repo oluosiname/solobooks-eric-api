@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Elster xmlns="http://www.elster.de/elsterxml/schema/v11">
+  <TransferHeader version="11">
+    <Verfahren>ElsterExtern</Verfahren>
+    <DatenArt>ZMDO</DatenArt>
+    <Vorgang>send-Auth</Vorgang>
+    <Testmerker>700000004</Testmerker>
+    <HerstellerID>97263</HerstellerID>
+    <DatenLieferant>Max Mustermann</DatenLieferant>
+    <Datei>
+      <Verschluesselung>CMSEncryptedData</Verschluesselung>
+      <Kompression>GZIP</Kompression>
+      <TransportSchluessel/>
+    </Datei>
+  </TransferHeader>
+  <DatenTeil>
+    <Nutzdatenblock>
+      <NutzdatenHeader version="11">
+        <NutzdatenTicket>1</NutzdatenTicket>
+        <Empfaenger id="L">BF</Empfaenger>
+      </NutzdatenHeader>
+      <Nutzdaten>
+        <zm version="000005">
+          <unternehmer>
+            <knri>DE123456789</knri>
+            <zulassNr>
+              <zulnr1>N</zulnr1>
+              <zulnr2>1111111</zulnr2>
+            </zulassNr>
+            <anschrift>
+              <name>Max Mustermann</name>
+              <strasse>Musterstrasse</strasse>
+              <hausnr>1</hausnr>
+              <plz>10115</plz>
+              <ort>Berlin</ort>
+              <staat>DE</staat>
+            </anschrift>
+            <zm-zeilen waehrung="1" meldeart="10">
+              <anzeige>false</anzeige>
+              <widerruf>false</widerruf>
+              <mzr>
+                <quart>1</quart>
+                <jahr>2025</jahr>
+              </mzr>
+              <zeile umsatzart="L">
+                <knre>FR12345678901</knre>
+                <betrag>5000</betrag>
+              </zeile>
+              <zeile umsatzart="L">
+                <knre>NL123456789B01</knre>
+                <betrag>2500</betrag>
+              </zeile>
+            </zm-zeilen>
+          </unternehmer>
+        </zm>
+      </Nutzdaten>
+    </Nutzdatenblock>
+  </DatenTeil>
+</Elster>

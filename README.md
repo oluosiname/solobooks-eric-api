@@ -11,6 +11,43 @@ A REST API service for submitting tax returns (UStVA, EUER, etc.) to ELSTER usin
 - Automatic extraction of data type version from XML
 - Comprehensive error handling
 
+## Testing locally before deploying
+
+Production does **not** run the `docker compose up` setup. That uses `Dockerfile`
+(Flask dev server, root user); production uses `Dockerfile.prod` (gunicorn, two
+workers, non-root, healthcheck). Testing the dev container therefore does not tell
+you the deploy will work.
+
+Build and smoke test what actually ships:
+
+```bash
+./scripts/build_and_test.sh
+```
+
+This builds `Dockerfile.prod`, runs it on port 5051 under gunicorn as the non-root
+user, waits for health, and runs the smoke test. Exits non-zero on failure, so it
+is safe to gate a deploy on.
+
+To smoke test something already running (a staging host, say):
+
+```bash
+./scripts/smoke_test.sh https://staging.example.com
+```
+
+The smoke test covers what has no automated coverage: ESt datenart detection,
+the ERiC plugin actually loading, and the status code returned on rejection.
+It needs no ELSTER certificate.
+
+For interactive exploration use the Postman collection described above.
+
+### Before deploying, also check
+
+- `API_KEY` is set in the production `.env`. `docker-compose.prod.yml` passes it,
+  but no application code reads it yet — authentication is not implemented.
+- The production compose file binds to `127.0.0.1:5000` and fronts the service
+  with nginx. Only nginx should be publicly reachable.
+
+
 ## Testing with Postman
 
 A collection covering the ESt (income tax) submission path lives at

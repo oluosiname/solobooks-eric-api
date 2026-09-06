@@ -34,9 +34,13 @@ To smoke test something already running (a staging host, say):
 ./scripts/smoke_test.sh https://staging.example.com
 ```
 
-The smoke test covers what has no automated coverage: ESt datenart detection,
-the ERiC plugin actually loading, and the status code returned on rejection.
-It needs no ELSTER certificate.
+The smoke test validates the three sample returns in `postman/` — ESt, UStVA and
+ZMDO — each with and without an explicit `datenartversion`, and checks that a
+rejected submission returns 422. It needs no ELSTER certificate.
+
+Because it asserts the samples actually validate, it catches regressions in the
+XML the builders produce — stripping the `elster:` prefixes from the ZM subtree,
+for instance, fails it.
 
 For interactive exploration use the Postman collection described above.
 

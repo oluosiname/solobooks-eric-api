@@ -26,42 +26,36 @@ check() {
   fi
 }
 
-# A skeleton E10. Deliberately incomplete: enough for ERiC to load the ESt
-# plugin and reject on content, which is what proves the plugin resolved.
-read -r -d '' EST_XML <<'XML'
-<?xml version="1.0" encoding="UTF-8"?>
-<Elster xmlns="http://www.elster.de/elsterxml/schema/v11">
-  <TransferHeader version="11">
-    <Verfahren>ElsterErklaerung</Verfahren>
-    <DatenArt>ESt</DatenArt>
-    <Vorgang>send-Auth</Vorgang>
-    <Testmerker>700000004</Testmerker>
-  </TransferHeader>
-  <DatenTeil>
-    <Nutzdatenblock>
-      <NutzdatenHeader version="11"><NutzdatenTicket>1</NutzdatenTicket></NutzdatenHeader>
-      <Nutzdaten>
-        <E10 xmlns="http://finkonsens.de/elster/elstererklaerung/est/e10/v2025"/>
-      </Nutzdaten>
-    </Nutzdatenblock>
-  </DatenTeil>
-</Elster>
-XML
+# The samples are complete, ERiC-valid documents. Asserting they VALIDATE is a
+# far stronger check than the old skeleton, which could only assert a rejection.
+SAMPLES_DIR="$(dirname "$0")/../postman"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-python3 - "$TMP" <<PY
+for pair in "est:sample_est_2025.xml" "ustva:sample_ustva_2025.xml" "zmdo:sample_zmdo_2025.xml"; do
+  key="${pair%%:*}"; file="${pair#*:}"
+  if [ ! -f "$SAMPLES_DIR/$file" ]; then
+    echo "  MISSING SAMPLE: $SAMPLES_DIR/$file" >&2
+    exit 1
+  fi
+  python3 - "$SAMPLES_DIR/$file" "$TMP/$key.json" "$TMP/${key}_explicit.json" "$key" <<'PY'
+import json, sys
+src, auto_out, explicit_out, key = sys.argv[1:5]
+xml = open(src, encoding="utf-8").read()
+version = {"est": "ESt_2025", "ustva": "UStVA_2025", "zmdo": "ZMDO"}[key]
+json.dump({"xml": xml}, open(auto_out, "w"))
+json.dump({"xml": xml, "datenartversion": version}, open(explicit_out, "w"))
+PY
+done
+
+python3 - "$TMP" <<'PY'
 import base64, json, os, sys
 tmp = sys.argv[1]
-xml = """$EST_XML"""
-json.dump({"xml": xml}, open(os.path.join(tmp, "validate.json"), "w"))
-json.dump({"xml": xml, "datenartversion": "ESt_2025"},
-          open(os.path.join(tmp, "validate_explicit.json"), "w"))
-json.dump({"xml": xml,
-           "cert_base64": base64.b64encode(b"not-a-real-pfx").decode(),
-           "password": "wrong", "datenartversion": "ESt_2025", "return_pdf": False},
-          open(os.path.join(tmp, "submit.json"), "w"))
+body = json.load(open(os.path.join(tmp, "est.json")))
+body.update(cert_base64=base64.b64encode(b"not-a-real-pfx").decode(),
+            password="wrong", datenartversion="ESt_2025", return_pdf=False)
+json.dump(body, open(os.path.join(tmp, "submit.json"), "w"))
 PY
 
 post() {
@@ -80,17 +74,16 @@ check "status is ok" "ok" \
   "$(python3 -c "import json;print(json.load(open('$TMP/h'))['status'])" 2>/dev/null || echo parse-error)"
 
 echo
-echo "ESt datenart detection"
-check "POST /validate, no datenartversion" "200" \
-  "$(post /validate "$TMP/v1" "$TMP/validate.json")"
-# 610301200 is a content validation failure, which only happens once the ESt
-# plugin has loaded. A datenart failure would surface as HTTP 400 instead.
-check "ESt plugin ran (err 610301200)" "610301200" \
-  "$(python3 -c "import json;print(json.load(open('$TMP/v1'))['error_code'])" 2>/dev/null || echo parse-error)"
-check "POST /validate, explicit ESt_2025" "200" \
-  "$(post /validate "$TMP/v2" "$TMP/validate_explicit.json")"
-check "explicit matches auto-detect" "610301200" \
-  "$(python3 -c "import json;print(json.load(open('$TMP/v2'))['error_code'])" 2>/dev/null || echo parse-error)"
+echo "Validation - all three form types"
+for pair in "est:ESt" "ustva:UStVA" "zmdo:ZMDO"; do
+  key="${pair%%:*}"; label="${pair#*:}"
+  check "$label validates (datenart auto-detected)" "true" \
+    "$(post /validate "$TMP/${key}_v1" "$TMP/$key.json" >/dev/null; \
+       python3 -c "import json;print(str(json.load(open('$TMP/${key}_v1'))['valid']).lower())" 2>/dev/null || echo parse-error)"
+  check "$label validates (explicit datenartversion)" "true" \
+    "$(post /validate "$TMP/${key}_v2" "$TMP/${key}_explicit.json" >/dev/null; \
+       python3 -c "import json;print(str(json.load(open('$TMP/${key}_v2'))['valid']).lower())" 2>/dev/null || echo parse-error)"
+done
 
 echo
 echo "Rejection status code"

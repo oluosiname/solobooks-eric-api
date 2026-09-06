@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Elster xmlns="http://www.elster.de/elsterxml/schema/v11">
+  <TransferHeader version="11">
+    <Verfahren>ElsterExtern</Verfahren>
+    <DatenArt>ZMDO</DatenArt>
+    <Vorgang>send-Auth</Vorgang>
+    <Testmerker>700000004</Testmerker>
+    <HerstellerID>97263</HerstellerID>
+    <DatenLieferant>Olumuyiwa Osiname</DatenLieferant>
+    <Datei>
+      <Verschluesselung>CMSEncryptedData</Verschluesselung>
+      <Kompression>GZIP</Kompression>
+      <TransportSchluessel/>
+    </Datei>
+  </TransferHeader>
+  <DatenTeil>
+    <Nutzdatenblock>
+      <NutzdatenHeader version="11">
+        <NutzdatenTicket>1</NutzdatenTicket>
+        <Empfaenger id="L">BF</Empfaenger>
+      </NutzdatenHeader>
+      <Nutzdaten>
+        <elster:zm xmlns:elster="http://www.elster.de/elsterxml/schema/v11" version="000005">
+          <elster:unternehmer>
+            <elster:knri>DE364074899</elster:knri>
+            <elster:zulassNr>
+              <elster:zulnr1>N</elster:zulnr1>
+              <elster:zulnr2>1111111</elster:zulnr2>
+            </elster:zulassNr>
+            <elster:anschrift>
+              <elster:name>Olumuyiwa Osiname</elster:name>
+              <elster:strasse>Dorfstr.</elster:strasse>
+              <elster:hausnr>36D</elster:hausnr>
+              <elster:plz>13057</elster:plz>
+              <elster:ort>Berlin</elster:ort>
+              <elster:staat>DE</elster:staat>
+            </elster:anschrift>
+            <elster:zm-zeilen waehrung="1" meldeart="10">
+              <elster:anzeige>false</elster:anzeige>
+              <elster:widerruf>false</elster:widerruf>
+              <elster:mzr>
+                <elster:quart>2</elster:quart>
+                <elster:jahr>2026</elster:jahr>
+              </elster:mzr>
+              <elster:zeile umsatzart="S">
+                <elster:knre>SE559017073301</elster:knre>
+                <elster:betrag>7560</elster:betrag>
+              </elster:zeile>
+            </elster:zm-zeilen>
+          </elster:unternehmer>
+        </elster:zm>
+      </Nutzdaten>
+    </Nutzdatenblock>
+  </DatenTeil>
+</Elster>

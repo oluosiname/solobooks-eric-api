@@ -11,6 +11,86 @@ A REST API service for submitting tax returns (UStVA, EUER, etc.) to ELSTER usin
 - Automatic extraction of data type version from XML
 - Comprehensive error handling
 
+## Testing locally before deploying
+
+Production does **not** run the `docker compose up` setup. That uses `Dockerfile`
+(Flask dev server, root user); production uses `Dockerfile.prod` (gunicorn, two
+workers, non-root, healthcheck). Testing the dev container therefore does not tell
+you the deploy will work.
+
+Build and smoke test what actually ships:
+
+```bash
+./scripts/build_and_test.sh
+```
+
+This builds `Dockerfile.prod`, runs it on port 5051 under gunicorn as the non-root
+user, waits for health, and runs the smoke test. Exits non-zero on failure, so it
+is safe to gate a deploy on.
+
+To smoke test something already running (a staging host, say):
+
+```bash
+./scripts/smoke_test.sh https://staging.example.com
+```
+
+The smoke test validates the three sample returns in `postman/` — ESt, UStVA and
+ZMDO — each with and without an explicit `datenartversion`, and checks that a
+rejected submission returns 422. It needs no ELSTER certificate.
+
+Because it asserts the samples actually validate, it catches regressions in the
+XML the builders produce — stripping the `elster:` prefixes from the ZM subtree,
+for instance, fails it.
+
+For interactive exploration use the Postman collection described above.
+
+### Before deploying, also check
+
+- `API_KEY` is set in the production `.env`. `docker-compose.prod.yml` passes it,
+  but no application code reads it yet — authentication is not implemented.
+- The production compose file binds to `127.0.0.1:5000` and fronts the service
+  with nginx. Only nginx should be publicly reachable.
+
+
+## Testing with Postman
+
+A collection covering all three submission paths lives at
+`postman/eric-api.postman_collection.json`. Import it into Postman.
+
+| Folder | Status |
+| --- | --- |
+| ESt — annual income tax return | validates, returns a PDF |
+| UStVA — VAT return | validates, returns a PDF |
+| ZMDO — Zusammenfassende Meldung | validates, returns a PDF |
+
+The ZM subtree carries an explicit `elster:` prefix declared on the `zm` element
+itself. Inheriting the envelope's default namespace resolves to the same
+namespace, but ERiC's reader rejects it — and a prefix declared on the envelope
+is refused outright. Fixed in SOL-507; do not "simplify" the prefixes away.
+
+Start the service first:
+
+```bash
+docker compose up -d
+curl http://localhost:5000/health
+```
+
+Set the collection variables `cert_base64` (base64 of your `.pfx`) and
+`cert_password` before running the two `/submit` requests. The `/validate`
+requests need no certificate.
+
+**Every request is a TEST submission.** The XML carries `<Testmerker>700000004</Testmerker>`,
+which routes it to the ELSTER clearing house — nothing is filed with the Finanzamt.
+
+On a successful submission the Transferticket is returned as:
+
+- `X-Transferticket` response header, when `return_pdf` is `true` (body is the PDF)
+- `transferticket` JSON field, when `return_pdf` is `false`
+
+`transfer_handle` is a separate, pre-existing field: ERiC's Datenabholung bundling
+parameter, not a receipt. Do not confuse the two.
+
+
 ## Setup
 
 ### Prerequisites

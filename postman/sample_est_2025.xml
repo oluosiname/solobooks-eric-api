@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Elster xmlns="http://www.elster.de/elsterxml/schema/v11">
+  <TransferHeader version="11">
+    <Verfahren>ElsterErklaerung</Verfahren>
+    <DatenArt>ESt</DatenArt>
+    <Vorgang>send-Auth</Vorgang>
+    <Testmerker>700000004</Testmerker>
+    <HerstellerID>97263</HerstellerID>
+    <DatenLieferant>Solobooks Test</DatenLieferant>
+    <Datei>
+      <Verschluesselung>CMSEncryptedData</Verschluesselung>
+      <Kompression>GZIP</Kompression>
+      <TransportSchluessel/>
+    </Datei>
+  </TransferHeader>
+  <DatenTeil>
+    <Nutzdatenblock>
+      <NutzdatenHeader version="11">
+        <NutzdatenTicket>1</NutzdatenTicket>
+        <Empfaenger id="F">1096</Empfaenger>
+      </NutzdatenHeader>
+      <Nutzdaten>
+        <E10 xmlns="http://finkonsens.de/elster/elstererklaerung/est/e10/v2025" version="2025">
+          <ESt1A>
+            <Art_Erkl>
+              <E0100001>X</E0100001>
+            </Art_Erkl>
+            <Finanzamt>
+              <E0100006>1096</E0100006>
+            </Finanzamt>
+            <Allg>
+              <A>
+                <E0100401>01.01.1985</E0100401>
+                <E0100201>Mustermann</E0100201>
+                <E0100301>Max</E0100301>
+                <E0100402>11</E0100402>
+                <E0101104>Musterstrasse</E0101104>
+                <E0101206>1</E0101206>
+                <E0100601>10115</E0100601>
+                <E0100602>Berlin</E0100602>
+              </A>
+              <BV>
+                <E0102002>X</E0102002>
+              </BV>
+            </Allg>
+          </ESt1A>
+          <S>
+            <Person>PersonA</Person>
+            <Gewinn>
+              <Freiber_T>
+                <E0803101>Softwareentwicklung</E0803101>
+                <E0803202>24500</E0803202>
+              </Freiber_T>
+            </Gewinn>
+          </S>
+          <Vorsatz>
+            <Unterfallart>10</Unterfallart>
+            <Vorgang>01</Vorgang>
+            <StNr>1096081508152</StNr>
+            <Zeitraum>2025</Zeitraum>
+            <AbsName>Max Mustermann</AbsName>
+            <AbsStr>Musterstr. 1</AbsStr>
+            <AbsPlz>10115</AbsPlz>
+            <AbsOrt>Berlin</AbsOrt>
+            <Copyright>Solobooks</Copyright>
+            <OrdNrArt>S</OrdNrArt>
+            <Rueckuebermittlung>
+              <Bescheid>1</Bescheid>
+              <ArtRueckuebermittlung>INTERNET</ArtRueckuebermittlung>
+            </Rueckuebermittlung>
+          </Vorsatz>
+        </E10>
+      </Nutzdaten>
+    </Nutzdatenblock>
+  </DatenTeil>
+</Elster>

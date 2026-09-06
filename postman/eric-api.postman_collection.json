@@ -1,0 +1,372 @@
+{
+  "info": {
+    "name": "eric-api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "ELSTER submissions through the eric-api.\n\nStart the service:\n  cd solobooks-eric-api && docker compose up -d\n  curl http://localhost:5000/health\n\nEvery request carries Testmerker 700000004 - these are TEST submissions,\nnothing is filed with a Finanzamt.\n\nThe /validate requests need no certificate and work immediately.\nThe /submit requests need cert_base64 and cert_password set below\n(Variables tab), then Save.\n\n  base64 -i your-cert.pfx | tr -d '\\n' | pbcopy\n\nSTATUS\n  ESt (annual return)  validates, returns a PDF\n  UStVA (VAT return)   validates, returns a PDF\n  ZMDO (ZM)            validates, returns a PDF"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "cert_base64",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cert_password",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Expect 200 {\"status\":\"ok\"}."
+      }
+    },
+    {
+      "name": "ESt - annual income tax return",
+      "description": "A complete 2025 return: single filer, freelance software developer,\n24.500 EUR profit, test Finanzamt 1096.\n\nDerived from the ERiC schema documentation - see\npostman/README-ESt-sample.md for the field constraints that matter.",
+      "item": [
+        {
+          "name": "Validate (auto-detect datenart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "validate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterErklaerung</Verfahren>\\n    <DatenArt>ESt</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Solobooks Test</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"F\\\">1096</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <E10 xmlns=\\\"http://finkonsens.de/elster/elstererklaerung/est/e10/v2025\\\" version=\\\"2025\\\">\\n          <ESt1A>\\n            <Art_Erkl>\\n              <E0100001>X</E0100001>\\n            </Art_Erkl>\\n            <Finanzamt>\\n              <E0100006>1096</E0100006>\\n            </Finanzamt>\\n            <Allg>\\n              <A>\\n                <E0100401>01.01.1985</E0100401>\\n                <E0100201>Mustermann</E0100201>\\n                <E0100301>Max</E0100301>\\n                <E0100402>11</E0100402>\\n                <E0101104>Musterstrasse</E0101104>\\n                <E0101206>1</E0101206>\\n                <E0100601>10115</E0100601>\\n                <E0100602>Berlin</E0100602>\\n              </A>\\n              <BV>\\n                <E0102002>X</E0102002>\\n              </BV>\\n            </Allg>\\n          </ESt1A>\\n          <S>\\n            <Person>PersonA</Person>\\n            <Gewinn>\\n              <Freiber_T>\\n                <E0803101>Softwareentwicklung</E0803101>\\n                <E0803202>24500</E0803202>\\n              </Freiber_T>\\n            </Gewinn>\\n          </S>\\n          <Vorsatz>\\n            <Unterfallart>10</Unterfallart>\\n            <Vorgang>01</Vorgang>\\n            <StNr>1096081508152</StNr>\\n            <Zeitraum>2025</Zeitraum>\\n            <AbsName>Max Mustermann</AbsName>\\n            <AbsStr>Musterstr. 1</AbsStr>\\n            <AbsPlz>10115</AbsPlz>\\n            <AbsOrt>Berlin</AbsOrt>\\n            <Copyright>Solobooks</Copyright>\\n            <OrdNrArt>S</OrdNrArt>\\n            <Rueckuebermittlung>\\n              <Bescheid>1</Bescheid>\\n              <ArtRueckuebermittlung>INTERNET</ArtRueckuebermittlung>\\n            </Rueckuebermittlung>\\n          </Vorsatz>\\n        </E10>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\"\n}"
+            },
+            "description": "No datenartversion passed - detected from the E10 namespace.\nExpect 200, \"valid\": true, <Erfolg/> in validation_result."
+          }
+        },
+        {
+          "name": "Validate (explicit ESt_2025)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "validate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterErklaerung</Verfahren>\\n    <DatenArt>ESt</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Solobooks Test</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"F\\\">1096</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <E10 xmlns=\\\"http://finkonsens.de/elster/elstererklaerung/est/e10/v2025\\\" version=\\\"2025\\\">\\n          <ESt1A>\\n            <Art_Erkl>\\n              <E0100001>X</E0100001>\\n            </Art_Erkl>\\n            <Finanzamt>\\n              <E0100006>1096</E0100006>\\n            </Finanzamt>\\n            <Allg>\\n              <A>\\n                <E0100401>01.01.1985</E0100401>\\n                <E0100201>Mustermann</E0100201>\\n                <E0100301>Max</E0100301>\\n                <E0100402>11</E0100402>\\n                <E0101104>Musterstrasse</E0101104>\\n                <E0101206>1</E0101206>\\n                <E0100601>10115</E0100601>\\n                <E0100602>Berlin</E0100602>\\n              </A>\\n              <BV>\\n                <E0102002>X</E0102002>\\n              </BV>\\n            </Allg>\\n          </ESt1A>\\n          <S>\\n            <Person>PersonA</Person>\\n            <Gewinn>\\n              <Freiber_T>\\n                <E0803101>Softwareentwicklung</E0803101>\\n                <E0803202>24500</E0803202>\\n              </Freiber_T>\\n            </Gewinn>\\n          </S>\\n          <Vorsatz>\\n            <Unterfallart>10</Unterfallart>\\n            <Vorgang>01</Vorgang>\\n            <StNr>1096081508152</StNr>\\n            <Zeitraum>2025</Zeitraum>\\n            <AbsName>Max Mustermann</AbsName>\\n            <AbsStr>Musterstr. 1</AbsStr>\\n            <AbsPlz>10115</AbsPlz>\\n            <AbsOrt>Berlin</AbsOrt>\\n            <Copyright>Solobooks</Copyright>\\n            <OrdNrArt>S</OrdNrArt>\\n            <Rueckuebermittlung>\\n              <Bescheid>1</Bescheid>\\n              <ArtRueckuebermittlung>INTERNET</ArtRueckuebermittlung>\\n            </Rueckuebermittlung>\\n          </Vorsatz>\\n        </E10>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\",\n  \"datenartversion\": \"ESt_2025\"\n}"
+            },
+            "description": "Same document, datenartversion pinned. Identical result -\ndetection and the explicit value agree."
+          }
+        },
+        {
+          "name": "Submit - TEST, PDF back",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterErklaerung</Verfahren>\\n    <DatenArt>ESt</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Solobooks Test</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"F\\\">1096</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <E10 xmlns=\\\"http://finkonsens.de/elster/elstererklaerung/est/e10/v2025\\\" version=\\\"2025\\\">\\n          <ESt1A>\\n            <Art_Erkl>\\n              <E0100001>X</E0100001>\\n            </Art_Erkl>\\n            <Finanzamt>\\n              <E0100006>1096</E0100006>\\n            </Finanzamt>\\n            <Allg>\\n              <A>\\n                <E0100401>01.01.1985</E0100401>\\n                <E0100201>Mustermann</E0100201>\\n                <E0100301>Max</E0100301>\\n                <E0100402>11</E0100402>\\n                <E0101104>Musterstrasse</E0101104>\\n                <E0101206>1</E0101206>\\n                <E0100601>10115</E0100601>\\n                <E0100602>Berlin</E0100602>\\n              </A>\\n              <BV>\\n                <E0102002>X</E0102002>\\n              </BV>\\n            </Allg>\\n          </ESt1A>\\n          <S>\\n            <Person>PersonA</Person>\\n            <Gewinn>\\n              <Freiber_T>\\n                <E0803101>Softwareentwicklung</E0803101>\\n                <E0803202>24500</E0803202>\\n              </Freiber_T>\\n            </Gewinn>\\n          </S>\\n          <Vorsatz>\\n            <Unterfallart>10</Unterfallart>\\n            <Vorgang>01</Vorgang>\\n            <StNr>1096081508152</StNr>\\n            <Zeitraum>2025</Zeitraum>\\n            <AbsName>Max Mustermann</AbsName>\\n            <AbsStr>Musterstr. 1</AbsStr>\\n            <AbsPlz>10115</AbsPlz>\\n            <AbsOrt>Berlin</AbsOrt>\\n            <Copyright>Solobooks</Copyright>\\n            <OrdNrArt>S</OrdNrArt>\\n            <Rueckuebermittlung>\\n              <Bescheid>1</Bescheid>\\n              <ArtRueckuebermittlung>INTERNET</ArtRueckuebermittlung>\\n            </Rueckuebermittlung>\\n          </Vorsatz>\\n        </E10>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\",\n  \"cert_base64\": \"{{cert_base64}}\",\n  \"password\": \"{{cert_password}}\",\n  \"datenartversion\": \"ESt_2025\",\n  \"return_pdf\": true\n}"
+            },
+            "description": "Needs a certificate. Response body is the PDF - use Send and Download.\n\nCheck the response HEADERS:\n  X-Transferticket   the real ELSTER receipt\n  X-Transfer-Handle  a different value entirely, not a receipt"
+          }
+        },
+        {
+          "name": "Submit - TEST, JSON back",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterErklaerung</Verfahren>\\n    <DatenArt>ESt</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Solobooks Test</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"F\\\">1096</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <E10 xmlns=\\\"http://finkonsens.de/elster/elstererklaerung/est/e10/v2025\\\" version=\\\"2025\\\">\\n          <ESt1A>\\n            <Art_Erkl>\\n              <E0100001>X</E0100001>\\n            </Art_Erkl>\\n            <Finanzamt>\\n              <E0100006>1096</E0100006>\\n            </Finanzamt>\\n            <Allg>\\n              <A>\\n                <E0100401>01.01.1985</E0100401>\\n                <E0100201>Mustermann</E0100201>\\n                <E0100301>Max</E0100301>\\n                <E0100402>11</E0100402>\\n                <E0101104>Musterstrasse</E0101104>\\n                <E0101206>1</E0101206>\\n                <E0100601>10115</E0100601>\\n                <E0100602>Berlin</E0100602>\\n              </A>\\n              <BV>\\n                <E0102002>X</E0102002>\\n              </BV>\\n            </Allg>\\n          </ESt1A>\\n          <S>\\n            <Person>PersonA</Person>\\n            <Gewinn>\\n              <Freiber_T>\\n                <E0803101>Softwareentwicklung</E0803101>\\n                <E0803202>24500</E0803202>\\n              </Freiber_T>\\n            </Gewinn>\\n          </S>\\n          <Vorsatz>\\n            <Unterfallart>10</Unterfallart>\\n            <Vorgang>01</Vorgang>\\n            <StNr>1096081508152</StNr>\\n            <Zeitraum>2025</Zeitraum>\\n            <AbsName>Max Mustermann</AbsName>\\n            <AbsStr>Musterstr. 1</AbsStr>\\n            <AbsPlz>10115</AbsPlz>\\n            <AbsOrt>Berlin</AbsOrt>\\n            <Copyright>Solobooks</Copyright>\\n            <OrdNrArt>S</OrdNrArt>\\n            <Rueckuebermittlung>\\n              <Bescheid>1</Bescheid>\\n              <ArtRueckuebermittlung>INTERNET</ArtRueckuebermittlung>\\n            </Rueckuebermittlung>\\n          </Vorsatz>\\n        </E10>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\",\n  \"cert_base64\": \"{{cert_base64}}\",\n  \"password\": \"{{cert_password}}\",\n  \"datenartversion\": \"ESt_2025\",\n  \"return_pdf\": false\n}"
+            },
+            "description": "Same, as JSON so both fields are visible side by side:\n  transferticket   string, the receipt\n  transfer_handle  int, unchanged\npdf_base64 carries the PDF."
+          }
+        }
+      ]
+    },
+    {
+      "name": "UStVA - VAT return",
+      "description": "January 2025: 10.000 EUR taxable at 19%, 1.900 EUR VAT,\n400 EUR input tax, 1.500 EUR payable.\n\nGenerated by the shipped ElsterXml::UStVA builder, so this is what\nthe product actually sends.",
+      "item": [
+        {
+          "name": "Validate (auto-detect datenart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "validate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterAnmeldung</Verfahren>\\n    <DatenArt>UStVA</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Max Mustermann</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"F\\\">1096</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <Anmeldungssteuern xmlns=\\\"http://finkonsens.de/elster/elsteranmeldung/ustva/v2025\\\" version=\\\"2025\\\">\\n          <Erstellungsdatum>20260906</Erstellungsdatum>\\n          <DatenLieferant>\\n            <Name>Max Mustermann</Name>\\n            <Strasse>Musterstrasse</Strasse>\\n            <PLZ>10115</PLZ>\\n            <Ort>Berlin</Ort>\\n          </DatenLieferant>\\n          <Steuerfall>\\n            <Umsatzsteuervoranmeldung>\\n              <Jahr>2025</Jahr>\\n              <Zeitraum>01</Zeitraum>\\n              <Steuernummer>1096081508152</Steuernummer>\\n              <Kz09>97263</Kz09>\\n              <Kz83>1500.00</Kz83>\\n            </Umsatzsteuervoranmeldung>\\n          </Steuerfall>\\n        </Anmeldungssteuern>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\"\n}"
+            },
+            "description": "Expect 200, \"valid\": true."
+          }
+        },
+        {
+          "name": "Validate (explicit UStVA_2025)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "validate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterAnmeldung</Verfahren>\\n    <DatenArt>UStVA</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Max Mustermann</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"F\\\">1096</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <Anmeldungssteuern xmlns=\\\"http://finkonsens.de/elster/elsteranmeldung/ustva/v2025\\\" version=\\\"2025\\\">\\n          <Erstellungsdatum>20260906</Erstellungsdatum>\\n          <DatenLieferant>\\n            <Name>Max Mustermann</Name>\\n            <Strasse>Musterstrasse</Strasse>\\n            <PLZ>10115</PLZ>\\n            <Ort>Berlin</Ort>\\n          </DatenLieferant>\\n          <Steuerfall>\\n            <Umsatzsteuervoranmeldung>\\n              <Jahr>2025</Jahr>\\n              <Zeitraum>01</Zeitraum>\\n              <Steuernummer>1096081508152</Steuernummer>\\n              <Kz09>97263</Kz09>\\n              <Kz83>1500.00</Kz83>\\n            </Umsatzsteuervoranmeldung>\\n          </Steuerfall>\\n        </Anmeldungssteuern>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\",\n  \"datenartversion\": \"UStVA_2025\"\n}"
+            },
+            "description": "Same document, datenartversion pinned."
+          }
+        },
+        {
+          "name": "Submit - TEST, PDF back",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterAnmeldung</Verfahren>\\n    <DatenArt>UStVA</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Max Mustermann</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"F\\\">1096</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <Anmeldungssteuern xmlns=\\\"http://finkonsens.de/elster/elsteranmeldung/ustva/v2025\\\" version=\\\"2025\\\">\\n          <Erstellungsdatum>20260906</Erstellungsdatum>\\n          <DatenLieferant>\\n            <Name>Max Mustermann</Name>\\n            <Strasse>Musterstrasse</Strasse>\\n            <PLZ>10115</PLZ>\\n            <Ort>Berlin</Ort>\\n          </DatenLieferant>\\n          <Steuerfall>\\n            <Umsatzsteuervoranmeldung>\\n              <Jahr>2025</Jahr>\\n              <Zeitraum>01</Zeitraum>\\n              <Steuernummer>1096081508152</Steuernummer>\\n              <Kz09>97263</Kz09>\\n              <Kz83>1500.00</Kz83>\\n            </Umsatzsteuervoranmeldung>\\n          </Steuerfall>\\n        </Anmeldungssteuern>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\",\n  \"cert_base64\": \"{{cert_base64}}\",\n  \"password\": \"{{cert_password}}\",\n  \"datenartversion\": \"UStVA_2025\",\n  \"return_pdf\": true\n}"
+            },
+            "description": "Needs a certificate. Response body is the PDF;\nX-Transferticket header carries the receipt."
+          }
+        },
+        {
+          "name": "Submit - TEST, JSON back",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterAnmeldung</Verfahren>\\n    <DatenArt>UStVA</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Max Mustermann</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"F\\\">1096</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <Anmeldungssteuern xmlns=\\\"http://finkonsens.de/elster/elsteranmeldung/ustva/v2025\\\" version=\\\"2025\\\">\\n          <Erstellungsdatum>20260906</Erstellungsdatum>\\n          <DatenLieferant>\\n            <Name>Max Mustermann</Name>\\n            <Strasse>Musterstrasse</Strasse>\\n            <PLZ>10115</PLZ>\\n            <Ort>Berlin</Ort>\\n          </DatenLieferant>\\n          <Steuerfall>\\n            <Umsatzsteuervoranmeldung>\\n              <Jahr>2025</Jahr>\\n              <Zeitraum>01</Zeitraum>\\n              <Steuernummer>1096081508152</Steuernummer>\\n              <Kz09>97263</Kz09>\\n              <Kz83>1500.00</Kz83>\\n            </Umsatzsteuervoranmeldung>\\n          </Steuerfall>\\n        </Anmeldungssteuern>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\",\n  \"cert_base64\": \"{{cert_base64}}\",\n  \"password\": \"{{cert_password}}\",\n  \"datenartversion\": \"UStVA_2025\",\n  \"return_pdf\": false\n}"
+            },
+            "description": "Same, as JSON."
+          }
+        }
+      ]
+    },
+    {
+      "name": "ZMDO - Zusammenfassende Meldung",
+      "description": "Q2 2026: one intra-community service, SE559017073301, 7.560 EUR.\nGenerated by the shipped ElsterXml::ZMDO builder, so this is what\nthe product actually sends.\n\ndatenartversion is ZMDO with NO year (plugin libcheckZMDO.so).\nZM_2025 - which models.py documents - is rejected as unknown.\n\nNote the zm subtree carries an explicit elster: prefix declared on\nthe zm element itself. Inheriting the envelope's default namespace\nresolves to the same namespace but ERiC's reader rejects it, and a\nprefix declared on the envelope is refused outright. Fixed in\nSOL-507 - do not 'simplify' the prefixes away.",
+      "item": [
+        {
+          "name": "Validate (auto-detect datenart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "validate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterExtern</Verfahren>\\n    <DatenArt>ZMDO</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Olumuyiwa Osiname</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"L\\\">BF</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <elster:zm xmlns:elster=\\\"http://www.elster.de/elsterxml/schema/v11\\\" version=\\\"000005\\\">\\n          <elster:unternehmer>\\n            <elster:knri>DE364074899</elster:knri>\\n            <elster:zulassNr>\\n              <elster:zulnr1>N</elster:zulnr1>\\n              <elster:zulnr2>1111111</elster:zulnr2>\\n            </elster:zulassNr>\\n            <elster:anschrift>\\n              <elster:name>Olumuyiwa Osiname</elster:name>\\n              <elster:strasse>Dorfstr.</elster:strasse>\\n              <elster:hausnr>36D</elster:hausnr>\\n              <elster:plz>13057</elster:plz>\\n              <elster:ort>Berlin</elster:ort>\\n              <elster:staat>DE</elster:staat>\\n            </elster:anschrift>\\n            <elster:zm-zeilen waehrung=\\\"1\\\" meldeart=\\\"10\\\">\\n              <elster:anzeige>false</elster:anzeige>\\n              <elster:widerruf>false</elster:widerruf>\\n              <elster:mzr>\\n                <elster:quart>2</elster:quart>\\n                <elster:jahr>2026</elster:jahr>\\n              </elster:mzr>\\n              <elster:zeile umsatzart=\\\"S\\\">\\n                <elster:knre>SE559017073301</elster:knre>\\n                <elster:betrag>7560</elster:betrag>\\n              </elster:zeile>\\n            </elster:zm-zeilen>\\n          </elster:unternehmer>\\n        </elster:zm>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\"\n}"
+            },
+            "description": "Expect 200, \"valid\": true, <Erfolg/> in validation_result."
+          }
+        },
+        {
+          "name": "Validate (explicit ZMDO)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "validate"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterExtern</Verfahren>\\n    <DatenArt>ZMDO</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Olumuyiwa Osiname</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"L\\\">BF</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <elster:zm xmlns:elster=\\\"http://www.elster.de/elsterxml/schema/v11\\\" version=\\\"000005\\\">\\n          <elster:unternehmer>\\n            <elster:knri>DE364074899</elster:knri>\\n            <elster:zulassNr>\\n              <elster:zulnr1>N</elster:zulnr1>\\n              <elster:zulnr2>1111111</elster:zulnr2>\\n            </elster:zulassNr>\\n            <elster:anschrift>\\n              <elster:name>Olumuyiwa Osiname</elster:name>\\n              <elster:strasse>Dorfstr.</elster:strasse>\\n              <elster:hausnr>36D</elster:hausnr>\\n              <elster:plz>13057</elster:plz>\\n              <elster:ort>Berlin</elster:ort>\\n              <elster:staat>DE</elster:staat>\\n            </elster:anschrift>\\n            <elster:zm-zeilen waehrung=\\\"1\\\" meldeart=\\\"10\\\">\\n              <elster:anzeige>false</elster:anzeige>\\n              <elster:widerruf>false</elster:widerruf>\\n              <elster:mzr>\\n                <elster:quart>2</elster:quart>\\n                <elster:jahr>2026</elster:jahr>\\n              </elster:mzr>\\n              <elster:zeile umsatzart=\\\"S\\\">\\n                <elster:knre>SE559017073301</elster:knre>\\n                <elster:betrag>7560</elster:betrag>\\n              </elster:zeile>\\n            </elster:zm-zeilen>\\n          </elster:unternehmer>\\n        </elster:zm>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\",\n  \"datenartversion\": \"ZMDO\"\n}"
+            },
+            "description": "Same document, datenartversion pinned. Identical result."
+          }
+        },
+        {
+          "name": "Submit - TEST, PDF back",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterExtern</Verfahren>\\n    <DatenArt>ZMDO</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Olumuyiwa Osiname</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"L\\\">BF</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <elster:zm xmlns:elster=\\\"http://www.elster.de/elsterxml/schema/v11\\\" version=\\\"000005\\\">\\n          <elster:unternehmer>\\n            <elster:knri>DE364074899</elster:knri>\\n            <elster:zulassNr>\\n              <elster:zulnr1>N</elster:zulnr1>\\n              <elster:zulnr2>1111111</elster:zulnr2>\\n            </elster:zulassNr>\\n            <elster:anschrift>\\n              <elster:name>Olumuyiwa Osiname</elster:name>\\n              <elster:strasse>Dorfstr.</elster:strasse>\\n              <elster:hausnr>36D</elster:hausnr>\\n              <elster:plz>13057</elster:plz>\\n              <elster:ort>Berlin</elster:ort>\\n              <elster:staat>DE</elster:staat>\\n            </elster:anschrift>\\n            <elster:zm-zeilen waehrung=\\\"1\\\" meldeart=\\\"10\\\">\\n              <elster:anzeige>false</elster:anzeige>\\n              <elster:widerruf>false</elster:widerruf>\\n              <elster:mzr>\\n                <elster:quart>2</elster:quart>\\n                <elster:jahr>2026</elster:jahr>\\n              </elster:mzr>\\n              <elster:zeile umsatzart=\\\"S\\\">\\n                <elster:knre>SE559017073301</elster:knre>\\n                <elster:betrag>7560</elster:betrag>\\n              </elster:zeile>\\n            </elster:zm-zeilen>\\n          </elster:unternehmer>\\n        </elster:zm>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\",\n  \"cert_base64\": \"{{cert_base64}}\",\n  \"password\": \"{{cert_password}}\",\n  \"datenartversion\": \"ZMDO\",\n  \"return_pdf\": true\n}"
+            },
+            "description": "Needs a certificate. Response body is the PDF;\nX-Transferticket header carries the receipt."
+          }
+        },
+        {
+          "name": "Submit - TEST, JSON back",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "submit"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"xml\": \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\"?>\\n<Elster xmlns=\\\"http://www.elster.de/elsterxml/schema/v11\\\">\\n  <TransferHeader version=\\\"11\\\">\\n    <Verfahren>ElsterExtern</Verfahren>\\n    <DatenArt>ZMDO</DatenArt>\\n    <Vorgang>send-Auth</Vorgang>\\n    <Testmerker>700000004</Testmerker>\\n    <HerstellerID>97263</HerstellerID>\\n    <DatenLieferant>Olumuyiwa Osiname</DatenLieferant>\\n    <Datei>\\n      <Verschluesselung>CMSEncryptedData</Verschluesselung>\\n      <Kompression>GZIP</Kompression>\\n      <TransportSchluessel/>\\n    </Datei>\\n  </TransferHeader>\\n  <DatenTeil>\\n    <Nutzdatenblock>\\n      <NutzdatenHeader version=\\\"11\\\">\\n        <NutzdatenTicket>1</NutzdatenTicket>\\n        <Empfaenger id=\\\"L\\\">BF</Empfaenger>\\n      </NutzdatenHeader>\\n      <Nutzdaten>\\n        <elster:zm xmlns:elster=\\\"http://www.elster.de/elsterxml/schema/v11\\\" version=\\\"000005\\\">\\n          <elster:unternehmer>\\n            <elster:knri>DE364074899</elster:knri>\\n            <elster:zulassNr>\\n              <elster:zulnr1>N</elster:zulnr1>\\n              <elster:zulnr2>1111111</elster:zulnr2>\\n            </elster:zulassNr>\\n            <elster:anschrift>\\n              <elster:name>Olumuyiwa Osiname</elster:name>\\n              <elster:strasse>Dorfstr.</elster:strasse>\\n              <elster:hausnr>36D</elster:hausnr>\\n              <elster:plz>13057</elster:plz>\\n              <elster:ort>Berlin</elster:ort>\\n              <elster:staat>DE</elster:staat>\\n            </elster:anschrift>\\n            <elster:zm-zeilen waehrung=\\\"1\\\" meldeart=\\\"10\\\">\\n              <elster:anzeige>false</elster:anzeige>\\n              <elster:widerruf>false</elster:widerruf>\\n              <elster:mzr>\\n                <elster:quart>2</elster:quart>\\n                <elster:jahr>2026</elster:jahr>\\n              </elster:mzr>\\n              <elster:zeile umsatzart=\\\"S\\\">\\n                <elster:knre>SE559017073301</elster:knre>\\n                <elster:betrag>7560</elster:betrag>\\n              </elster:zeile>\\n            </elster:zm-zeilen>\\n          </elster:unternehmer>\\n        </elster:zm>\\n      </Nutzdaten>\\n    </Nutzdatenblock>\\n  </DatenTeil>\\n</Elster>\\n\",\n  \"cert_base64\": \"{{cert_base64}}\",\n  \"password\": \"{{cert_password}}\",\n  \"datenartversion\": \"ZMDO\",\n  \"return_pdf\": false\n}"
+            },
+            "description": "Same, as JSON: transferticket and transfer_handle side by side."
+          }
+        }
+      ]
+    }
+  ]
+}

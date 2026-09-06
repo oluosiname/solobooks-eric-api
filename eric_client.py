@@ -18,6 +18,10 @@ from ericdemo.ericapi.fehlercodes import ERIC_OK
 from ericdemo.ericapi.bearbeitungsflags import ERIC_VALIDIERE, ERIC_SENDE, ERIC_DRUCKE
 
 
+class UnknownTaxYearError(ValueError):
+    """The tax year could not be determined and guessing it would be unsafe."""
+
+
 class PDFCapture:
     """Class to capture PDF data from ERIC callback"""
     def __init__(self):
@@ -109,6 +113,67 @@ class EricClient:
             pass
         return f'Error code: {error_code}'
     
+    @staticmethod
+    def _extract_est_year(root) -> Optional[str]:
+        """Find the tax year of an Einkommensteuererklaerung from the E10 namespace.
+
+        E10 carries no Jahr element; the year is only in its namespace URI
+        (.../est/e10/v2025). Returns None when the document is not an E10.
+        """
+        for elem in root.iter():
+            tag = elem.tag
+            if not tag.startswith('{'):
+                continue
+
+            namespace, _, local_name = tag[1:].partition('}')
+            if local_name != 'E10':
+                continue
+
+            segment = namespace.rstrip('/').rsplit('/', 1)[-1]
+            year = segment[1:] if segment.startswith('v') else segment
+            if year.isdigit() and len(year) == 4:
+                return year
+
+        return None
+
+    def extract_transferticket(self, eric, server_response: Optional[str]) -> Optional[str]:
+        """Extract the Transferticket from the Finanzamt server response XML.
+
+        The Transferticket is the receipt the filer quotes to the Finanzamt. It is
+        distinct from the transfer handle returned by EricBearbeiteVorgang, which is
+        a Datenabholung bundling parameter and is NULL for a submission.
+
+        Returns None rather than raising: a submission that succeeded must not be
+        reported as failed just because the receipt could not be parsed.
+        """
+        if not server_response:
+            return None
+
+        try:
+            with self._eric_buffer(eric) as ticket_buffer, \
+                    self._eric_buffer(eric) as rc_buffer, \
+                    self._eric_buffer(eric) as error_buffer, \
+                    self._eric_buffer(eric) as ndh_buffer:
+                rc = eric.PyEricGetErrormessagesFromXMLAnswer(
+                    server_response,
+                    ticket_buffer,
+                    rc_buffer,
+                    error_buffer,
+                    ndh_buffer)
+
+                if rc != ERIC_OK:
+                    print(f'Warning: could not extract Transferticket: error code {rc}')
+                    return None
+
+                ticket = eric.PyEricRueckgabepufferInhalt(ticket_buffer)
+                if not ticket:
+                    return None
+
+                return ticket.decode('utf-8', errors='replace').strip() or None
+        except Exception as e:
+            print(f'Warning: could not extract Transferticket: {e}')
+            return None
+
     def extract_datenart_version(self, xml_content: str) -> Optional[str]:
         """Extract DatenArt and version from XML"""
         try:
@@ -154,7 +219,15 @@ class EricClient:
                 raise ValueError("Could not find DatenArt in XML")
             
             daten_art = daten_art_elem.text
-            
+
+            # ESt (Einkommensteuererklaerung): the year lives in the E10 element's
+            # namespace, e.g. http://finkonsens.de/elster/elstererklaerung/est/e10/v2025.
+            # Resolved explicitly rather than through the path guessing below, which
+            # has no E10 case and would fall through to a bare "ESt".
+            est_jahr = self._extract_est_year(root)
+            if est_jahr:
+                return f"ESt_{est_jahr}"
+
             # Find year - check multiple possible locations
             jahr = None
             
@@ -216,10 +289,18 @@ class EricClient:
                 elif daten_art == 'EUER':
                     return f"EUER_{jahr}"
                 return f"{daten_art}_{jahr}"
+            elif daten_art == 'ESt':
+                # A bare "ESt" resolves to no plugin, or the wrong year's. Fail loudly
+                # rather than letting ERiC pick.
+                raise UnknownTaxYearError(
+                    'Could not determine the tax year for an ESt submission. '
+                    'Pass datenartversion explicitly, e.g. ESt_2025.')
             else:
                 # Fallback: use DatenArt as-is
                 return daten_art
-                
+
+        except UnknownTaxYearError:
+            raise
         except Exception as e:
             print(f"Warning: Could not extract datenartversion from XML: {e}")
             return None
@@ -276,12 +357,13 @@ class EricClient:
         password: str, 
         datenart_version: Optional[str] = None,
         return_pdf: bool = True
-    ) -> Tuple[bool, Optional[int], Optional[int], Optional[str], Optional[bytes], Optional[str], Optional[str]]:
+    ) -> Tuple[bool, Optional[int], Optional[int], Optional[str], Optional[bytes], Optional[str], Optional[str], Optional[str]]:
         """
         Submit XML with certificate authentication
-        
+
         Returns:
-            (success, error_code, transfer_handle, error_message, pdf_data, server_response_xml, validation_result_xml)
+            (success, error_code, transfer_handle, error_message, pdf_data,
+             server_response_xml, validation_result_xml, transferticket)
         """
         eric = self._get_eric_instance()
         
@@ -338,14 +420,16 @@ class EricClient:
                     
                     if rc != ERIC_OK:
                         error_message = self._get_error_message(eric, rc)
-                        return False, rc, None, error_message, None, server_response_text, validation_result_xml
-                    
+                        return False, rc, None, error_message, None, server_response_text, validation_result_xml, None
+
                     # Get PDF from callback if available
                     result_pdf = None
                     if pdf_capture and pdf_capture.pdf_data:
                         result_pdf = pdf_capture.pdf_data
-                    
-                    return True, None, th, None, result_pdf, server_response_text, None
+
+                    transferticket = self.extract_transferticket(eric, server_response_text)
+
+                    return True, None, th, None, result_pdf, server_response_text, None, transferticket
         finally:
             # Cleanup certificate file
             try:

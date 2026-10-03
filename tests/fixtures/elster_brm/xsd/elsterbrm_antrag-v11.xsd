@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<xs:schema xmlns="http://www.elster.de/elsterxml/schema/v11"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+           targetNamespace="http://www.elster.de/elsterxml/schema/v11"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified"
+           version="1"
+           jxb:version="1.0">
+    <xs:include schemaLocation="elsterbrm_antrag-include.xsd"/>
+
+    	<!-- Top-level Elemente der Datenarten -->
+    <xs:element name="SpezRechtTeilnahme" type="SpezRechtTeilnahmeCType">
+        <xs:annotation>
+            <xs:documentation xml:lang="de">
+	        Datenart für die Teilnahme an einem neuen Verfahren (derzeit lediglich VaSt). Die Teilnahme führt dazu,
+		dass ein Datenabruf die beantragten Rechte für "sich selbst" umgehend erhält (ohne Freischaltung / Genehmigung).
+            </xs:documentation>
+        </xs:annotation>
+    </xs:element>
+
+    <xs:element name="SpezRechtAntrag" type="SpezRechtAntragCType">
+        <xs:annotation>
+            <xs:documentation xml:lang="de">
+                Antrag auf spezielles Recht von einem Datenabrufer für einen Dateninhaber (führt zu offenem Antrag).
+                Im Papierersatzverfahren erhält der Dateninhaber einen Brief, der den Freischaltcode
+                für den offenen Antrag enthält. Diesen muss er seinem Datenabrufer mitteilen, damit dieser an seiner
+                statt den offenen Antrag genehmigen kann.
+            </xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="SpezRechtGenehmigung" type="SpezRechtGenehmigungCType">
+        <xs:annotation>
+            <xs:documentation xml:lang="de">
+                Genehmigung eines Antrags auf spezielles Recht.
+                Im vollelektronischen Fall erfolgt die Genehmigung eines Antrags seitens des Dateninhabers.
+            </xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="SpezRechtFreischaltung" type="SpezRechtFreischaltungCType">
+        <xs:annotation>
+            <xs:documentation xml:lang="de">
+                Freischalten eines Antrags auf spezielles Recht.
+                Im Papierersatzverfahren schaltet der Datenabrufer den Antrag selbst frei, indem er die IdNr des
+                Dateninhabers und den Freischaltcode mitschickt.
+            </xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="SpezRechtStorno" type="SpezRechtStornoCType">
+        <xs:annotation>
+            <xs:documentation xml:lang="de">
+                Stornierung eines offenen oder genehmigten Antrags (seitens des Dateninhabers oder Datenabrufers des
+                Antrags bzw. durch einen Rechteverwalter)
+            </xs:documentation>
+        </xs:annotation>
+    </xs:element>
+    <xs:element name="SpezRechtListe" type="SpezRechtListeCType">
+        <xs:annotation>
+            <xs:documentation xml:lang="de">
+                Enthält alle Anträge des Absenders der Anfrage. Alternativ kann auch ein Rechteverwalter die Anträge
+                einer mit IdNr registrierten Person einsehen, wenn er deren IdNr und Geburtsdatum mitschickt.
+
+                Anträge, bei dem die Person Dateninhaber ist, heißen DateninhaberAntrag;
+                Anträge bei denen die Person Datenabrufer ist, heißen DatenabruferAntrag.
+                Neben offenen und genehmigten Anträgen werden auch Anträge in anderen Zuständen angezeigt, solange das
+                Datum ihres letzten Zustandswechsels noch nicht zu lange zurückliegt.
+                Bei offenen Anträgen wird zusätzlich eine Genehmigungsfrist und angezeigt sowie die Information, ob
+                der Antrag im Vollelektronischen Verfahren oder im Ersatzverfahren gestellt wurde.
+
+                Anträge befinden sich in der Liste, wenn der letzte Statuswechsel nicht länger als x Tage zurückliegt.
+                Anträge im Alter von x Tagen werden noch zurückgegeben, im Alter von x+1 Tagen nicht mehr.
+                Veraltete Anträge werden nie angezeigt.
+
+                Antragsstatus     Dauer in Tagen (x)
+                offen             immer
+                genehmigt         immer
+                abgelehnt         90
+                ignoriert         90
+                veraltet          -1
+                abgelaufen        90
+                widerrufen        90
+
+            </xs:documentation>
+        </xs:annotation>
+    </xs:element>
+
+
+
+</xs:schema>

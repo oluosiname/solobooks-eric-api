@@ -1,0 +1,584 @@
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3">
+	<xs:annotation>
+		<xs:appinfo>version: 3</xs:appinfo>
+		<xs:appinfo>revision: 2</xs:appinfo>
+	</xs:annotation>
+	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:simpleType name="AntragsDatumSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Darstellung des Antragsdatums.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="ZeitstempelSType"/>
+	</xs:simpleType>
+	<xs:simpleType name="AntragsIdSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Definition einer AntragsId.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="AntragStatusSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Definition der zulässigen Status von Anträgen in der Schnittstelle.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="offen">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Wird ein Antrag korrekt gestellt, erhält er automatisch den Zustand "offen". Ausnahme: wenn der
+                        Dateninhaber gleich dem Datenabrufer ist, geht der Zustand stattdessen direkt in "genehmigt"
+                        über.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="genehmigt">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Nach Genehmigung eines offenen Antrags wird dieser in den Zustand "genehmigt" gesetzt.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="abgelehnt">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Nach Ablehnung eines offenen Antrags wird dieser in den Zustand "abgelehnt" gesetzt.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="abgelaufen">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Ein genehmigter Antrag geht nach Ende seiner Gültigkeitsdauer in den Zustand "abgelaufen" über.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="widerrufen">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Dateninhaber können nur genehmigte Anträge stornieren, Datenabrufer können sowohl offene Anträge
+                        als auch genehmigte Anträge stornieren. Anträge wechseln von "offen" bzw. "genehmigt" nach
+                        "widerrufen".
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="ignoriert">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Ein offener Antrag wird nach Ablauf der Genehmigungsfrist auf den Zustand "ignoriert" gesetzt.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="veraltet">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Ein genehmigter Antrag, der durch einen neueren genehmigten Antrag (mit selbem Dateninhaber,
+                        Datenabrufer und Speziellem Recht) ersetzt wird, wechselt seinen Zustand nach "veraltet".
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="VollmachtStatusSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Definition der zulässigen Status von Anträgen in der Schnittstelle.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="aktiv"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DatumStatusWechselSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Zeitpunkt des letzten Statuswechsels.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="ZeitstempelSType"/>
+	</xs:simpleType>
+	<xs:complexType name="GueltigkeitCType">
+		<xs:choice>
+			<xs:element ref="GueltigBis">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Das Element GueltigBis enthält ein tagesgenaues Datum. Das Element fehlt komplett, wenn die
+                        Gueltigkeit unbefristet sein soll.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="GueltigkeitUnbegrenzt">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Falls ein Antrag bzw. Recht unbefristet gültig sein soll, wird dieses Element verwendet und auf
+                        den einzigen erlaubten Wert "unbegrenzt" gesetzt. Bei befristeter Gültigkeit fehlt das Element
+                        komplett.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:complexType>
+	<xs:simpleType name="IdNrSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Definition einer IdNr</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="NameSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Definition von Namen</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="DateninhaberOrdnungsbegriffSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Definition des Ordnungsbegriffes, der von einem Datenabrufer für einen Antrag vergeben werden kann.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="30"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RechtNameSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Bezeichnung (Name) eines Speziellen Rechtes. Es findet keine Prüfung im Schema statt, sondern durch die
+                Anwendung.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="50"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="TagesdatumSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Stellt ein Tagesdatum dar (Beispiel 2012-09-27 gem.
+                http://www.w3.org/TR/2012/PR-xmlschema11-2-20120119/datatypes.html#date)
+            </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:date"/>
+	</xs:simpleType>
+	<xs:simpleType name="ZeitstempelSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Stellt einen Zeitpunkt dar (Beispiel 2012-09-27T10:17:32+02:00 gem.
+                http://www.w3.org/TR/2012/PR-xmlschema11-2-20120119/datatypes.html#dateTime)
+            </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:dateTime"/>
+	</xs:simpleType>
+	<xs:simpleType name="TeilBekanntGebDatumSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Unterstützung für teilbekanntes Geburtsdatum; als Wildcard ist nur die 0 erlaubt; Angabe im ISO-8601-Standard</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="\d{4}-\d{2}-\d{2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:element name="AntragsDatum" type="AntragsDatumSType">
+		<xs:annotation>
+			<xs:documentation>Zeitpunkt des letzten Statuswechsels</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="AntragsID" type="AntragsIdSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Die Elster-interne AntragsID, unter der der Antrag nachverfolgt werden kann. Wird u. a. für
+                Supportanfragen benötigt.
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="AntragsStatus" type="AntragStatusSType">
+		<xs:annotation>
+			<xs:documentation>Der Datus eines Antrages</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DatenabruferName" type="NameSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Der geprüfte Name des Datenabrufers.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DateninhaberHatZugestimmt" type="xs:boolean">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Gibt an, ob ein Dateninhaber einem Antrag zugestimmt oder ihn abgelehnt hat.
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DateninhaberIdNr" type="IdNrSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">IdNr. des Dateninhabers (Steuerpflichtigen).</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DateninhaberGeburtstag" type="TeilBekanntGebDatumSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+				Geburtsdatum des Dateninhabers (Steuerpflichtigen).
+				Datumsfeld: JJJJ-MM-TT
+				Teilbekannte Geburtsdaten im Format JJJJ-MM-00 oder 
+				JJJJ-00-00 werden auch unterstützt.
+			</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DateninhaberOrdnungsbegriff" type="DateninhaberOrdnungsbegriffSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Ein Ordnungsbegriff, der frei vom Datenabrufer für einen Antrag vergeben werden kann. Er wird nur dem
+                Datenabrufer angezeigt, niemals dem Dateninhaber!
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DatenabruferMail" type="xs:string">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Mail-Adresse des Dateninhabers.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="EOPBenachrichtigungDA" type="xs:boolean">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Flag, mit dem man steuern kann, ob für diesen Antrag für den Datenabrufer Portal-Postfachnachrichten aller Art verschickt werden sollen oder nicht.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="DatumStatusWechsel" type="DatumStatusWechselSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Zeitpunkt des letzten Statuswechsels.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Freischaltcode">
+		<xs:annotation>
+			<xs:documentation>Der FreischaltCode eines Datenabrufers für einen bestimmten Antrag.</xs:documentation>
+		</xs:annotation>
+		<xs:simpleType>
+			<xs:restriction base="xs:string"/>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="GenehmigenBis" type="TagesdatumSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Der letzte Tag an dem der Antrag vom Dateninhaber genehmigt werden kann. Danach verfällt der Antrag.
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="Gueltigkeit" type="GueltigkeitCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Enthält die Gültigkeit eines Antrags bzw. Rechts. Je nachdem, ob die Gültigkeit begrenzt ist oder nicht,
+                wird entweder das Kindelement "GueltigBis" mit einem tagesgenauen Datumswert angezeigt, oder das
+                Kindelement "GueltigkeitUnbegrenzt" mit dem Wert "unbegrenzt" angezeigt.
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="GueltigBis" type="TagesdatumSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Ein Datum in der Zukunft, nach dem das Recht nicht mehr gültig sein soll. Wenn kein Datum angeben wird,
+                bleibt das Recht unbegrenzt lange gültig, bzw. bis es vom Dateninhaber oder vom Datenabrufer storniert
+                wird.
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="GueltigkeitUnbegrenzt">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Zeigt an, das ein Spezielles Recht zeitlich unbegrenzt gültig ist.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:simpleType>
+			<xs:restriction base="xs:string">
+				<xs:enumeration value="unbegrenzt"/>
+			</xs:restriction>
+		</xs:simpleType>
+	</xs:element>
+	<xs:element name="Recht" type="RechtNameSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Das Spezielle Recht. Erlaubte Werte: AbrufEBelege
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ReVerStBesucherGeburtstag" type="TeilBekanntGebDatumSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Geburtsdatum eines Besuchers der Rechteverwaltungsstelle.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="ReVerStBesucherIdNr" type="IdNrSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">IdNr. eines Besuchers der Rechteverwaltungsstelle.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:simpleType name="VerfahrenSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Verfahren. Erlaubte Werte: "ERSATZVERFAHREN" oder "STANDARDVERFAHREN"</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:complexType name="VeranlagungszeitraumCType">
+		<xs:sequence>
+			<xs:element name="Unbeschraenkt" type="xs:boolean">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                    Flag, mit dem man steuern kann, ob die Einschränkung einer Berechtigung auf einen Veranlagungszeitraum durchgeführt werden soll (Wert "false") oder ob keine Einschränkung stattfinden soll (Wert "true").
+                    Wenn der Wert "Unbeschraenkt"==true gesetzt ist, darf weder das Element "Veranlagungsjahre" noch das Element "Zeitspanne" gesetzt sein. Gilt "Unbeschraenkt"==false, so muss entweder das Element "Veranlagungsjahre" oder das Element "Zeitspanne" gesetzt sein.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice minOccurs="0">
+				<xs:element name="Veranlagungsjahre" type="JahresListeCType">
+					<xs:annotation>
+						<xs:documentation xml:lang="de">
+                        Enthält eine Liste von Veranlagungsjahren auf die das Recht zum Datenabruf entweder vom Datenabrufer, oder vom Dateninhaber eingeschränkt werden kann. 
+                        </xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="Zeitspanne" type="ZeitspanneCType">
+					<xs:annotation>
+						<xs:documentation xml:lang="de">
+                        Enthält eine Zeitspanne auf die das Recht zum Datenabruf entweder vom Datenabrufer, oder vom Dateninhaber eingeschränkt werden kann.
+                        Ist das Element "Zeitspanne" gesetzt, so muss mindestens eines der Elemente "Von" oder "Bis" gesetzt sein. Wenn beide Elemente ("Von" und "Bis") gesetzt sind, so muss "Von"?"Bis" gelten.
+                        </xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="JahresListeCType">
+		<xs:sequence>
+			<xs:element name="Jahr" type="xs:gYear" maxOccurs="5">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                    Veranlagungsjahr das in der Liste erscheinen soll. Für alle angegebenen Veranlagungsjahre in dieser Liste, soll das Recht zum Belegabruf gelten. Es können maximal 5 Veranlagungsjahre angegeben werden.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="Veranlagungszeitraum" type="VeranlagungszeitraumCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Veranlagungszeitraum des Antrags/Rechts.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="ZeitspanneCType">
+		<xs:sequence>
+			<xs:element name="Von" type="xs:gYear" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                    Enthält einen "Ab/Von"-Wert. Ab diesem Veranlagungszeitraum soll das Recht zum Belegabruf gelten.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Bis" type="xs:gYear" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                    Enthält einen "Bis"-Wert. Bis zu diesem Veranlagungszeitraum soll das Recht zum Belegabruf gelten.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- VDB Deklarationen -->
+	<xs:simpleType name="GINSTERVollmachtsIDSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">ID der Vollmacht, wie sie von GINSTER übermittelt wird: z.B. 0100G10097531831003133196. Im Beispiel steht: 0100 für die DATEV; 'G' ist ein Formatzeichen; 100975318 ist die Kanzlei-ID gefolgt von der Prüfziffer 3; 100313319 ist die fürs BRM relevante Vollmachts-ID, die von der DATEV vergeben wurde, gefolgt von der Prüfziffer 6.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="10"/>
+			<xs:maxLength value="28"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="VDBVollmachtStatusSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Status einer Vollmacht.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="aktiv">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Aktivieren bzw. reaktivieren einer Vollmacht, welche sich im Status gesperrt befindet.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="gesperrt">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Sperren einer aktiven Vollmacht.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="storniert">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Die Vollmacht wurde widerrufen. Dies ist der Endzustand einer Vollmacht.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="in Stornierung">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Die Vollmacht wurde widerrufen. Dies ist der Endzustand einer Vollmacht.</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="VollmachtnehmerIDCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de"/>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Herausgeber" type="HerausgeberSType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">ID des Herausgebers der Vollmachten (aktuell nur DATEV [0100])</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="HauptID" type="HauptIDSType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Haupt-ID des Vollmachtnehmers, welche Datenabrufer ist (ehemals Kanzlei-ID)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubID" type="SubSType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">ID der Geschäftsstelle des Vollmachtnehmers.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="HerausgeberSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">ID des Herausgebers der Vollmachten (z.B. 0100 für die DATEV).</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="\d{4}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="HauptIDSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Haupt-ID eines Vollmachtnehmers; im Falle einer Kanzlei, handelt es sich hierbei um 9 Ziffern.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="9"/>
+			<xs:maxLength value="13"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="SubSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Definition einer Geschäftsstellen-ID einer Kanzlei. Max. Länge 10 Zeichen. Von der DATEV werden nur dezimale Zeichen der Länge 10 (inkl. einer Prüfziffer) vergeben.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="0"/>
+			<xs:maxLength value="10"/>
+			<xs:pattern value="([a-zA-Zäöüß0-9.])*"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="DateninhaberCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Beinhaltet die Daten des Dateninhabers</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Name" type="NameSType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Der Name der natürlichen Person oder der nicht-natürlichen Person.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DateninhaberIdNr" type="IdNrSType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">IdNr. des Dateninhabers (nur bei natürlichen Personen).</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SteuernummernCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Liste von Steuernummern des Dateninhabers</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Steuernummer" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Jedes einzelne Steuernummern-Element besteht aus der Steuernummer im Bundesschema und einem Referenzzähler.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="StNr" type="StNrSType">
+							<xs:annotation>
+								<xs:documentation xml:lang="de">Steuernummer im Bundesschema mit 13 Ziffern</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="AnzahlVG" type="ReferenzzaehlerSType">
+							<xs:annotation>
+								<xs:documentation xml:lang="de">Die AnzahlVG (AnzahlVollmachtGeber) gibt an, wieviele (aktive) Vollmachten mit der Steuernummer vorhanden sein müssen, damit eine Steuerkontoabfrage durchgeführt werden kann. Bei Einzelveranlagung ist der Zähler immmer 1, bei Zusammenveranlagung von Ehegatten immer 2. Größere Werte könnten zukünftig auftreten.</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="StNrSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Steuernummer im Bundesschema mit 13 Ziffern</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="\d{13}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ReferenzzaehlerSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Der Referenzzähler gibt an, wieviele (aktive) Vollmachten mit der Steuernummer vorhanden sein müssen, damit eine Steuerkontoabfrage durchgeführt werden kann. Bei Einzelveranlagung ist der Zähler immmer 1, bei Zusammenveranlagung von Ehegatten immer 2. Größere Werte könnten zukünftig auftreten.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:int"/>
+	</xs:simpleType>
+	<xs:complexType name="AusschluesseCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Liste von Ausschluessen von Rechten</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Ausschluss" type="AusschlussNameSType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Bezeichnung (Name) eines Speziellen Rechtes. Es findet keine Prüfung im Schema statt, sondern durch die Anwendung. Die Werte werden als Ziffern übergeben und im WIESEL gemappt. Aktuell erlaubte Werte: 1:"ElsterDatenabholung|ElsterVaStDaten", 2:"ElsterKontoabfrage|Kontoabfrage" und 3:"ElsterDatenabholung|ElsterLohn2ANDaten"</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="AusschlussNameSType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Bezeichnung (Name) eines Speziellen Rechtes. Aktuell erlaubte Werte: "ElsterDatenabholung|ElsterVaStDaten" und "ElsterKontoabfrage|Kontoabfrage".</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ElsterDatenabholung|ElsterVaStDaten"/>
+			<xs:enumeration value="ElsterKontoabfrage|Kontoabfrage"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="VDBVeranlagungszeitraumCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Hier kann der Veranlagungszeitraum in der Form einer Liste von Veranlagungsjahren, als Zeitraum (von Jahr bis Jahr) oder als offener Zeitraum (ab dem Jahr) angegeben werden.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Unbeschraenkt" type="xs:boolean">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">"true" falls keine Einschränkungen beim Veranlagungszeitraum definiert wurde; sonst ist der Wert "false".</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice minOccurs="0">
+				<xs:element name="ZeitlVertretungAb" type="xs:date">
+					<xs:annotation>
+						<xs:documentation xml:lang="de">Stichtag ab dem die VaSt-Abrufberechtigung gültig ist.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="ZeitlicheVertretung" type="ZeitlicheVertretungCType" maxOccurs="10">
+					<xs:annotation>
+						<xs:documentation xml:lang="de">Zeitintervalle für die die VaSt-Abrufberechtigung gültig ist.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ZeitlicheVertretungCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Zeitspanne, kann durch das "bis-Datum" eingegrenzt werden, ansonsten unbegrenzt gültig</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Von" type="xs:date">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Erster Tag eines Zeitintervalls.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Bis" type="xs:date">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Zweiter Tag des Zeitintervalls.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

@@ -1,4 +1,6 @@
 """Pydantic models for request/response validation"""
+from datetime import date
+
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 
@@ -63,5 +65,38 @@ class DatenabholungResult(BaseModel):
     """Response model for a VaSt Belegabruf"""
     # Both phases run server-side because they must share one transfer handle.
     belege: List[str] = []
+    error_code: Optional[int] = None
+    error_message: Optional[str] = None
+
+
+class ElsterBrmCredentials(BaseModel):
+    """Fields every ElsterBRM request carries"""
+    cert_base64: str = Field(..., description="Base64-encoded certificate (.pfx) of the Datenabrufer")
+    password: str = Field(..., description="Certificate password")
+    hersteller_id: str = Field(..., description="ELSTER Hersteller-ID")
+    datenlieferant: str = Field('Solobooks', description="DatenLieferant")
+
+
+class SpezRechtAntragRequest(ElsterBrmCredentials):
+    """Ask a Dateninhaber to authorise retrieval of their Belege"""
+    idnr: str = Field(..., description="Steuer-IdNr of the Dateninhaber")
+    date_of_birth: date = Field(..., description="Dateninhaber's date of birth, ISO 8601")
+    valid_until: date = Field(..., description="GueltigBis, at least 10 days out")
+    datenabrufer_mail: str = Field(..., description="DatenabruferMail")
+
+
+class SpezRechtListeRequest(ElsterBrmCredentials):
+    """List authorisations for the given Dateninhaber"""
+    idnrs: List[str] = Field(..., min_length=1, description="Steuer-IdNrs to filter by")
+
+
+class SpezRechtStornoRequest(ElsterBrmCredentials):
+    """Withdraw an authorisation"""
+    antrags_id: str = Field(..., description="AntragsID returned by SpezRechtAntrag")
+
+
+class ElsterBrmResult(BaseModel):
+    """Parsed ElsterBRM answer, or the ERiC/ELSTER failure"""
+    data: Optional[Any] = None
     error_code: Optional[int] = None
     error_message: Optional[str] = None

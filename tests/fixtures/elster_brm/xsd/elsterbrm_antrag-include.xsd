@@ -1,0 +1,936 @@
+<?xml version="1.0" encoding="ISO-8859-15"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3">
+	<xs:include schemaLocation="elsterbrm_basis.xsd"/>
+	<xs:annotation>
+		<xs:appinfo>version: 3</xs:appinfo>
+		<xs:appinfo>revision: 2</xs:appinfo>
+	</xs:annotation>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:annotation>
+		<xs:documentation xml:lang="de">
+            Nomenklatur / Synonyme:
+
+            + Dateninhaber: eine Person mit IdNr, die nicht zwingend im ElsterOnline-Portal registriert sein muss
+            + Datenabrufer: eine mit IdNr bzw. OrgStNr im ElsterOnline-Portal registrierte Person / Organisation
+            + Vollelektronisches Verfahren: neben dem Datenabrufer besitzt auch der Dateninhaber einen
+              ElsterOnline-Portal Account.
+            + Papierersatzverfahren: der Dateninhaber besitzt keinen ElsterOnline-Portal Account.
+            + Freischaltcode: Zeichenkette, die beim Genehmigen eines Antrags im Papierersatzverfahren benötigt wird.
+            + Rechteverwalter: eine Person, die stellvertretend für einen Dateninhaber bzw. Datenabrufer mit IdNr die
+              Liste aller Anträge anzeigen und stornieren kann.
+
+            Zustandsübergänge eines Antrags, die durch Verwenden dieser Schnittstelle erreicht werden können:
+
+            vorher     nachher    durch                               seitens
+            -          genehmigt  SpezRechtTeilnahme                  Datenabrufer (=Dateninhaber)
+            -          offen      SpezRechtAntrag                     Datenabrufer
+            offen      genehmigt  SpezRechtGenehmigung (genehmigen)   Dateninhaber
+            offen      genehmigt  SpezRechtFreischaltung              Datenabrufer (a)
+            offen      abgelehnt  SpezRechtStono                      Dateninhaber
+            offen      widerrufen SpezRechtStorno                     Datenabrufer, Rechteverwalter
+            genehmigt  widerrufen SpezRechtStorno                     Dateninhaber, Datenabrufer, Rechteverwalter
+            genehmigt  veraltet   SpezRechtGenehmigung (b)            Dateninhaber, Datenabrufer
+
+            (a) im Papierersatzverfahren
+            (b) Indirekt: ein genehmigter Antrag wird auf veraltet gesetzt, wenn ein neuerer Antrag für dasselbe
+                Spezielle Recht seitens des Dateninhabers (oder seitens des Datenabrufers im Papierersatzverfahren)
+                genehmigt wird.
+
+
+            Erlaubte Belegungen des Felds "Recht": AbrufEBelege
+
+        </xs:documentation>
+	</xs:annotation>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:annotation>
+		<xs:documentation xml:lang="de">
+            Im folgenden Abschnitt sind alle Elemente, die im ElsterXML Dokument als Nutzdaten verwendet werden können.
+        </xs:documentation>
+	</xs:annotation>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:annotation>
+		<xs:documentation xml:lang="de">
+            Im folgenden Abschnitt sind die komplexen Type für die oben aufgeführten Nutzdatenelemente definiert.
+        </xs:documentation>
+	</xs:annotation>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:complexType name="SpezRechtTeilnahmeCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Antrag auf VaSt-Teilnahme.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="Recht">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Das spezielle Recht, über das ein Datenabrufer verfügen will.
+                        Momentan gültige Einträge: AbrufEBelege
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DateninhaberOrdnungsbegriff" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Vom Datenabrufer vergebener optionaler Ordnungsbegriff für den Dateninhaber.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DatenabruferMail" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Mail-Adresse des Datenabrufers.
+                        Notwendig, wenn Testmerker gesetzt. Wird ignoriert, wenn kein Testmerker gesetzt.
+                        Wird zu Testzwecken verwendet, um den Abrufcode per Mail (anstatt per Brief) zu erhalten.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="AntragAntwort" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="1"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="SpezRechtAntragCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Antrag auf Delegation eines Rechtes stellen. Resultiert bei Erfolg in einem offenen Antrag.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="DateninhaberIdNr">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+        				IdNr des Dateninhabers.
+        			</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DateninhaberGeburtstag">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+        				Geburtstag des Dateninhabers. 
+						Datumsfeld: JJJJ-MM-TT
+						Teilbekannte Geburtsdaten im Format JJJJ-MM-00 oder 
+						JJJJ-00-00 werden auch unterstützt.
+        			</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Recht">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+        				Das spezielle Recht, über das ein Datenabrufer
+        				verfügen will. Momentan gültige Einträge:
+        				AbrufEBelege
+        			</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="GueltigBis">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+        				Enthält das angestrebte tagesgenaue
+        				Gültigkeitsdatum des Antrags. Das Datum ist
+        				"inklusive", wird der Antrag später genehmigt,
+        				ist er bis 23:59:59 dieses Tages gültig. Das
+        				Datum 9999-12-31 wird als unbefristet gültig
+        				interpretiert.
+        			</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DateninhaberOrdnungsbegriff" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+        				Vom Datenabrufer vergebener optionaler
+        				Ordnungsbegriff für den Dateninhaber.
+        			</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DatenabruferMail" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+        				Mail-Adresse des Datenabrufers. Notwendig, wenn
+        				Testmerker gesetzt. Wird ignoriert, wenn kein
+        				Testmerker gesetzt. Wird zu Testzwecken
+        				verwendet, um den Freischaltcode per Mail
+        				(anstatt per Brief) zu erhalten.
+        			</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="EOPBenachrichtigungDA" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+        				Flag, mit dem man steuern kann, ob im
+        				Benutzerkonto des Datenabrufers im
+        				ElsterOnline-Portal Postfachnachrichten im
+        				Zusammenhang mit diesem Antrag eingestellt
+        				werden sollen (Wert "true") oder nicht (Wert
+        				"false"). Ist das Element nicht angegeben, so
+        				wird standardmäßig der Wert "true" verwendet.
+        			</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Veranlagungszeitraum" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+        				Veranlagungszeitraum auf den eine Berechtigung eingeschränkt werden soll.
+        			</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="AntragAntwort" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required">
+			<xs:annotation>
+				<xs:documentation xml:lang="de">
+						Mit Version 3 von SpezRechtAntrag (Request und Response) ist die Angabe des Elements Veranlagungszeitraum verpflichtend. Das Element selbst wird aber aufgrund der Abwärtskompatibilität als optinal geführt. Es wird ein Fehler geliefert, wenn SpezRechtAntrag mit Version 3, aber ohne das Element Veranlagungszeitraum geliefert wird.
+        			</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="2"/>
+					<xs:enumeration value="3"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:element name="AntragAntwort" type="AntragAntwortCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Zusätzliche Felder in der Antwort auf "Antrag Stellen".</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="AntragAntwortCType">
+		<xs:sequence>
+			<xs:element ref="AntragsID">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Vom System vergebene ID des Antrags. Anhand der AntragsId kann ein Antrag eindeutig
+                        identifiziert werden. Wird vergeben beim Stellen des Antrags. Wird benötigt beim Genehmigen
+                        oder Stornieren eines Antrags. Wird angezeigt beim Anzeigen von Anträgen.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="AntragsDatum">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Zeitpunkt, an dem der Antrag entgegengenommen wurde.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="GenehmigenBis" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Datum, bis zu dem der Antrag spätestens vom Dateninhaber genehmigt werden muss. Im Falle einer
+                        automatischen Genehmigung (Dateninhaber ist Datenabrufer) existiert dieses Feld nicht, da der
+                        Antrag beim Anlegen sofort in den Zustand "genehmigt" gesetzt wurde.
+                        Das Datum selbst ist "inklusive", erst am Folgetag wechselt der Antrag seinen Status von
+                        "offen" auf "ignoriert", er kann dann nicht mehr genehmigt werden.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="AntragsStatus">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Zustand des Antrags ist nach dem Stellen des Antrags normalerweise "offen". Im Spezialfall
+                        (Dateninhaber ist Datenabrufer) wird der Antrag allerdings sofort automatisch genehmigt und das
+                        Feld auf "genehmigt" gesetzt.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Freischaltcode" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Im Papierersatzverfahren wird zu Testzwecken unter bestimmten Bedingungen (Testmerker gesetzt)
+                        der im System generierte Freischaltcode zurückgeliefert.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:complexType name="SpezRechtGenehmigungCType">
+		<xs:annotation>
+			<xs:documentation>
+                Genehmigen von offenen Anträgen seitens des Dateninhabers.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="AntragsID">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        ID des Antrags, der genehmigt/abgelehnt werden soll.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DateninhaberHatZugestimmt" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Soll der Antrag genehmigt oder ablehnt werden? Kann die Werte
+                        "true" und "false" annehmen.
+
+                        Dieses Feld ist veraltet und soll nicht mehr mitgeliefert werden. Der Normalfall wird dann
+                        eine Genehmigung seitens des Dateninhabers sein. Will der Dateninhaber ablehnen, wird dies ab
+                        sofort über die SpezRechtStorno gehandhabt.
+                        <deprecated>true</deprecated>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="GueltigBis" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Dateninhaber kann das vom Datenabrufer vorgeschlagene Ablaufdatum des Antrags ändern,
+                        indem er dieses Feld mit einem in der Zukunft liegenden Datum belegt.
+                        Das Datum 9999-12-31 wird als unbefristet gültig interpretiert.
+                        Das Datum ist "inklusive". Wenn der Antrag genehmigt wird, ist er bis 23:59:59 dieses
+                        Tages gültig.
+                        Wenn das Feld nicht gesetzt ist, bleibt das vom Datenabrufer beim Antrag stellen gesetzte
+                        Ablaufdatum unverändert.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DateninhaberIdNr" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Wird nicht ausgewertet und ist veraltet. Hierfür gibt es die neue Datenart SpezRechtFreischaltung.
+                        <deprecated>true</deprecated>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Freischaltcode" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Wird nicht ausgewertet und ist veraltet. Hierfür gibt es die neue Datenart SpezRechtFreischaltung.
+                        <deprecated>true</deprecated>
+					</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Veranlagungszeitraum" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Dateninhaber kann den vom Datenabrufer vorgeschlagenen Veranlagungszeitraum des Antrags ändern, indem er dieses Feld mit neuen Werten belegt. Wenn das Feld nicht gesetzt ist, bleibt der vom Datenabrufer beim Antrag stellen gesetzte Veranlagungszeitraum unverändert.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="GenehmigenAntwort" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="2"/>
+					<xs:enumeration value="3"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:element name="GenehmigenAntwort" type="GenehmigenAntwortCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Zusätzliche Felder in der Antwort auf "Antrag Genehmigen".</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="GenehmigenAntwortCType">
+		<xs:sequence>
+			<xs:element ref="AntragsDatum">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Der Zeitpunkt, an dem der Antrag gestellt wurde.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="AntragsStatus">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Status, den der Antrag nach Bearbeiten der Genehmigung hat (mögliche Zustände: "genehmigt"
+                        oder "abgelehnt").
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Recht">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Name des speziellen Rechts, das dem Datenabrufer durch diese Genehmigung zugestanden wurde.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DatenabruferName">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Name des Datenabrufers, Länge maximal 160 Zeichen. Zusammengesetzt aus:
+                        Vorname, Vorsatz (wie z.B. "von und zu"), Nachname und Zusatz (wie z.B. "sen.") im Falle einer
+                        mit IdNr registrierten Person. Im Fall einer Organisation steht hier der Name der Organisation.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:complexType name="SpezRechtFreischaltungCType">
+		<xs:annotation>
+			<xs:documentation>
+                Freischalten von offenen Anträgen seitens des Datenabrufers im Papierersatzverfahren.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="AntragsID">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        ID des Antrags, der freigeschalten werden soll.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Freischaltcode">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Enthält den Freischaltcode für den offenen Antrag.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="FreischaltenAntwort" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="1"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:element name="FreischaltenAntwort" type="FreischaltenAntwortCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Zusätzliche Felder in der Antwort auf "Antrag Freischalten".</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="FreischaltenAntwortCType">
+		<xs:sequence>
+			<xs:element ref="AntragsDatum">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Der Zeitpunkt, an dem der Antrag gestellt wurde.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="AntragsStatus">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Status, den der Antrag nach Bearbeiten der Freischaltung hat (möglicher Zustand: "genehmigt").
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Recht">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Name des speziellen Rechts, das dem Datenabrufer durch diese Freischaltung zugestanden wurde.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DateninhaberOrdnungsbegriff" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Ordnungsbegriff, den der Datenabrufer diesem Vorgang zugeordnet hat.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="DateninhaberIdNr">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Die IdNr des Dateninhabers.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:complexType name="SpezRechtStornoCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Stornieren von Anträgen.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="AntragsID">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">ID des Antrags, der storniert werden soll.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="StornoAntwort" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="version" use="required">
+			<xs:annotation>
+				<xs:documentation xml:lang="de">Ab Version 3 von SpezRechtStorno (Response) ist die Angabe des Elements Veranlagungszeitraum verpflichtend. Das Element selbst wird aber aufgrund der Abwärtskompatibilität als optional geführt.
+Ab Version 4 können mit SpezRechtStorno auch Vollmachten widerrufen werden; in diesem Fall wird die Vollmachts-ID der Vollmacht (z.B. 0100G10569836572000043150) der zu widerrufenden Vollmacht übermittelt.
+        		</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="2"/>
+					<xs:enumeration value="3"/>
+					<xs:enumeration value="4"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:element name="StornoAntwort" type="StornoAntwortCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Zusätzliche Felder in der Antwort auf "Antrag stornieren".
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="StornoAntwortCType">
+		<xs:sequence>
+			<xs:element ref="GueltigBis" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Gültigkeit des Antrags, bevor er storniert wurde.
+                        Das Datum 9999-12-31 wird als unbefristet gültig interpretiert.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Recht">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Name des speziellen Rechts für den offenen oder genehmigten Antrag, der storniert wurde.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="AntragsStatus">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Der Status, den der Antrag nach Bearbeiten der Stornierung hat
+                        (mögliche Zustände: "abgelehnt, widerrufen").
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Veranlagungszeitraum" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Veranlagungszeitraum des Antrags, bevor er storniert wurde.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:complexType name="SpezRechtListeCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Anzeigen der Anträge und Rechte.
+
+                Zeigt eine Liste der Anträge an, an denen der Absender der Anfrage als Dateninhaber oder Datenabrufer
+                beteiligt ist. Rechteverwalter können sich die Anträge eines mit IdNr registrierten Dateninhabers bzw.
+                Datenabrufers anzeigen, wenn sie dessen IdNr und Geburtstdatum mit angeben.
+
+                Neben offenen und genehmigten Anträgen werden auch Anträge in anderen Zuständen angezeigt, genaueres
+                steht in der Definition des Elements "SpezRechtListe".
+            </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="ReVerStBesucherIdNr" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Die IdNr des Dateninhabers bzw. Datenabrufers, wenn das Anzeigen der Liste durch einen
+                        Rechteverwalter erfolgt. Ansonsten wird dieses Element ignoriert.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="ReVerStBesucherGeburtstag" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Das Geburtsdatum des Dateninhabers bzw. Datenabrufers, wenn das Anzeigen der Liste durch einen
+                        Rechteverwalter erfolgt. Ansonsten wird dieses Element ignoriert.
+                        Teilbekannte Geburtstage werden unterstützt. Als Wildcard ist nur die 0 erlaubt; Angabe im ISO-8601-Standard
+                        JJJJ-MM-TT
+                        Folgende teilbekannten Geburtsdaten sind möglich:
+                        - 1976-03-00
+                        - 1976-00-00
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Vollmachtsdaten" type="VollmachtsdatenCType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Liste der angezeigten Vollmachstdaten.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Antrag" type="AbstrakterAntragCType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Liste der angezeigten Anträge. Anträge, bei denen die Person die Position des Dateninhabers
+                        bekleidet, sind vom Typ DateninhaberAntragCType. Anträge bei denen die Person die Position
+                        des Datenabrufers bekleidet, sind vom Typ DatenabruferAntragCType.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Suchkriterien" type="SuchkriterienCType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Suchkriterien, mit denen die Liste der angezeigten Anträge eingeschänkt werden kann.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="version" use="required">
+			<xs:annotation>
+				<xs:documentation xml:lang="de">Ab Version 3 von SpezRechtListe (Response) ist die Angabe des Elements Veranlagungszeitraum verpflichtend. Das Element selbst wird aber aufgrund der Abwärtskompatibilität als optinal geführt.
+Ab Version 4 (Response) ist die Angabe des Elements Verfahren nicht mehr erlaubt.
+Mit Version 5 werden VDB-Berechtigungen im Element "Antrag" abgerufen; hierbei handelt es sich um eine Zwischenlösung zur Version 6.
+Ab Version 6 werden VDB-Berechtigungen im Element "Vollmachtsdaten" abgerufen (Response); die VDB-Berechtigungen werden dann nicht mehr im Element "Antrag" wie in Version 5 abgerufen.
+Ab Version 7 werden Stammdaten des Vollmachtnehmers zu VDB-Berechtigungen im Unterelement "Vollmachtnehmer" des Elements "Vollmachtsdaten" abgerufen.
+        		</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="2"/>
+					<xs:enumeration value="3"/>
+					<xs:enumeration value="4"/>
+					<xs:enumeration value="5"/>
+					<xs:enumeration value="6"/>
+					<xs:enumeration value="7"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="AbstrakterAntragCType" abstract="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Abstrakte Darstellung eines Antrags. Basis für DateninhaberAntragCType und DatenabruferAntragCType.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element ref="AntragsID">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        ID des Antrags.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="AntragsDatum">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Zeitpunkt, zu dem der Antrag gestellt wurde.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="GueltigBis" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Ablaufdatum des Antrags. Enthält ein tagesgenaues Datum. Das Datum 9999-12-31 wird als
+                        unbefristet gültig interpretiert.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="AntragsStatus">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Status des Antrags.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="GenehmigenBis" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Zeitpunkt, bis zu dem ein offener Antrag seitens des Dateninhabers genehmigt werden muss. Feld
+                        existiert nur bei offenen Anträgen. Anträge in anderen Zuständen besitzen dieses Feld nicht.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Recht">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Name des speziellen Rechts.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Verfahren" type="VerfahrenSType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Verfahren. Erlaubte Werte: "ERSATZVERFAHREN" oder "STANDARDVERFAHREN".
+                        Feld ist nur gesetzt, wenn der Antrag im Zustand 'offen' ist.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Untervollmachten" type="xs:boolean" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Das Element ist nur vorhanden, wenn es sich um eine Berechtigung 
+                        handelt, die aus einer über die Vollmachtsdatenbank (VDB) der 
+                        Steuerberaterkammern eingereichten Vollmacht abgeleitet ist. Ist 
+                        das Element nicht vorhanden, so handelt es sich um eine Berechtigung, 
+                        die über das vollelektronische Verfahren bzw. Ersatzverfahren mit 
+                        Freischaltcode erteilt wurde bzw. einen Antrag auf eine derartige 
+                        Berechtigung. Falls das Element vorhanden ist, gibt der Wert des 
+                        Elements an, ob der Dateninhaber in seiner Vollmacht die Vergabe 
+                        von Untervollmachten durch die vertretungsberechtigten Berufsträger 
+                        einer Steuerberatungskanzlei erlaubt oder nicht erlaubt. Der Wert 
+                        "true" bedeutet, dass die vertretungsberechtigten Berufsträger der 
+                        bevollmächtigten Kanzlei die Vollmacht zum Abruf der erlaubten 
+                        elektronischen Belegarten auch an ihre Mitarbeiter weitergeben 
+                        dürfen und die Mitarbeiter an Stelle der Berufsträger den Belegabruf 
+                        durchführen können. Enthält das Element "Untervollmachten" den Wert 
+                        "false", so kann der Belegabruf nur durch einen 
+                        vertretungsberechtigten Berufsträger vorgenommen werden.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element ref="Veranlagungszeitraum" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Veranlagungszeitraum des Antrags/Rechts.
+                    </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:element name="DateninhaberAntrag" type="DateninhaberAntragCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Darstellung eines Antrages, wie er einem Dateninhaber dargestellt wird.
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="DateninhaberAntragCType">
+		<xs:complexContent>
+			<xs:extension base="AbstrakterAntragCType">
+				<xs:sequence>
+					<xs:element ref="DatenabruferName">
+						<xs:annotation>
+							<xs:documentation xml:lang="de">
+                                Der ungekürzte geprüfte Name des Datenabrufers, Länge maximal 160 Zeichen. Besteht aus:
+                                Vorname, Vorsatz (wie z.B. "von und zu"), Nachname und Zusatz (wie z.B. "sen."), falls
+                                der Datenabrufer mit IdNr registriert ist. Falls der Datenabrufer eine Organisation ist,
+                                steht an dieser Stelle der Organisationsname. Das Format des Organisationsnames variiert
+                                je nach Registrierungsart.
+                                Ausnahme: Falls es sich um eine Vollmacht handelt, kann der Datenabrufername viel länger
+                                als 160 Zeichen sein!
+                            </xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="DatenabruferAntrag" type="DatenabruferAntragCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Darstellung eines Antrages, wie er einem Datenabrufer dargestellt wird.
+            </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="DatenabruferAntragCType">
+		<xs:complexContent>
+			<xs:extension base="AbstrakterAntragCType">
+				<xs:sequence>
+					<xs:element ref="DateninhaberOrdnungsbegriff" minOccurs="0">
+						<xs:annotation>
+							<xs:documentation xml:lang="de">
+                                Ordnungsbegriff, den der Datenabrufer diesem Vorgang zugeordnet hat.
+                            </xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element ref="DateninhaberIdNr">
+						<xs:annotation>
+							<xs:documentation xml:lang="de">IdNr des Dateninhabers.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="SuchkriterienCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">
+                Suchkriterien, mit denen die Liste der angezeigten Anträge eingeschränkt werden kann.
+            </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Dateninhaber" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                    Bei Angabe einer Liste von Dateninhaber-IdNrs werden nur die Anträge zurückgeliefert, deren Dateninhaber sich in der Liste befinden. Die Anzahl der Dateninhaber-IdNrs, nach denen gesucht werden kann, ist beschränkt. Bei Überschreitung wird der Nutzdatenfehler 080090240 zurückgeliefert.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="DateninhaberIdNr" type="IdNrSType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="AntragsStatus" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Bei der Angabe einer Liste von AntragsStatus werden nur die Anträge zurückgeliefert, deren Status sich in der Liste befinden.
+                    </xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="AntragsStatus" type="AntragStatusSType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="AntragsDatum" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">
+                        Wenn das Startdatum (Von) und/oder Enddatum (Bis) angegeben sind, dann werden nur die Anträge zurückgeliefert, deren Antragsdatum sich im angegebenen Zeitraum befinden. 
+                    </xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Von" type="ZeitstempelSType" minOccurs="0"/>
+						<xs:element name="Bis" type="ZeitstempelSType" minOccurs="0"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="DateninhaberOrdnungsbegriff" type="DateninhaberOrdnungsbegriffSType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Bei Angabe eines Textes in DateninhaberOrdnungsbegriff werden die Anträge zurückgeliefert, deren Ordnungsbegriffe den angegebenen Text enthalten. Die Anträge werden unabhängig von Groß- und Kleinschreibung zurückgeliefert. Diese Case-Insensivität betrifft alle Zeichen im gewählten Zeichensatz des ELSTER-XML-Dokuments.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<xs:complexType name="VollmachtsdatenCType">
+		<xs:annotation>
+			<xs:documentation xml:lang="de">Vollmachtsdaten wie sie dem Vollmachtgeber (natürliche Person) bzw. Rechteverwalter angezeigt werden.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="VollmachtsID" type="GINSTERVollmachtsIDSType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">ID der Vollmacht wie sie von GINSTER an ELSTER geliefert wurde.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Datum" type="xs:date">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Datum, an dem die Vollmachtsdaten im BRM angelegt wurden.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Status" type="VDBVollmachtStatusSType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Status der Abrufberechtigung "aktiv"/"gesperrt"/"storniert"</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="VollmachtnehmerID" type="VollmachtnehmerIDCType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Daten zur Vollmachtnehmer-ID.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Vollmachtnehmer" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Stammdaten des Vollmachtnehmers (Name, Anschrift).</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Name" type="xs:string">
+							<xs:annotation>
+								<xs:documentation xml:lang="de">Vollmachtnehmername (z.B. Name der Kanzlei).</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="Name2" type="xs:string" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation xml:lang="de">Namenszusatz des Vollmachtnehmers (z.B. Namenszusatz der Kanzlei).</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="Anschrift" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation xml:lang="de">Anschrift des Vollmachtnehmers (z.B. Anschrift der Kanzlei). Diese ist optional um ggf. später auch natürliche Personen, zu denen keine Anschrift ermittelt werden kann, als Vollmachtnehmer zu unterstützen.</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="Str">
+										<xs:annotation>
+											<xs:documentation xml:lang="de">Strasse der Organisation. Beinhaltet die Hausnummer plus eventueller Zusätze und kann aus bis zu 72 Zeichen bestehen.</xs:documentation>
+										</xs:annotation>
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:minLength value="1"/>
+												<xs:maxLength value="72"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+									<xs:element name="Ort">
+										<xs:annotation>
+											<xs:documentation xml:lang="de">Ort der Organisation. Kann aus bis zu 72 Zeichen bestehen.</xs:documentation>
+										</xs:annotation>
+										<xs:simpleType>
+											<xs:restriction base="xs:string">
+												<xs:minLength value="1"/>
+												<xs:maxLength value="72"/>
+											</xs:restriction>
+										</xs:simpleType>
+									</xs:element>
+									<xs:choice>
+										<xs:element name="PLZ">
+											<xs:annotation>
+												<xs:documentation xml:lang="de">PLZ für nationale Adresse. Die PLZ von internationalen Adressen befindet sich im Typ "AuslandsPLZ".</xs:documentation>
+											</xs:annotation>
+											<xs:simpleType>
+												<xs:restriction base="xs:string">
+													<xs:length value="5"/>
+												</xs:restriction>
+											</xs:simpleType>
+										</xs:element>
+										<!-- Für Adressen im Ausland -->
+										<xs:element name="AuslandsPLZ">
+											<xs:complexType>
+												<xs:annotation>
+													<xs:documentation xml:lang="de">Kombination aus ausländischer PLZ und Land für Adressen im Ausland.</xs:documentation>
+												</xs:annotation>
+												<xs:sequence>
+													<xs:element name="PLZ">
+														<xs:annotation>
+															<xs:documentation xml:lang="de">Die ausländische PLZ der Kanzlei. Kann bis zu 10 Zeichen enthalten.</xs:documentation>
+														</xs:annotation>
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="1"/>
+																<xs:maxLength value="10"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+													<xs:element name="Land">
+														<xs:annotation>
+															<xs:documentation xml:lang="de">Name des Landes. Kann aus bis zu 30 Zeichen bestehen.</xs:documentation>
+														</xs:annotation>
+														<xs:simpleType>
+															<xs:restriction base="xs:string">
+																<xs:minLength value="1"/>
+																<xs:maxLength value="30"/>
+															</xs:restriction>
+														</xs:simpleType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:choice>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="Vollmachtgeber" type="DateninhaberCType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Name des Vollmachtgebers.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AusschlussVerwIdNr" type="xs:boolean">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Flag, das angibt, ob die Verwendung der IdNr des Vollmachtgebers deaktiviert ist.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Steuernummern" type="SteuernummernCType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Liste der Steuernummern dieser Abrufberechtigung, wie sie von GINSTER an ELSTER übermittelt wurde.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Ausschluesse" type="AusschluesseCType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Ausschlüsse von Abrufberechtigungen.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Untervollmachten" type="xs:boolean">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Angabe, ob die Abrufberechtigungen auch für Mitarbeiter des Vollmachtnehmers gilt.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Veranlagungszeitraum" type="VDBVeranlagungszeitraumCType">
+				<xs:annotation>
+					<xs:documentation xml:lang="de">Veranlagungszeitraum des VaSt-Belegabrufs.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

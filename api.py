@@ -3,7 +3,12 @@ import os
 import base64
 import tempfile
 from flask import Flask, request, send_file, jsonify
-from models import ValidationRequest, ValidationResult, SubmissionRequest, SubmissionResult, HealthStatus
+from pydantic import ValidationError
+
+from models import (
+    ValidationRequest, ValidationResult, SubmissionRequest, SubmissionResult, HealthStatus,
+    DatenabholungRequest, DatenabholungResult
+)
 from eric_client import EricClient
 
 app = Flask(__name__)
@@ -177,6 +182,58 @@ def submit_submission():
                     os.unlink(temp_file)
             except:
                 pass
+
+
+@app.route('/datenabholung', methods=['POST'])
+def datenabholung():
+    """Run a full VaSt Belegabruf and return the decrypted Belege"""
+    try:
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+
+        try:
+            req = DatenabholungRequest(**data)
+        except ValidationError as e:
+            # Pydantic puts the offending input in the message, which here is
+            # the whole request including cert_base64 and password, so only the
+            # field names and reasons are returned.
+            faults = '; '.join(
+                f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()
+            )
+            return jsonify({'error': f'Invalid request: {faults}'}), 400
+        except Exception:
+            return jsonify({'error': 'Invalid request'}), 400
+
+        success, error_code, error_message, belege = eric_client.datenabholung(
+            idnr=req.idnr,
+            year=req.year,
+            cert_base64=req.cert_base64,
+            password=req.password,
+            hersteller_id=req.hersteller_id,
+            datenlieferant=req.datenlieferant,
+            product_name=req.product_name,
+            product_version=req.product_version,
+            belegart=req.belegart,
+            testmerker=req.testmerker,
+        )
+
+        result = DatenabholungResult(
+            belege=belege,
+            error_code=None if success else error_code,
+            error_message=None if success else error_message
+        )
+
+        return jsonify(result.model_dump()), (200 if success else 502)
+
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as err:
+        import traceback
+        return jsonify({
+            'error': f'Unexpected error: {str(err)}',
+            'traceback': traceback.format_exc()
+        }), 500
 
 
 if __name__ == '__main__':

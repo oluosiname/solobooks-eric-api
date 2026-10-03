@@ -43,3 +43,25 @@ class HealthStatus(BaseModel):
     """Response model for health check"""
     status: str
 
+
+
+class DatenabholungRequest(BaseModel):
+    """Request model for a VaSt Belegabruf (ElsterDatenabholung)"""
+    idnr: str = Field(..., description="Steuer-IdNr of the Dateninhaber (11 digits)")
+    year: int = Field(..., description="Veranlagungsjahr")
+    cert_base64: str = Field(..., description="Base64-encoded certificate (.pfx file)")
+    password: str = Field(..., description="Certificate password")
+    hersteller_id: str = Field(..., description="ELSTER Hersteller-ID")
+    datenlieferant: str = Field('Solobooks', description="DatenLieferant")
+    product_name: str = Field('Solobooks', description="Hersteller/ProduktName")
+    product_version: str = Field('spike', description="Hersteller/ProduktVersion")
+    belegart: Optional[str] = Field('VaSt_LStB', description="Narrow to one Belegart, or null for all")
+    testmerker: Optional[str] = Field(None, description="Testmerker, omitted for real cases")
+
+
+class DatenabholungResult(BaseModel):
+    """Response model for a VaSt Belegabruf"""
+    # Both phases run server-side because they must share one transfer handle.
+    belege: List[str] = []
+    error_code: Optional[int] = None
+    error_message: Optional[str] = None

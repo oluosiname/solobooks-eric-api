@@ -438,3 +438,101 @@ class EricClient:
             except:
                 pass
 
+
+    def datenabholung(
+        self,
+        xml_content: str,
+        cert_base64: str,
+        password: str,
+        datenart_version: str = 'ElsterVaStDaten_31'
+    ) -> Tuple[bool, Optional[int], Optional[str], Optional[str]]:
+        """
+        Run a VaSt Belegabruf request (ERiC Entwicklerhandbuch 9.2.4.2).
+
+        Sends the Datenabholung XML, then decrypts every <Datenpaket> in the
+        server answer with EricDekodiereDaten -- the packets are CMS-encrypted
+        to the certificate, so only ERIC can open them.
+
+        Returns:
+            (success, error_code, error_message, server_response_xml)
+        """
+        eric = self._get_eric_instance()
+
+        xml_bytes = xml_content.encode('utf-8') if isinstance(xml_content, str) else xml_content
+
+        try:
+            cert_data = base64.b64decode(cert_base64)
+        except Exception as e:
+            raise ValueError(f'Failed to decode certificate: {str(e)}')
+
+        with tempfile.NamedTemporaryFile(mode='wb', suffix='.pfx', delete=False) as cert_file:
+            cert_file.write(cert_data)
+            cert_file_path = cert_file.name
+
+        try:
+            # No ERIC_DRUCKE: ElsterVaStDaten does not support PDF print.
+            processing_flags = ERIC_VALIDIERE | ERIC_SENDE
+
+            with self._eric_certificate(eric, cert_file_path, password) as crypto_params:
+                with self._eric_buffer(eric) as response_buffer, self._eric_buffer(eric) as server_buffer:
+                    rc, _th = eric.PyEricBearbeiteVorgang(
+                        datenpuffer=xml_bytes,
+                        datenartVersion=datenart_version,
+                        bearbeitungsFlags=processing_flags,
+                        druckParameter=None,
+                        cryptoParameter=crypto_params,
+                        transferHandle=None,
+                        rueckgabeXmlPuffer=response_buffer,
+                        serverantwortXmlPuffer=server_buffer
+                    )
+
+                    server_response = eric.PyEricRueckgabepufferInhalt(server_buffer)
+                    server_response_xml = (
+                        server_response.decode('utf-8', errors='replace') if server_response else None
+                    )
+
+                    if rc != ERIC_OK:
+                        return False, rc, self._get_error_message(eric, rc), server_response_xml
+
+                    if server_response_xml:
+                        server_response_xml = self._decode_datenpakete(
+                            eric, server_response_xml, crypto_params
+                        )
+
+                    return True, None, None, server_response_xml
+        finally:
+            try:
+                if os.path.exists(cert_file_path):
+                    os.unlink(cert_file_path)
+            except OSError:
+                pass
+
+    def _decode_datenpakete(self, eric, server_response_xml: str, crypto_params) -> str:
+        """Replace each base64 <Datenpaket> with the Beleg XML it contains."""
+        ns = {'d': 'http://finkonsens.de/elster/elsterdatenabholung/v3'}
+
+        try:
+            root = ET.fromstring(server_response_xml)
+        except ET.ParseError:
+            return server_response_xml
+
+        for packet in root.iterfind('.//d:Abholung/d:Datenpaket', ns):
+            encoded = ''.join((packet.text or '').split())
+            if not encoded:
+                continue
+
+            with self._eric_buffer(eric) as buffer:
+                rc = eric.PyEricDekodiereDaten(
+                    zertifikatHandle=crypto_params.zertifikatHandle,
+                    pin=crypto_params.pin,
+                    base64Eingabe=encoded,
+                    rueckgabePuffer=buffer
+                )
+                if rc != ERIC_OK:
+                    packet.text = f'DECODE_ERROR {rc}: {self._get_error_message(eric, rc)}'
+                    continue
+
+                decoded = eric.PyEricRueckgabepufferInhalt(buffer)
+                packet.text = decoded.decode('utf-8', errors='replace') if decoded else ''
+
+        return ET.tostring(root, encoding='unicode')

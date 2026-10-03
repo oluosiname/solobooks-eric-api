@@ -43,3 +43,20 @@ class HealthStatus(BaseModel):
     """Response model for health check"""
     status: str
 
+
+
+class DatenabholungRequest(BaseModel):
+    """Request model for a VaSt Belegabruf (ElsterDatenabholung)"""
+    xml: str = Field(..., description="The Datenabholung XML (Anfrage or Abholung phase)")
+    cert_base64: str = Field(..., description="Base64-encoded certificate (.pfx file)")
+    password: str = Field(..., description="Certificate password")
+    datenartversion: str = Field('ElsterVaStDaten_31', description="ERiC data version")
+
+
+class DatenabholungResult(BaseModel):
+    """Response model for a VaSt Belegabruf"""
+    # ELSTER reports business failures inside the XML, so a 200 here does not
+    # mean the retrieval was permitted.
+    response_xml: Optional[str] = None
+    error_code: Optional[int] = None
+    error_message: Optional[str] = None

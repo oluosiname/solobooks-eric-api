@@ -2,6 +2,7 @@
 import os
 import base64
 import tempfile
+import traceback
 from flask import Flask, request, send_file, jsonify
 from pydantic import ValidationError
 
@@ -17,6 +18,25 @@ app = Flask(__name__)
 
 # Initialize ERIC client
 eric_client = EricClient()
+
+
+def invalid_request(err):
+    # Pydantic's message embeds the offending input, which on these routes can
+    # be the certificate, its password or the taxpayer's XML, so only the field
+    # names and reasons are returned.
+    if isinstance(err, ValidationError):
+        faults = '; '.join(
+            f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in err.errors()
+        )
+        return jsonify({'error': f'Invalid request: {faults}'}), 400
+    return jsonify({'error': 'Invalid request'}), 400
+
+
+def unexpected_error():
+    # The traceback's frames hold the request's secrets, so it stays in the
+    # server log and the caller gets an opaque error.
+    print(traceback.format_exc(), flush=True)
+    return jsonify({'error': 'Unexpected error'}), 500
 
 
 @app.route('/health', methods=['GET'])
@@ -38,7 +58,7 @@ def validate_xml():
         try:
             req = ValidationRequest(**data)
         except Exception as e:
-            return jsonify({'error': f'Invalid request: {str(e)}'}), 400
+            return invalid_request(e)
         
         # Validate XML using ERIC client
         is_valid, error_code, error_message, validation_result = eric_client.validate_xml(
@@ -64,12 +84,8 @@ def validate_xml():
     
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
-    except Exception as err:
-        import traceback
-        return jsonify({
-            'error': f'Unexpected error: {str(err)}',
-            'traceback': traceback.format_exc()
-        }), 500
+    except Exception:
+        return unexpected_error()
 
 
 @app.route('/submit', methods=['POST'])
@@ -88,7 +104,7 @@ def submit_submission():
         try:
             req = SubmissionRequest(**data)
         except Exception as e:
-            return jsonify({'error': f'Invalid request: {str(e)}'}), 400
+            return invalid_request(e)
         
         # Submit XML using ERIC client
         success, error_code, transfer_handle, error_message, pdf_data, server_response, validation_result, transferticket = eric_client.submit_xml(
@@ -169,12 +185,8 @@ def submit_submission():
     
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
-    except Exception as err:
-        import traceback
-        return jsonify({
-            'error': f'Unexpected error: {str(err)}',
-            'traceback': traceback.format_exc()
-        }), 500
+    except Exception:
+        return unexpected_error()
     
     finally:
         # Cleanup temporary PDF file
@@ -196,16 +208,8 @@ def datenabholung():
 
         try:
             req = DatenabholungRequest(**data)
-        except ValidationError as e:
-            # Pydantic puts the offending input in the message, which here is
-            # the whole request including cert_base64 and password, so only the
-            # field names and reasons are returned.
-            faults = '; '.join(
-                f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()
-            )
-            return jsonify({'error': f'Invalid request: {faults}'}), 400
-        except Exception:
-            return jsonify({'error': 'Invalid request'}), 400
+        except Exception as e:
+            return invalid_request(e)
 
         success, error_code, error_message, belege = eric_client.datenabholung(
             idnr=req.idnr,
@@ -230,12 +234,8 @@ def datenabholung():
 
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
-    except Exception as err:
-        import traceback
-        return jsonify({
-            'error': f'Unexpected error: {str(err)}',
-            'traceback': traceback.format_exc()
-        }), 500
+    except Exception:
+        return unexpected_error()
 
 
 def _elster_brm(request_model, datenart, nutzdaten, parse):
@@ -247,15 +247,8 @@ def _elster_brm(request_model, datenart, nutzdaten, parse):
 
         try:
             req = request_model(**data)
-        except ValidationError as e:
-            # Field names and reasons only: the input holds the certificate,
-            # its password and the IdNr.
-            faults = '; '.join(
-                f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()
-            )
-            return jsonify({'error': f'Invalid request: {faults}'}), 400
-        except Exception:
-            return jsonify({'error': 'Invalid request'}), 400
+        except Exception as e:
+            return invalid_request(e)
 
         success, error_code, error_message, answer = eric_client.elster_brm(
             datenart=datenart,
@@ -274,9 +267,7 @@ def _elster_brm(request_model, datenart, nutzdaten, parse):
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception:
-        import traceback
-        print(traceback.format_exc(), flush=True)
-        return jsonify({'error': 'Unexpected error'}), 500
+        return unexpected_error()
 
 
 @app.route('/elster_brm/antrag', methods=['POST'])

@@ -3,6 +3,8 @@ import os
 import base64
 import tempfile
 from flask import Flask, request, send_file, jsonify
+from pydantic import ValidationError
+
 from models import (
     ValidationRequest, ValidationResult, SubmissionRequest, SubmissionResult, HealthStatus,
     DatenabholungRequest, DatenabholungResult
@@ -192,8 +194,16 @@ def datenabholung():
 
         try:
             req = DatenabholungRequest(**data)
-        except Exception as e:
-            return jsonify({'error': f'Invalid request: {str(e)}'}), 400
+        except ValidationError as e:
+            # Pydantic puts the offending input in the message, which here is
+            # the whole request including cert_base64 and password, so only the
+            # field names and reasons are returned.
+            faults = '; '.join(
+                f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()
+            )
+            return jsonify({'error': f'Invalid request: {faults}'}), 400
+        except Exception:
+            return jsonify({'error': 'Invalid request'}), 400
 
         success, error_code, error_message, belege = eric_client.datenabholung(
             idnr=req.idnr,

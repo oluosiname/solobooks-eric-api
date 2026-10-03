@@ -3,7 +3,6 @@ import os
 import sys
 import base64
 import tempfile
-import re
 import xml.etree.ElementTree as ET
 from xml.sax import saxutils
 import locale
@@ -442,8 +441,9 @@ class EricClient:
 
 
     VAST_ELSTER_NS = 'http://www.elster.de/elsterxml/schema/v11'
-    # Entwicklerhandbuch Tab. 9-24. All share this transport; only the
-    # belegart attribute and the consumer's parser differ.
+    # The twelve Belegarten this transport serves (Entwicklerhandbuch
+    # Tab. 9-24); only the belegart attribute and the caller's parser differ.
+    # Not validated here -- the caller owns input validation.
     VAST_BELEGARTEN = frozenset([
         'VaSt_LStB', 'VaSt_KRV', 'VaSt_RIE', 'VaSt_RUE', 'VaSt_LErsL',
         'VaSt_Pers1', 'VaSt_Pers2', 'VaSt_RBM', 'VaSt_VWL', 'VaSt_FSA',
@@ -477,15 +477,6 @@ class EricClient:
         Returns:
             (success, error_code, error_message, belege)
         """
-        # Checked before the round trip: the schema requires exactly 11 digits
-        # (IDNrSType), and a malformed one otherwise comes back as an opaque
-        # ERIC rejection or ELSTER's 371015235.
-        if not re.fullmatch(r'\d{11}', str(idnr or '')):
-            raise ValueError('idnr must be the 11-digit Steuer-IdNr')
-
-        if belegart is not None and belegart not in self.VAST_BELEGARTEN:
-            raise ValueError(f'unknown belegart: {belegart}')
-
         eric = self._get_eric_instance()
 
         # validate=True: b64decode otherwise drops junk characters and yields

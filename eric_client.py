@@ -593,6 +593,11 @@ class EricClient:
             server_response = eric.PyEricRueckgabepufferInhalt(server_buffer)
             answer = server_response.decode('utf-8', errors='replace') if server_response else None
 
+            if rc != ERIC_OK:
+                validation = eric.PyEricRueckgabepufferInhalt(response_buffer)
+                if validation:
+                    print(f'ERIC validation buffer: {validation.decode("utf-8", errors="replace")[:2000]}', flush=True)
+
             return rc, th, answer
 
     @staticmethod
@@ -710,3 +715,117 @@ class EricClient:
                 belege.append(decoded.decode('utf-8', errors='replace') if decoded else '')
 
         return belege
+
+    # --- VaSt Berechtigungsmanagement (Verfahren ElsterBRM) ---
+    #
+    # A different Verfahren from the Datenabholung used for retrieval, so none of
+    # the /datenabholung plumbing applies: no transfer handle (these are single
+    # round trips), no CMS-encrypted payload to decode, and the datenartversion
+    # is the bare Datenart name rather than carrying a version suffix
+    # (Datenartversionmatrix.xml). Nutzdaten come from elster_brm.py.
+
+    BRM_DATENARTEN = frozenset(['SpezRechtAntrag', 'SpezRechtListe', 'SpezRechtStorno'])
+
+    def elster_brm(
+        self,
+        datenart: str,
+        nutzdaten: str,
+        cert_base64: str,
+        password: str,
+        hersteller_id: str,
+        datenlieferant: str = 'Solobooks',
+        testmerker: Optional[str] = None
+    ) -> Tuple[bool, Optional[int], Optional[str], Optional[str]]:
+        """
+        Send one ElsterBRM request and return the server answer unparsed.
+
+        Returns:
+            (success, error_code, error_message, answer_xml)
+        """
+        eric = self._get_eric_instance()
+
+        xml = self._brm_envelope(datenart, nutzdaten, {
+            'hersteller_id': hersteller_id,
+            'datenlieferant': datenlieferant,
+            'testmerker': testmerker,
+        })
+
+        try:
+            cert_data = base64.b64decode(cert_base64, validate=True)
+        except Exception as e:
+            raise ValueError(f'Failed to decode certificate: {str(e)}')
+
+        if not cert_data:
+            raise ValueError('Certificate is empty after base64 decoding')
+
+        with tempfile.NamedTemporaryFile(mode='wb', suffix='.pfx', delete=False) as cert_file:
+            cert_file.write(cert_data)
+            cert_file_path = cert_file.name
+
+        try:
+            with self._eric_certificate(eric, cert_file_path, password) as crypto_params:
+                # transferHandle is NULL here: handles bundle a Datenabholung's
+                # phases, and these Datenarten are single round trips.
+                with self._eric_buffer(eric) as response_buffer, self._eric_buffer(eric) as server_buffer:
+                    rc, _th = eric.PyEricBearbeiteVorgang(
+                        datenpuffer=xml.encode('utf-8'),
+                        datenartVersion=datenart,
+                        bearbeitungsFlags=ERIC_VALIDIERE | ERIC_SENDE,
+                        druckParameter=None,
+                        cryptoParameter=crypto_params,
+                        transferHandle=None,
+                        rueckgabeXmlPuffer=response_buffer,
+                        serverantwortXmlPuffer=server_buffer
+                    )
+
+                    server = eric.PyEricRueckgabepufferInhalt(server_buffer)
+                    answer = server.decode('utf-8', errors='replace') if server else None
+
+                    failure = self._failure(eric, rc, answer)
+                    if failure:
+                        self._log_validation_buffer(eric, response_buffer)
+                        return (False, *failure, answer)
+
+                    return True, None, None, answer
+        finally:
+            try:
+                if os.path.exists(cert_file_path):
+                    os.unlink(cert_file_path)
+            except OSError:
+                pass
+
+    def _log_validation_buffer(self, eric, response_buffer):
+        # The plausibility detail behind 610001002 exists only here, but for an
+        # Antrag it can echo the IdNr and date of birth, so it is opt-in.
+        if os.environ.get('ERIC_LOG_VALIDATION_BUFFER') != '1':
+            return
+        validation = eric.PyEricRueckgabepufferInhalt(response_buffer)
+        if validation:
+            print(f'ERIC validation buffer: {validation.decode("utf-8", errors="replace")[:2000]}', flush=True)
+
+    def _brm_envelope(self, datenart: str, nutzdaten: str, header: dict) -> str:
+        e = self._xml_escape
+        testmerker = f"<Testmerker>{e(header['testmerker'])}</Testmerker>" if header.get('testmerker') else ''
+        return (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            f'<Elster xmlns="{self.VAST_ELSTER_NS}">'
+            '<TransferHeader version="11">'
+            '<Verfahren>ElsterBRM</Verfahren>'
+            f'<DatenArt>{e(datenart)}</DatenArt>'
+            '<Vorgang>send-Auth</Vorgang>'
+            f'{testmerker}'
+            '<Empfaenger id="L"><Ziel>CS</Ziel></Empfaenger>'
+            f"<HerstellerID>{e(header['hersteller_id'])}</HerstellerID>"
+            f"<DatenLieferant>{e(header['datenlieferant'])}</DatenLieferant>"
+            '<Datei><Verschluesselung>CMSEncryptedData</Verschluesselung>'
+            '<Kompression>GZIP</Kompression><TransportSchluessel/></Datei>'
+            '</TransferHeader>'
+            '<DatenTeil><Nutzdatenblock>'
+            '<NutzdatenHeader version="11">'
+            '<NutzdatenTicket>1</NutzdatenTicket>'
+            '<Empfaenger id="L">CS</Empfaenger>'
+            '</NutzdatenHeader>'
+            f'<Nutzdaten>{nutzdaten}</Nutzdaten>'
+            '</Nutzdatenblock></DatenTeil>'
+            '</Elster>'
+        )

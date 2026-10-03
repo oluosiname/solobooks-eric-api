@@ -7,9 +7,11 @@ from pydantic import ValidationError
 
 from models import (
     ValidationRequest, ValidationResult, SubmissionRequest, SubmissionResult, HealthStatus,
-    DatenabholungRequest, DatenabholungResult
+    DatenabholungRequest, DatenabholungResult, ElsterBrmResult,
+    SpezRechtAntragRequest, SpezRechtListeRequest, SpezRechtStornoRequest,
 )
 from eric_client import EricClient
+import elster_brm
 
 app = Flask(__name__)
 
@@ -234,6 +236,77 @@ def datenabholung():
             'error': f'Unexpected error: {str(err)}',
             'traceback': traceback.format_exc()
         }), 500
+
+
+def _elster_brm(request_model, datenart, nutzdaten, parse):
+    """Run one ElsterBRM round trip: validate, send, parse the answer."""
+    try:
+        data = request.get_json(silent=True)
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+
+        try:
+            req = request_model(**data)
+        except ValidationError as e:
+            # Field names and reasons only: the input holds the certificate,
+            # its password and the IdNr.
+            faults = '; '.join(
+                f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}" for err in e.errors()
+            )
+            return jsonify({'error': f'Invalid request: {faults}'}), 400
+        except Exception:
+            return jsonify({'error': 'Invalid request'}), 400
+
+        success, error_code, error_message, answer = eric_client.elster_brm(
+            datenart=datenart,
+            nutzdaten=nutzdaten(req),
+            cert_base64=req.cert_base64,
+            password=req.password,
+            hersteller_id=req.hersteller_id,
+            datenlieferant=req.datenlieferant,
+        )
+
+        if not success:
+            return jsonify(ElsterBrmResult(error_code=error_code, error_message=error_message).model_dump()), 502
+
+        return jsonify(ElsterBrmResult(data=parse(answer)).model_dump()), 200
+
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception:
+        import traceback
+        print(traceback.format_exc(), flush=True)
+        return jsonify({'error': 'Unexpected error'}), 500
+
+
+@app.route('/elster_brm/antrag', methods=['POST'])
+def spez_recht_antrag():
+    """Request an authorisation to retrieve a Dateninhaber's Belege"""
+    return _elster_brm(
+        SpezRechtAntragRequest, 'SpezRechtAntrag',
+        lambda r: elster_brm.antrag(r.idnr, r.date_of_birth, r.valid_until, r.datenabrufer_mail),
+        elster_brm.parse_antrag,
+    )
+
+
+@app.route('/elster_brm/liste', methods=['POST'])
+def spez_recht_liste():
+    """List authorisations for the given Dateninhaber"""
+    return _elster_brm(
+        SpezRechtListeRequest, 'SpezRechtListe',
+        lambda r: elster_brm.liste(r.idnrs),
+        elster_brm.parse_liste,
+    )
+
+
+@app.route('/elster_brm/storno', methods=['POST'])
+def spez_recht_storno():
+    """Withdraw an authorisation"""
+    return _elster_brm(
+        SpezRechtStornoRequest, 'SpezRechtStorno',
+        lambda r: elster_brm.storno(r.antrags_id),
+        elster_brm.parse_storno,
+    )
 
 
 if __name__ == '__main__':

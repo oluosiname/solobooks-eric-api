@@ -439,67 +439,82 @@ class EricClient:
                 pass
 
 
+    VAST_ELSTER_NS = 'http://www.elster.de/elsterxml/schema/v11'
+    VAST_ABHOLUNG_NS = 'http://finkonsens.de/elster/elsterdatenabholung/v3'
+
     def datenabholung(
         self,
-        xml_content: str,
+        idnr: str,
+        year: int,
         cert_base64: str,
         password: str,
+        hersteller_id: str,
+        datenlieferant: str = 'Solobooks',
+        product_name: str = 'Solobooks',
+        product_version: str = 'spike',
+        belegart: Optional[str] = 'VaSt_LStB',
+        testmerker: Optional[str] = None,
         datenart_version: str = 'ElsterVaStDaten_31'
-    ) -> Tuple[bool, Optional[int], Optional[str], Optional[str]]:
+    ) -> Tuple[bool, Optional[int], Optional[str], list]:
         """
-        Run a VaSt Belegabruf request (ERiC Entwicklerhandbuch 9.2.4.2).
+        Run a complete VaSt Belegabruf (ERiC Entwicklerhandbuch 9.2.4.2).
 
-        Sends the Datenabholung XML, then decrypts every <Datenpaket> in the
-        server answer with EricDekodiereDaten -- the packets are CMS-encrypted
-        to the certificate, so only ERIC can open them.
+        Both phases run here rather than in the caller because they must share
+        one EricTransferHandle: it is initialised to 0 for the Anfrage and the
+        value ERIC returns has to be passed back unchanged on the Abholung,
+        which is what bundles them into a single retrieval. Passing NULL
+        instead yields ERIC_GLOBAL_TRANSFERHANDLE (610001227).
 
         Returns:
-            (success, error_code, error_message, server_response_xml)
+            (success, error_code, error_message, belege)
         """
         eric = self._get_eric_instance()
 
-        xml_bytes = xml_content.encode('utf-8') if isinstance(xml_content, str) else xml_content
-
+        # validate=True: b64decode otherwise drops junk characters and yields
+        # empty bytes, which would write a 0-byte .pfx and fail obscurely later.
         try:
-            cert_data = base64.b64decode(cert_base64)
+            cert_data = base64.b64decode(cert_base64, validate=True)
         except Exception as e:
             raise ValueError(f'Failed to decode certificate: {str(e)}')
+
+        if not cert_data:
+            raise ValueError('Certificate is empty after base64 decoding')
 
         with tempfile.NamedTemporaryFile(mode='wb', suffix='.pfx', delete=False) as cert_file:
             cert_file.write(cert_data)
             cert_file_path = cert_file.name
 
         try:
-            # No ERIC_DRUCKE: ElsterVaStDaten does not support PDF print.
-            processing_flags = ERIC_VALIDIERE | ERIC_SENDE
-
             with self._eric_certificate(eric, cert_file_path, password) as crypto_params:
-                with self._eric_buffer(eric) as response_buffer, self._eric_buffer(eric) as server_buffer:
-                    rc, _th = eric.PyEricBearbeiteVorgang(
-                        datenpuffer=xml_bytes,
-                        datenartVersion=datenart_version,
-                        bearbeitungsFlags=processing_flags,
-                        druckParameter=None,
-                        cryptoParameter=crypto_params,
-                        transferHandle=None,
-                        rueckgabeXmlPuffer=response_buffer,
-                        serverantwortXmlPuffer=server_buffer
-                    )
+                header = {
+                    'hersteller_id': hersteller_id,
+                    'datenlieferant': datenlieferant,
+                    'product_name': product_name,
+                    'product_version': product_version,
+                    'testmerker': testmerker,
+                }
 
-                    server_response = eric.PyEricRueckgabepufferInhalt(server_buffer)
-                    server_response_xml = (
-                        server_response.decode('utf-8', errors='replace') if server_response else None
-                    )
+                # Phase 1: which Belege are on offer. Handle starts at 0.
+                anfrage = self._build_anfrage(idnr, year, belegart, header)
+                rc, transfer_handle, answer = self._send_abholung(
+                    eric, anfrage, datenart_version, crypto_params, 0
+                )
+                if rc != ERIC_OK:
+                    return False, rc, self._get_error_message(eric, rc), []
 
-                    if rc != ERIC_OK:
-                        return False, rc, self._get_error_message(eric, rc), server_response_xml
+                ids = self._beleg_ids(answer, belegart)
+                if not ids:
+                    return True, None, None, []
 
-                    if server_response_xml:
-                        server_response_xml = self._decode_datenpakete(
-                            eric, server_response_xml, crypto_params
-                        )
+                # Phase 2: fetch them, reusing the handle phase 1 returned.
+                abholung = self._build_abholung(idnr, year, ids, header)
+                rc, _th, answer = self._send_abholung(
+                    eric, abholung, datenart_version, crypto_params, transfer_handle
+                )
+                if rc != ERIC_OK:
+                    return False, rc, self._get_error_message(eric, rc), []
 
-                    return True, None, None, server_response_xml
+                return True, None, None, self._decode_belege(eric, answer, crypto_params)
         finally:
             try:
                 if os.path.exists(cert_file_path):
@@ -507,15 +522,114 @@ class EricClient:
             except OSError:
                 pass
 
-    def _decode_datenpakete(self, eric, server_response_xml: str, crypto_params) -> str:
-        """Replace each base64 <Datenpaket> with the Beleg XML it contains."""
-        ns = {'d': 'http://finkonsens.de/elster/elsterdatenabholung/v3'}
+    def _send_abholung(self, eric, xml: str, datenart_version: str, crypto_params, transfer_handle: int):
+        """One EricBearbeiteVorgang round trip. Returns (rc, handle, answer_xml)."""
+        # No ERIC_DRUCKE: ElsterVaStDaten does not support PDF print (9.2.3).
+        flags = ERIC_VALIDIERE | ERIC_SENDE
 
+        with self._eric_buffer(eric) as response_buffer, self._eric_buffer(eric) as server_buffer:
+            rc, th = eric.PyEricBearbeiteVorgang(
+                datenpuffer=xml.encode('utf-8'),
+                datenartVersion=datenart_version,
+                bearbeitungsFlags=flags,
+                druckParameter=None,
+                cryptoParameter=crypto_params,
+                transferHandle=transfer_handle,
+                rueckgabeXmlPuffer=response_buffer,
+                serverantwortXmlPuffer=server_buffer
+            )
+            server_response = eric.PyEricRueckgabepufferInhalt(server_buffer)
+            answer = server_response.decode('utf-8', errors='replace') if server_response else None
+
+            return rc, th, answer
+
+    def _transfer_header(self, header: dict) -> str:
+        testmerker = f"<Testmerker>{header['testmerker']}</Testmerker>" if header.get('testmerker') else ''
+        return (
+            '<TransferHeader version="11">'
+            '<Verfahren>ElsterDatenabholung</Verfahren>'
+            '<DatenArt>ElsterVaStDaten</DatenArt>'
+            '<Vorgang>send-Auth</Vorgang>'
+            f'{testmerker}'
+            f"<HerstellerID>{header['hersteller_id']}</HerstellerID>"
+            f"<DatenLieferant>{header['datenlieferant']}</DatenLieferant>"
+            '<Datei><Verschluesselung>CMSEncryptedData</Verschluesselung>'
+            '<Kompression>GZIP</Kompression><TransportSchluessel/></Datei>'
+            f"<VersionClient>{header['product_version']}</VersionClient>"
+            '</TransferHeader>'
+        )
+
+    def _nutzdatenblock(self, ticket: int, header: dict, inner: str) -> str:
+        return (
+            '<Nutzdatenblock>'
+            '<NutzdatenHeader version="11">'
+            f'<NutzdatenTicket>{ticket}</NutzdatenTicket>'
+            '<Empfaenger id="L">CS</Empfaenger>'
+            f"<Hersteller><ProduktName>{header['product_name']}</ProduktName>"
+            f"<ProduktVersion>{header['product_version']}</ProduktVersion></Hersteller>"
+            f"<DatenLieferant>{header['datenlieferant']}</DatenLieferant>"
+            '</NutzdatenHeader>'
+            '<Nutzdaten>'
+            f'<Datenabholung xmlns="{self.VAST_ABHOLUNG_NS}" version="31">{inner}</Datenabholung>'
+            '</Nutzdaten>'
+            '</Nutzdatenblock>'
+        )
+
+    def _envelope(self, header: dict, blocks: str) -> str:
+        return (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            f'<Elster xmlns="{self.VAST_ELSTER_NS}">'
+            f'{self._transfer_header(header)}'
+            f'<DatenTeil>{blocks}</DatenTeil>'
+            '</Elster>'
+        )
+
+    def _build_anfrage(self, idnr: str, year: int, belegart: Optional[str], header: dict) -> str:
+        attrs = f'idnr="{idnr}" veranlagungsjahr="{year}"'
+        if belegart:
+            attrs += f' belegart="{belegart}"'
+        return self._envelope(header, self._nutzdatenblock(1, header, f'<Anfrage {attrs}/>'))
+
+    def _build_abholung(self, idnr: str, year: int, ids: list, header: dict) -> str:
+        blocks = ''.join(
+            self._nutzdatenblock(
+                index + 1, header,
+                f'<Abholung id="{beleg_id}" idnr="{idnr}" veranlagungsjahr="{year}"/>'
+            )
+            for index, beleg_id in enumerate(ids)
+        )
+        return self._envelope(header, blocks)
+
+    def _beleg_ids(self, answer_xml: Optional[str], belegart: Optional[str]) -> list:
+        if not answer_xml:
+            return []
+
+        ns = {'d': self.VAST_ABHOLUNG_NS}
         try:
-            root = ET.fromstring(server_response_xml)
+            root = ET.fromstring(answer_xml)
         except ET.ParseError:
-            return server_response_xml
+            return []
 
+        ids = []
+        for node in root.iterfind('.//d:Anfrage/d:Id', ns):
+            if belegart and node.get('belegart') != belegart:
+                continue
+            if node.get('id'):
+                ids.append(node.get('id'))
+        return ids
+
+    def _decode_belege(self, eric, answer_xml: Optional[str], crypto_params) -> list:
+        """Decrypt each <Datenpaket>; the packets are CMS-encrypted to the cert."""
+        if not answer_xml:
+            return []
+
+        ns = {'d': self.VAST_ABHOLUNG_NS}
+        try:
+            root = ET.fromstring(answer_xml)
+        except ET.ParseError:
+            return []
+
+        belege = []
         for packet in root.iterfind('.//d:Abholung/d:Datenpaket', ns):
             encoded = ''.join((packet.text or '').split())
             if not encoded:
@@ -529,10 +643,10 @@ class EricClient:
                     rueckgabePuffer=buffer
                 )
                 if rc != ERIC_OK:
-                    packet.text = f'DECODE_ERROR {rc}: {self._get_error_message(eric, rc)}'
+                    belege.append(f'DECODE_ERROR {rc}: {self._get_error_message(eric, rc)}')
                     continue
 
                 decoded = eric.PyEricRueckgabepufferInhalt(buffer)
-                packet.text = decoded.decode('utf-8', errors='replace') if decoded else ''
+                belege.append(decoded.decode('utf-8', errors='replace') if decoded else '')
 
-        return ET.tostring(root, encoding='unicode')
+        return belege

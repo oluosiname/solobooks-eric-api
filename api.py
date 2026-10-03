@@ -184,7 +184,7 @@ def submit_submission():
 
 @app.route('/datenabholung', methods=['POST'])
 def datenabholung():
-    """Run a VaSt Belegabruf and return the answer with Datenpakete decrypted"""
+    """Run a full VaSt Belegabruf and return the decrypted Belege"""
     try:
         data = request.get_json(silent=True)
         if not data:
@@ -195,21 +195,25 @@ def datenabholung():
         except Exception as e:
             return jsonify({'error': f'Invalid request: {str(e)}'}), 400
 
-        success, error_code, error_message, response_xml = eric_client.datenabholung(
-            req.xml,
-            req.cert_base64,
-            req.password,
-            req.datenartversion
+        success, error_code, error_message, belege = eric_client.datenabholung(
+            idnr=req.idnr,
+            year=req.year,
+            cert_base64=req.cert_base64,
+            password=req.password,
+            hersteller_id=req.hersteller_id,
+            datenlieferant=req.datenlieferant,
+            product_name=req.product_name,
+            product_version=req.product_version,
+            belegart=req.belegart,
+            testmerker=req.testmerker,
         )
 
         result = DatenabholungResult(
-            response_xml=response_xml,
+            belege=belege,
             error_code=None if success else error_code,
             error_message=None if success else error_message
         )
 
-        # A transport-level ERIC failure is a 502; ELSTER's own refusals travel
-        # inside response_xml with a 200.
         return jsonify(result.model_dump()), (200 if success else 502)
 
     except ValueError as e:

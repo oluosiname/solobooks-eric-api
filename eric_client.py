@@ -3,7 +3,9 @@ import os
 import sys
 import base64
 import tempfile
+import re
 import xml.etree.ElementTree as ET
+from xml.sax import saxutils
 import locale
 import threading
 from pathlib import Path
@@ -440,6 +442,13 @@ class EricClient:
 
 
     VAST_ELSTER_NS = 'http://www.elster.de/elsterxml/schema/v11'
+    # Entwicklerhandbuch Tab. 9-24. All share this transport; only the
+    # belegart attribute and the consumer's parser differ.
+    VAST_BELEGARTEN = frozenset([
+        'VaSt_LStB', 'VaSt_KRV', 'VaSt_RIE', 'VaSt_RUE', 'VaSt_LErsL',
+        'VaSt_Pers1', 'VaSt_Pers2', 'VaSt_RBM', 'VaSt_VWL', 'VaSt_FSA',
+        'VaSt_ZUS', 'VaSt_GDB',
+    ])
     VAST_ABHOLUNG_NS = 'http://finkonsens.de/elster/elsterdatenabholung/v3'
 
     def datenabholung(
@@ -468,6 +477,15 @@ class EricClient:
         Returns:
             (success, error_code, error_message, belege)
         """
+        # Checked before the round trip: the schema requires exactly 11 digits
+        # (IDNrSType), and a malformed one otherwise comes back as an opaque
+        # ERIC rejection or ELSTER's 371015235.
+        if not re.fullmatch(r'\d{11}', str(idnr or '')):
+            raise ValueError('idnr must be the 11-digit Steuer-IdNr')
+
+        if belegart is not None and belegart not in self.VAST_BELEGARTEN:
+            raise ValueError(f'unknown belegart: {belegart}')
+
         eric = self._get_eric_instance()
 
         # validate=True: b64decode otherwise drops junk characters and yields
@@ -499,8 +517,9 @@ class EricClient:
                 rc, transfer_handle, answer = self._send_abholung(
                     eric, anfrage, datenart_version, crypto_params, 0
                 )
-                if rc != ERIC_OK:
-                    return False, rc, self._get_error_message(eric, rc), []
+                failure = self._failure(eric, rc, answer)
+                if failure:
+                    return (False, *failure, [])
 
                 ids = self._beleg_ids(answer, belegart)
                 if not ids:
@@ -511,8 +530,9 @@ class EricClient:
                 rc, _th, answer = self._send_abholung(
                     eric, abholung, datenart_version, crypto_params, transfer_handle
                 )
-                if rc != ERIC_OK:
-                    return False, rc, self._get_error_message(eric, rc), []
+                failure = self._failure(eric, rc, answer)
+                if failure:
+                    return (False, *failure, [])
 
                 return True, None, None, self._decode_belege(eric, answer, crypto_params)
         finally:
@@ -521,6 +541,47 @@ class EricClient:
                     os.unlink(cert_file_path)
             except OSError:
                 pass
+
+    def _failure(self, eric, rc, answer_xml):
+        """
+        (error_code, error_message) if the retrieval failed, else None.
+
+        Two independent failure channels: rc is ERIC's own code (bad handle,
+        plugin missing, transport), while ELSTER refuses a permitted-looking
+        request by returning ERIC_OK with a non-zero <Rueckgabe><Code> inside
+        the server answer -- e.g. 371015220 when the Belegabruf has never been
+        switched on. Checking only rc reports such a refusal as "nothing
+        available", which is the one answer a caller must not confuse it with.
+        """
+        if rc != ERIC_OK:
+            return rc, self._get_error_message(eric, rc)
+
+        for code, text in self._server_return_codes(answer_xml):
+            if code and code != '0':
+                return int(code) if code.isdigit() else None, text
+
+        return None
+
+    def _server_return_codes(self, answer_xml):
+        """Every <RC><Rueckgabe> in the server answer, as (code, text)."""
+        if not answer_xml:
+            return []
+
+        ns = {'e': self.VAST_ELSTER_NS}
+        try:
+            root = ET.fromstring(answer_xml)
+        except ET.ParseError:
+            return []
+
+        codes = []
+        for rueckgabe in root.iterfind('.//e:RC/e:Rueckgabe', ns):
+            code = rueckgabe.find('e:Code', ns)
+            text = rueckgabe.find('e:Text', ns)
+            codes.append((
+                (code.text or '').strip() if code is not None else None,
+                (text.text or '').strip() if text is not None else None,
+            ))
+        return codes
 
     def _send_abholung(self, eric, xml: str, datenart_version: str, crypto_params, transfer_handle: int):
         """One EricBearbeiteVorgang round trip. Returns (rc, handle, answer_xml)."""
@@ -543,31 +604,39 @@ class EricClient:
 
             return rc, th, answer
 
+    @staticmethod
+    def _xml_escape(value) -> str:
+        """Caller-supplied header text can carry & or <, which would otherwise
+        produce malformed XML that ERIC rejects with an opaque parse error."""
+        return saxutils.escape(str(value)) if value is not None else ''
+
     def _transfer_header(self, header: dict) -> str:
-        testmerker = f"<Testmerker>{header['testmerker']}</Testmerker>" if header.get('testmerker') else ''
+        e = self._xml_escape
+        testmerker = f"<Testmerker>{e(header['testmerker'])}</Testmerker>" if header.get('testmerker') else ''
         return (
             '<TransferHeader version="11">'
             '<Verfahren>ElsterDatenabholung</Verfahren>'
             '<DatenArt>ElsterVaStDaten</DatenArt>'
             '<Vorgang>send-Auth</Vorgang>'
             f'{testmerker}'
-            f"<HerstellerID>{header['hersteller_id']}</HerstellerID>"
-            f"<DatenLieferant>{header['datenlieferant']}</DatenLieferant>"
+            f"<HerstellerID>{e(header['hersteller_id'])}</HerstellerID>"
+            f"<DatenLieferant>{e(header['datenlieferant'])}</DatenLieferant>"
             '<Datei><Verschluesselung>CMSEncryptedData</Verschluesselung>'
             '<Kompression>GZIP</Kompression><TransportSchluessel/></Datei>'
-            f"<VersionClient>{header['product_version']}</VersionClient>"
+            f"<VersionClient>{e(header['product_version'])}</VersionClient>"
             '</TransferHeader>'
         )
 
     def _nutzdatenblock(self, ticket: int, header: dict, inner: str) -> str:
+        e = self._xml_escape
         return (
             '<Nutzdatenblock>'
             '<NutzdatenHeader version="11">'
             f'<NutzdatenTicket>{ticket}</NutzdatenTicket>'
             '<Empfaenger id="L">CS</Empfaenger>'
-            f"<Hersteller><ProduktName>{header['product_name']}</ProduktName>"
-            f"<ProduktVersion>{header['product_version']}</ProduktVersion></Hersteller>"
-            f"<DatenLieferant>{header['datenlieferant']}</DatenLieferant>"
+            f"<Hersteller><ProduktName>{e(header['product_name'])}</ProduktName>"
+            f"<ProduktVersion>{e(header['product_version'])}</ProduktVersion></Hersteller>"
+            f"<DatenLieferant>{e(header['datenlieferant'])}</DatenLieferant>"
             '</NutzdatenHeader>'
             '<Nutzdaten>'
             f'<Datenabholung xmlns="{self.VAST_ABHOLUNG_NS}" version="31">{inner}</Datenabholung>'

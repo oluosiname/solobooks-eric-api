@@ -10,6 +10,7 @@ from models import (
     ValidationRequest, ValidationResult, SubmissionRequest, SubmissionResult, HealthStatus,
     DatenabholungRequest, DatenabholungResult, ElsterBrmResult,
     SpezRechtAntragRequest, SpezRechtListeRequest, SpezRechtStornoRequest,
+    SpezRechtFreischaltungRequest,
 )
 from eric_client import EricClient
 import elster_brm
@@ -297,6 +298,16 @@ def spez_recht_storno():
         SpezRechtStornoRequest, 'SpezRechtStorno',
         lambda r: elster_brm.storno(r.antrags_id),
         elster_brm.parse_storno,
+    )
+
+
+@app.route('/elster_brm/freischaltung', methods=['POST'])
+def spez_recht_freischaltung():
+    """Activate an authorisation with the Dateninhaber's Freischaltcode"""
+    return _elster_brm(
+        SpezRechtFreischaltungRequest, 'SpezRechtFreischaltung',
+        lambda r: elster_brm.freischaltung(r.antrags_id, r.freischaltcode),
+        elster_brm.parse_freischaltung,
     )
 
 

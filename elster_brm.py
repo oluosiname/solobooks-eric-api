@@ -42,6 +42,15 @@ def storno(antrags_id: str) -> str:
     return f'<SpezRechtStorno version="3"><AntragsID>{escape(antrags_id)}</AntragsID></SpezRechtStorno>'
 
 
+def freischaltung(antrags_id: str, freischaltcode: str) -> str:
+    return (
+        '<SpezRechtFreischaltung version="1">'
+        f'<AntragsID>{escape(antrags_id)}</AntragsID>'
+        f'<Freischaltcode>{escape(freischaltcode)}</Freischaltcode>'
+        '</SpezRechtFreischaltung>'
+    )
+
+
 def parse_antrag(answer_xml: str) -> dict:
     node = _find(answer_xml, './/e:SpezRechtAntrag/e:AntragAntwort')
     return {
@@ -72,6 +81,15 @@ def parse_storno(answer_xml: str) -> dict:
     return {
         'antrags_id': _text(node, 'AntragsID'),
         'antrags_status': _text(node, 'StornoAntwort/e:AntragsStatus'),
+    }
+
+
+def parse_freischaltung(answer_xml: str) -> dict:
+    node = _find(answer_xml, './/e:SpezRechtFreischaltung')
+    return {
+        'antrags_id': _text(node, 'AntragsID'),
+        'antrags_status': _text(node, 'FreischaltenAntwort/e:AntragsStatus'),
+        'dateninhaber_idnr': _text(node, 'FreischaltenAntwort/e:DateninhaberIdNr'),
     }
 
 

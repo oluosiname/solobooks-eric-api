@@ -64,6 +64,17 @@ def test_antrag_sends_the_built_nutzdaten(client, sent):
     assert '<DateninhaberGeburtstag>1985-01-01</DateninhaberGeburtstag>' in calls[0]['nutzdaten']
 
 
+def test_freischaltung_sends_the_code(client, sent):
+    calls = sent((False, 371015229, 'Freischaltcode falsch', None))
+
+    response = client.post('/elster_brm/freischaltung', json={**CREDENTIALS, 'antrags_id': 'br1', 'freischaltcode': '6FG5-R32P-JJ4S'})
+
+    assert calls[0]['datenart'] == 'SpezRechtFreischaltung'
+    assert '<Freischaltcode>6FG5-R32P-JJ4S</Freischaltcode>' in calls[0]['nutzdaten']
+    assert response.status_code == 502
+    assert response.get_json()['error_code'] == 371015229
+
+
 def test_a_german_date_is_refused_before_elster(client, sent):
     calls = sent(antrag_answer())
 

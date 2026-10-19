@@ -66,6 +66,11 @@ class TestStorno:
         schema.assertValid(element(elster_brm.storno('br12701v299sh650fgwcn0c31z2k0xrb')))
 
 
+class TestFreischaltung:
+    def test_validates_against_the_schema(self, schema):
+        schema.assertValid(element(elster_brm.freischaltung('br12701v299sh650fgwcn0c31z2k0xrb', '6FG5-R32P-JJ4S')))
+
+
 class TestParseAntrag:
     def test_reads_the_antrag_answer(self):
         assert elster_brm.parse_antrag(fixture('02a_SpezRechtAntrag_Response.xml')) == {
@@ -102,4 +107,24 @@ class TestParseStorno:
         assert elster_brm.parse_storno(fixture('08_SpezRechtStorno_Response.xml')) == {
             'antrags_id': 'br1271mrfht6w750vcjwkhfd4qvgv7hf',
             'antrags_status': 'abgelehnt',
+        }
+
+
+class TestParseFreischaltung:
+    def test_reads_the_approved_status(self, schema):
+        answer = elster_brm.freischaltung('br12701v299sh650fgwcn0c31z2k0xrb', '6FG5-R32P-JJ4S').replace(
+            '</SpezRechtFreischaltung>',
+            '<FreischaltenAntwort>'
+            '<AntragsDatum>2013-05-07T21:25:21.543</AntragsDatum>'
+            '<AntragsStatus>genehmigt</AntragsStatus>'
+            '<Recht>AbrufEBelege</Recht>'
+            '<DateninhaberIdNr>04452397687</DateninhaberIdNr>'
+            '</FreischaltenAntwort></SpezRechtFreischaltung>',
+        )
+        schema.assertValid(element(answer))
+
+        assert elster_brm.parse_freischaltung(f'<Elster xmlns="{elster_brm.NS}"><Nutzdaten>{answer}</Nutzdaten></Elster>') == {
+            'antrags_id': 'br12701v299sh650fgwcn0c31z2k0xrb',
+            'antrags_status': 'genehmigt',
+            'dateninhaber_idnr': '04452397687',
         }

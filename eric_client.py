@@ -724,7 +724,7 @@ class EricClient:
     # is the bare Datenart name rather than carrying a version suffix
     # (Datenartversionmatrix.xml). Nutzdaten come from elster_brm.py.
 
-    BRM_DATENARTEN = frozenset(['SpezRechtAntrag', 'SpezRechtListe', 'SpezRechtStorno'])
+    BRM_DATENARTEN = frozenset(['SpezRechtAntrag', 'SpezRechtListe', 'SpezRechtStorno', 'SpezRechtFreischaltung'])
 
     def elster_brm(
         self,

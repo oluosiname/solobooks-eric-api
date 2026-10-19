@@ -95,6 +95,12 @@ class SpezRechtStornoRequest(ElsterBrmCredentials):
     antrags_id: str = Field(..., description="AntragsID returned by SpezRechtAntrag")
 
 
+class SpezRechtFreischaltungRequest(ElsterBrmCredentials):
+    """Activate an authorisation with the code from the Dateninhaber's letter"""
+    antrags_id: str = Field(..., description="AntragsID returned by SpezRechtAntrag")
+    freischaltcode: str = Field(..., description="Freischaltcode from the Dateninhaber's letter")
+
+
 class ElsterBrmResult(BaseModel):
     """Parsed ElsterBRM answer, or the ERiC/ELSTER failure"""
     data: Optional[Any] = None

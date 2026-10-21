@@ -31,7 +31,7 @@ extern "C"
      * im @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}. Dort sind die Arbeitsabläufe von Einzel- und Sammellieferung
      * beschrieben.
      *
-     * Die Funktion kann Steuerdaten plausibilisieren, an den ELSTER-Annahmeserver übertragen und
+     * Die Funktion kann Steuerdaten auf Plausibilität prüfen, an den ELSTER-Annahmeserver übertragen und
      * ausdrucken, sowie Protokolle der Übertragung erzeugen. Die ProcessingFlags im Parameter
      * @c bearbeitungsFlags definieren, welche der Schritte wie ausgeführt werden.
      *
@@ -39,10 +39,6 @@ extern "C"
      * ein PDF-Druck der Daten erfolgen. In diesen Fällen sind die Parameter @c cryptoParameter
      * und @c druckParameter entsprechend zu befüllen. Die möglichen Parameterkombinationen und
      * Druckkennzeichnungen können im @typeDokumentation{ERiC-Entwicklerhandbuch.pdf} nachgelesen werden.
-     *
-     * Sind für einen Anwendungsfall mehrere voneinander abhängige Aufrufe von
-     * ::EricMtBearbeiteVorgang() nötig, so ist der Parameter @c transferHandle zu übergeben. Dies
-     * ist derzeit nur für die Datenabholung der Fall.
      *
      * Es werden an bestimmten Punkten der Verarbeitung benutzerdefinierte Callback Funktionen
      * aufgerufen. Siehe hierzu \ref MTSection_Fortschrittcallbacks.
@@ -55,7 +51,7 @@ extern "C"
      *              Enthält die zu verarbeitenden XML-Daten.
      * @param[in] datenartVersion
      *      @parblock
-     *              Die @c datenartVersion ist der @lsDokumentation{Datenartversionmatrix.xml} zu entnehmen.
+     *              Die @c datenartVersion ist der @lsDokumentation{Datenartversionmatrix.ods} zu entnehmen.
      *
      *              Dieser Parameter darf nicht NULL sein und muss zu den XML-Eingangsdaten passen.
      *
@@ -87,19 +83,6 @@ extern "C"
      *              siehe ::eric_verschluesselungs_parameter_t.
      *
      *              Erfolgt kein authentifizierter Versand, so ist NULL zu übergeben.
-     *      @endparblock
-     * @param[in,out] transferHandle
-     *      @parblock
-     *              Bei der Datenabholung ist ein Zeiger auf ein vom Aufrufer verwaltetes
-     *              und anfangs mit 0 befülltes ::EricTransferHandle zu übergeben, über das die
-     *              zusammenhängenden Versandvorgänge einer Datenabholung gebündelt werden
-     *              (Bündelung der Versandvorgänge "Anforderung", "Abholung" und optional
-     *              "Quittierung").
-     *
-     *              Wenn bei der Datenabholung kein Versandflag gesetzt ist (nur Validierung),
-     *              darf dem transferHandle auch ein Nullzeiger (NULL) übergeben werden.
-     *
-     *              Bei allen anderen Anwendungsfällen ist immer NULL zu übergeben.
      *      @endparblock
      * @param[out] rueckgabeXmlPuffer
      *      @parblock
@@ -211,7 +194,7 @@ extern "C"
      * Die einzelnen Elemente sind in der Schemadefinition
      * @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricBearbeiteVorgang.xsd} dokumentiert.
      * Wenn die Bearbeitungsflags ::ERIC_PRUEFE_HINWEISE und ::ERIC_VALIDIERE übergeben
-     * worden sind, wurden bei der Plausibilisierung keine Fehler gefunden. Es sind
+     * worden sind, wurden bei der Plausibilitätsprüfung keine Fehler gefunden. Es sind
      * keine Fehler im Rückgabepuffer enthalten.
      *
      * \subsection MTSection_Plausibilitaetsfehler Plausibilitätsfehler
@@ -247,7 +230,7 @@ extern "C"
      * \subsection MTSection_Serverfehlerfall Fehler in der Serverantwort
      *
      * Ist der Rückgabewert ::ERIC_TRANSFER_ERR_XML_THEADER oder
-     * ::ERIC_TRANSFER_ERR_XML_NHEADER so enthält der Serverantwortpuffer
+     * ::ERIC_TRANSFER_ERR_XML_NHEADER, so enthält der Serverantwortpuffer
      * Fehlermeldungen. Zur Auswertung kann entweder die Serverantwort selbst
      * ausgewertet werden oder es wird ::EricMtGetErrormessagesFromXMLAnswer() aufgerufen.
      *
@@ -264,15 +247,15 @@ extern "C"
      * registrierten Callbacks aufgerufen.
      *
      * @see
+     *      - EricMtHoleFehlerText()
+     *      - EricMtGetErrormessagesFromXMLAnswer()
+     *      - EricMtRegistriereFortschrittCallback()
+     *      - EricMtRegistriereGlobalenFortschrittCallback()
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Anwendungsfälle von EricBearbeiteVorgang()"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. der jeweiligen Datenart
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "ElsterDatenabholung"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Größenbegrenzung der Eingangsdaten"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Funktionen für Fortschrittcallbacks"
-     *      - EricMtHoleFehlerText()
-     *      - EricMtGetErrormessagesFromXMLAnswer()
-     *      - EricMtRegistriereFortschrittCallback()
-     *      - EricMtRegistriereGlobalenFortschrittCallback()
      *
      */
     ERICAPI_IMPORT int STDCALL EricMtBearbeiteVorgang(
@@ -282,7 +265,6 @@ extern "C"
         uint32_t bearbeitungsFlags,
         const eric_druck_parameter_t* druckParameter,
         const eric_verschluesselungs_parameter_t* cryptoParameter,
-        EricTransferHandle* transferHandle,
         EricRueckgabepufferHandle rueckgabeXmlPuffer,
         EricRueckgabepufferHandle serverantwortXmlPuffer);
 
@@ -373,7 +355,7 @@ extern "C"
     /**
      * @brief Das @c xml wird gegen das Schema der @c datenartVersion validiert.
      *
-     * Das verwendete Schema kann nachgeschlagen werden unter @lsSchnittstellenbeschreibungen{Dokumentation\\Schnittstellenbeschreibungen\\}
+     * Das verwendete Schema kann nachgeschlagen werden unter @lsDatenarten{Dokumentation\\Datenarten\\}\<verfahren>\\\<datenart>\\Schema\\
      *
      * Nicht unterstützte Datenartversionen: @mAbsatz
      *  - ElsterKMV
@@ -384,7 +366,7 @@ extern "C"
      *             XML-Zeichenfolge
      * @param[in]  datenartVersion
      *      @parblock
-     *              Die @c datenartVersion ist der @lsDokumentation{Datenartversionmatrix.xml} zu entnehmen.
+     *              Die @c datenartVersion ist der @lsDokumentation{Datenartversionmatrix.ods} zu entnehmen.
      *              Dieser Parameter darf nicht NULL sein und muss zu den XML-Eingangsdaten passen.
      *
      *              Siehe auch @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}.
@@ -405,8 +387,8 @@ extern "C"
      *         - ::ERIC_GLOBAL_COMMONDATA_NICHT_VERFUEGBAR
      *         - ::ERIC_GLOBAL_DATENARTVERSION_UNBEKANNT
      *         - ::ERIC_GLOBAL_NICHT_GENUEGEND_ARBEITSSPEICHER
-     *         - ::ERIC_IO_READER_SCHEMA_VALIDIERUNGSFEHLER: @mLB<a>Die Fehlerbeschreibung steht im <tt>fehlertextPuffer</tt>.
-     *         - ::ERIC_IO_PARSE_FEHLER: @mLB<a>Die Fehlerbeschreibung steht im <tt>fehlertextPuffer</tt>.
+     *         - ::ERIC_IO_READER_SCHEMA_VALIDIERUNGSFEHLER: @mLB<a>Die Fehlerbeschreibung steht im <tt>fehlertextPuffer.</tt>
+     *         - ::ERIC_IO_PARSE_FEHLER: @mLB<a>Die Fehlerbeschreibung steht im <tt>fehlertextPuffer.</tt>
      *         - weitere, siehe eric_fehlercodes.h
      */
     ERICAPI_IMPORT int STDCALL EricMtCheckXML(
@@ -605,7 +587,7 @@ extern "C"
      * @param[in] testmerker
      *      @parblock
      *              Für eine Testübertragung muss der entsprechende Testmerker angegeben werden,
-     *              siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Test Unterstützung bei der ERiC-Anbindung".
+     *              siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Testunterstützung bei der ERiC-Anbindung".
      *
      *              Falls ein Echtfall übertragen werden soll, muss der Wert NULL angegeben werden.
      *      @endparblock
@@ -664,9 +646,9 @@ extern "C"
      *
      *
      * @see
-     *     - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Datenverarbeitung mit ERiC"
-     *     - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Anwendungsfälle von EricBearbeiteVorgang()"
      *     - ERiC-Returncodes und Fehlertexte sind in eric_fehlercodes.h zu finden.
+     *     - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Datenverarbeitung mit ERiC"
+     *     - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Anwendungsfälle von EricBearbeiteVorgang()"             
      */
     ERICAPI_IMPORT int STDCALL EricMtCreateTH(
         EricInstanzHandle instanz,
@@ -831,7 +813,7 @@ extern "C"
     ERICAPI_IMPORT int STDCALL EricMtEinstellungSetzen(
         EricInstanzHandle instanz,
         const char* name,
-        const char* wert);
+        const byteChar* wert);
 
     /**
      * @brief Der Wert der API-Einstellung @c name wird auf den Standardwert zurückgesetzt.
@@ -960,12 +942,12 @@ extern "C"
      *
      * Für die Ermittlung der Auswahllisten vieler Feldkennungen wird aus Performanzgründen Anwendungsfall 2 empfohlen.
      * Die Funktion liefert Auswahllisten zu Feldkennungen vom Format "NichtAbgeschlosseneEnumeration" zurück.
-     * Diese Auswahllisten werden auch in der Jahres-/Deltadokumentation dokumentiert.
+     * Diese Auswahllisten werden auch in der Jahres-/@lsDeltadokumentation{Deltadokumentation} dokumentiert.
      *
      * @param[in] instanz Die ERiC-Instanz, auf der diese Funktion ausgeführt werden soll.
      * @param[in] datenartVersion
      *            Dieser Parameter darf nicht NULL sein.
-     *            Die gültigen Datenartversionen sind in der @lsDokumentation{Datenartversionmatrix.xml} enthalten.
+     *            Die gültigen Datenartversionen sind in der @lsDokumentation{Datenartversionmatrix.ods} enthalten.
      * @param[in] feldkennung
      *            Feldkennung, für welche die Auswahlliste zu ermitteln ist.
      * @param[out] rueckgabeXmlPuffer
@@ -1013,7 +995,7 @@ extern "C"
      * Die Funktion liefert bei erfolgreicher Ausführung: @mAbsatz
      * - Das Transferticket aus dem Antwort-XML in dem Parameter @c transferticketPuffer.
      * - Den Returncode und die Fehlermeldung aus dem Transferheader
-     *   in den Parametern \c returncodeTHPuffer und \c fehlertextTHPuffer.
+     *   in den Parametern \c returncodeTHPuffer und <tt>fehlertextTHPuffer.</tt>
      * - Für jeden Nutzdatenheader dessen Returncode und Fehlermeldung als XML-Daten im
      *   Parameter @c returncodesUndFehlertexteNDHXmlPuffer nach XML Schema Definition
      *   @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricGetErrormessagesFromXMLAnswer.xsd}.
@@ -1031,8 +1013,8 @@ extern "C"
      * @param[out] transferticketPuffer Handle auf einen Rückgabepuffer, in den
      *            das Transferticket geschrieben wird, siehe ::EricRueckgabepufferHandle.
      * @param[out] returncodeTHPuffer Handle auf einen Rückgabepuffer, in den
-     *            der Returncode aus dem Transferheader geschrieben wird.
-     *            Siehe ::EricRueckgabepufferHandle.
+     *            der Returncode aus dem Transferheader geschrieben wird, 
+     *            siehe ::EricRueckgabepufferHandle.
      * @param[out] fehlertextTHPuffer Handle auf einen Rückgabepuffer, in den
      *            die Fehlermeldung aus dem Transferheader geschrieben wird, siehe
      *            ::EricRueckgabepufferHandle.
@@ -1071,10 +1053,10 @@ extern "C"
      *     auszuwerten.
      *
      * @see
-     *      - XML-Schema des Transferheaders: @lsElsterBasisSchema{Dokumentation\Schnittstellenbeschreibungen\ElsterBasisSchema\Schema\th000011_extern.xsd}
-     *      - XML-Schema des Nutzdatenheaders: @lsElsterBasisSchema{Dokumentation\Schnittstellenbeschreibungen\ElsterBasisSchema\Schema\ndh000011.xsd}
+     *      - XML-Schema des Transferheaders: @lsElsterBasisSchema{Dokumentation\ElsterBasisSchema\Schema\th000011_extern.xsd}
+     *      - XML-Schema des Nutzdatenheaders: @lsElsterBasisSchema{Dokumentation\ElsterBasisSchema\Schema\ndh000011.xsd}
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Schnittstellenbeschreibungen",
-     *        Tabelle "Ergänzende Softwarepakete und Dateien – Schnittstellenbeschreibungen"
+     *        Tabelle "ELSTER > Ergänzende Softwarepakete und Dateien > Schnittstellenbeschreibungen"
      */
     ERICAPI_IMPORT int STDCALL EricMtGetErrormessagesFromXMLAnswer(
         EricInstanzHandle instanz,
@@ -1157,7 +1139,7 @@ extern "C"
      *                Optional kann auf die folgende Weise noch ein Testmerker angehängt werden:
      *                http://127.0.0.1:24727/eID-Client?testmerker=520000000. @mLB<a>Zu
      *                den verfügbaren Testmerkern siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf},
-     *                Kap. "Test Unterstützung bei der ERiC-Anbindung".
+     *                Kap. "Testunterstützung bei der ERiC-Anbindung".
      *                
      *                <b>Wichtig:</b> Das Ad Hoc-Zertifikat, das in diesem Fall für den neuen
      *                         Personalausweis erzeugt wird, ist nur 24 Stunden gültig.
@@ -1554,7 +1536,7 @@ extern "C"
      *              Handle auf einen Rückgabepuffer, in den
      *              die Ergebnis XML-Daten geschrieben werden.
      *              Die XML-Daten folgen der XML Schema Definition
-     *              @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricHoleTestFinanzaemter.xsd}.
+     *              @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricHoleTestfinanzaemter.xsd}.
      *
      *              Zur Erzeugung, Verwendung und Freigabe von Rückgabepuffern
      *              siehe Dokumentation zu ::EricRueckgabepufferHandle.
@@ -1563,7 +1545,7 @@ extern "C"
      * \b Beispiel:
      * \code{.xml}
      * <?xml version="1.0" encoding="UTF-8"?>
-     * <EricHoleTestFinanzaemter xmlns="http://www.elster.de/EricXML/1.0/EricHoleTestFinanzaemter">
+     * <EricHoleTestfinanzaemter xmlns="http://www.elster.de/EricXML/1.0/EricHoleTestfinanzaemter">
      *   <Finanzamt>
      *       <BuFaNummer>1096</BuFaNummer>
      *       <Name>Testfinanzamt Saarland</Name>
@@ -1573,7 +1555,7 @@ extern "C"
      *       <Name>Finanzschule (Edenkoben)</Name>
      *     </Finanzamt>
      *     (...)
-     * </EricHoleTestFinanzaemter>
+     * </EricHoleTestfinanzaemter>
      * \endcode
      *
      * @return
@@ -1649,8 +1631,8 @@ extern "C"
      *                        von ::ERIC_CRYPT_E_INVALID_HANDLE = 610201101 bis 610201212
      *
      * @see
-     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Verwendung von EricHoleZertifikatEigenschaften()"
      *      - @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricHoleZertifikatEigenschaften.xsd}
+     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Verwendung von EricHoleZertifikatEigenschaften()"             
      *
      */
     ERICAPI_IMPORT int STDCALL EricMtHoleZertifikatEigenschaften(
@@ -1733,6 +1715,7 @@ extern "C"
      *             Für Linux, AIX und macOS ist zu beachten, dass der syslogd-Dienst
      *             gegebenenfalls erst noch zu aktivieren und für die Protokollierung
      *             von Meldungen der Facility "User" zu konfigurieren ist.
+     *
      *             Suchkriterien für ERiC-Meldungen in der Windows-Ereignisansicht
      *             sind "ERiC (Elster Rich Client)" als Quelle und "Anwendung"
      *             als Protokoll.
@@ -1743,8 +1726,8 @@ extern "C"
      *     @endparblock
      *
      * @see
-     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Hinweise zum optimierten Einsatz von ERiC-Instanzen und Plugins"
      *      - EricMtInstanzFreigeben()
+     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Hinweise zum optimierten Einsatz von ERiC-Instanzen und Plugins"
      */
     ERICAPI_IMPORT EricInstanzHandle STDCALL EricMtInstanzErzeugen(
         const char *pluginPfad,
@@ -1877,7 +1860,7 @@ extern "C"
      *  - ::ERIC_GLOBAL_UNKNOWN
      *
      * @see
-     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "BIC ISO-Ländercodes"
+     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "BIC: ISO-Ländercodes"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "BIC-Prüfung"
      */
     ERICAPI_IMPORT int STDCALL EricMtPruefeBIC(
@@ -1911,7 +1894,7 @@ extern "C"
      *  - ::ERIC_GLOBAL_UNKNOWN
      *
      * @see
-     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "IBAN - länderspezifische Formate"
+     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "IBAN: Länderspezifische Formate"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "IBAN-Prüfung"
      *
      */
@@ -1956,7 +1939,7 @@ extern "C"
      *
      * @see
      *         - EricMtPruefeSteuernummer()
-     *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Prüfung der Steueridentifikationsnummer (IdNr)"
+     *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Prüfung der Steueridentifikationsnummer (IdNr.)"
      *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Test-Steueridentifikationsnummer"
      */
     ERICAPI_IMPORT int STDCALL EricMtPruefeIdentifikationsMerkmal(
@@ -2131,8 +2114,8 @@ extern "C"
      *           Deshalb sollte der Callback sehr schnell ausgeführt werden.
      *
      * @see
-     *         - EricFortschrittCallback
      *         - EricMtBearbeiteVorgang()
+     *         - EricFortschrittCallback
      *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Funktionen für Fortschrittcallbacks"
      *
      */

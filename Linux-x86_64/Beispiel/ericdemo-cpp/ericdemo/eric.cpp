@@ -4,7 +4,6 @@
 #include "eric.h"
 #include "anwendungsfehler.h"
 #include "resolve.h"
-#include "ericsystemsteuerung.h"
 #include "system.h"
 
 const std::string pfadSeparator(1, PFAD_SEPARATOR);
@@ -37,7 +36,6 @@ namespace {
         uint32_t bearbeitungsFlags,
         const eric_druck_parameter_t *druckParameter,
         const eric_verschluesselungs_parameter_t *cryptoParameter,
-        EricTransferHandle *transferHandle,
         EricRueckgabepufferHandle rueckgabeXmlPuffer,
         EricRueckgabepufferHandle serverantwortXmlPuffer);
     EricBearbeiteVorgangFun EricBearbeiteVorgangPtr;
@@ -218,7 +216,11 @@ Eric::Eric(const std::string &argHomeDir, const std::string &argLogDir) : libEri
 
         if (argLogDir.empty() || System::istPfadRelativ(argLogDir.c_str()))
         {
-            if (!System::getArbeitsverzeichnis(logDir))
+            if (System::getArbeitsverzeichnis(logDir))
+            {
+                logDir += argLogDir;
+            }
+            else
             {
                 throw Anwendungsfehler("Das Arbeitsverzeichnis konnte nicht ermittelt werden.");
             }
@@ -277,12 +279,11 @@ int Eric::EricBearbeiteVorgang(const char* datenpuffer,
                                uint32_t bearbeitungsFlags,
                                const eric_druck_parameter_t *druckParameter,
                                const eric_verschluesselungs_parameter_t *cryptoParameter,
-                               EricTransferHandle *transferHandle,
                                EricRueckgabepufferHandle rueckgabeXmlPuffer,
                                EricRueckgabepufferHandle serverantwortXmlPuffer) const
 {
     return EricBearbeiteVorgangPtr(datenpuffer, datenartVersion,
-        bearbeitungsFlags, druckParameter, cryptoParameter, transferHandle, rueckgabeXmlPuffer, serverantwortXmlPuffer);
+        bearbeitungsFlags, druckParameter, cryptoParameter,  rueckgabeXmlPuffer, serverantwortXmlPuffer);
 }
 
 int Eric::EricGetHandleToCertificate(EricZertifikatHandle * hToken,

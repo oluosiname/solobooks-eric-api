@@ -2,7 +2,6 @@
 #define _ERICDEKODIERUNG_H_
 
 #include <string>
-#include <ericapi.h>
 
 // Vorwaertsdeklarationen
 class Eric;
@@ -23,7 +22,6 @@ public:
       */
     explicit EricDekodierung(const Eric &eric);
 
-    virtual ~EricDekodierung();
 
     /** @brief Führt die Dekodierung mit dem übergebenen Zertifikat aus und
       *        gibt die entschlüsselten Daten zurück
@@ -39,8 +37,6 @@ public:
     void leseDatensatz(const std::string& dateiName);
 
 private:
-    EricDekodierung &operator=(const EricDekodierung &); // Zuweisungen verboten
-
     const Eric &ericAdapter;
     std::string verschluesselteDaten;
 };

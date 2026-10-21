@@ -81,7 +81,7 @@ Optionen:
 Beispiele:
      <starte-ottodemo>
      <starte-ottodemo> --help
-     <starte-ottodemo> -e Empfang.xml -o 7090bc69-be5e-4fd0-b91a-2128021295d6 -c test-softidnr-pse -p 123456 -i <Hersteller-ID>
+     <starte-ottodemo> -e Empfang.xml -o 6c12140d-64ca-4ec1-ae9e-08aaf0eb1c6e -c test-softidnr-pse -p 123456 -i <Hersteller-ID>
      <starte-ottodemo> -s <Datei> -c test-softidnr-pse -p 123456 -i <Hersteller-ID>
 
 <starte-ottodemo>: 

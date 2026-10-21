@@ -15,7 +15,7 @@ In ericdemo werden folgende Aspekte beispielhaft implementiert:
      - Validieren eines Datensatzes
      - Versenden eines Datensatzes, mit Zertifikat authentifiziert oder
        unsigniert
-     - PDF-Erstellung nach dem Versenden
+     - PDF-Erstellung als Vorschaudruck oder nach dem Versenden
   - Entschlüsseln eines Datensatzes
 
 Den Quellcode des Beispielprogramms finden Sie im Verzeichnis:
@@ -31,7 +31,7 @@ Voraussetzung:
 ============== 
 
 Für die Nutzung des mitgelieferten XML-Beispieldatensatzes "ESt_2020.xml"  
-gilt ab dem ERiC-Release 39.4.x folgende Voraussetzung:
+gilt folgende Voraussetzung:
 
 Die Hersteller-ID "74931" im Element <HerstellerID>...</HerstellerID> 
 muss durch die eigene Hersteller-ID ersetzt werden. 
@@ -74,7 +74,7 @@ ericdemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis an eine andere
 Stelle kopieren, an der Sie Schreibrechte besitzen. Danach sind folgende
 Anpassungen notwendig:
 
-*       Datei "starte-ericdemo-x86.bat" bzw. "starte-ericdemo-x64.bat"
+*       Datei "starte-ericdemo.bat"
         Das Verzeichnis der ERiC-Bibliotheken ist als Wert der Option /d zu
         setzen.
 
@@ -136,7 +136,7 @@ ericdemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis an eine andere
 Stelle kopieren, an der Sie Schreibrechte besitzen. Danach sind folgende
 Anpassungen notwendig:
 
-*       Im Target ericdemo den "Header Search Path" anpassen, so dass dieser
+*       Im Target ericdemo den "Header Search Path" anpassen, sodass dieser
         auf das Verzeichnis mit den ERiC-Headern verweist.
 
 *       Unter dem Menu Produkt -> Scheme -> "Edit Scheme" in dem Punkt Run den Parameter 
@@ -168,17 +168,53 @@ Anpassungen notwendig:
         Die Variable ERIC_INSTALL muss auf das ERiC-Installationsverzeichnis
         gesetzt werden.
 
+Alle Plattformen (CMake):
+=========================
+
+Das zur Verfügung gestellte CMake-Build-Rezept dient Ihnen als Basisrezept für
+das Erstellen des Programms ericdemo mit CMake. Diese Anleitung zum Bauen des
+Programms ericdemo mit CMake richtet sich an fortgeschrittenere Benutzer. Wenn
+Sie sich nicht sicher sind, ob Ihre Anforderungen die Verwendung von CMake
+erfordern, verwenden Sie lieber direkt die plattformspezifischen
+Build-Werkzeuge. Zum Bauen des Programms ericdemo mit CMake ist mindestens die
+CMake-Version 3.22, ein durch CMake unterstütztes Build-Werkzeug wie z.B.
+Visual Studio / MSBuild, GNU Make, Ninja oder Xcode und ein unterstützter
+C++-Compiler (MSVC für Windows, AppleClang für macOS, GCC oder Clang für
+GNU/Linux, IBM (Open) XL C/C++ für AIX) erforderlich. Auf AIX benötigen Sie
+außerdem die AIX Toolbox für Linux Applications, um das Programm in der
+GNU/Linux-Umgebung zu bauen. Wir empfehlen Ihnen das CMake-Build-Verzeichnis
+build im Verzeichnis ericdemo-cpp anzulegen. Um die Baurezepte für die
+Anwendung ericdemo mit Debug-Einstellungen zu generieren, führen Sie den Befehl
+
+*       cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+im Arbeitsverzeichnis ericdemo-cpp aus. Wenn Sie das Projekt für Windows-x86,
+bzw. Windows-x86_64, mit Visual Studio bauen wollen, sollten Sie an den oben
+genannten Befehl die Option -A Win32, bzw. -A x64, anhängen. Um das Programm
+nun zu erstellen, rufen Sie CMake wie folgt im Arbeitsverzeichnis ericdemo-cpp
+auf:
+
+*       cmake --build build --config Debug
+
+Zum Erstellen und Ausführen der ericdemo benötigen Sie Schreibrechte im
+ericdemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis in einen anderen
+Ordner kopieren, in dem Sie Schreibrechte besitzen. Danach sind folgende
+Anpassungen notwendig:
+
+*       In der CMakeLists.txt-Datei muss der Pfad zum include-Verzeichnis der
+        ERiC-Bibliotheken angepasst werden.
+
+*       Dem Skript starte-ericdemo.bat, bzw. starte-ericdemo.sh, muss das
+        Verzeichnis der ERiC-Bibliotheken als Wert der Option /d, bzw. -d,
+        übergeben werden, um die ericdemo erfolgreich ausführen zu können.
 
 Ausführen:
 ==========
 
-Sie können ericdemo wie folgt ausführen:
+Sie können ericdemo im Arbeitsverzeichnis ericdemo-cpp wie folgt ausführen:
 
-*       Unter Windows, 32-Bit-Architektur:
-        starte-ericdemo-x86.bat
-
-*       Unter Windows, 64-Bit-Architektur
-        starte-ericdemo-x64.bat
+*       Unter Windows:
+        starte-ericdemo.bat
 
 *       Unter Linux, AIX und macOS:
         sh starte-ericdemo.sh
@@ -186,15 +222,15 @@ Sie können ericdemo wie folgt ausführen:
 Diese Startskripte können auch mit folgenden Optionen aufgerufen werden:
 
 Optionen unter Windows:
-    /?                   Hilfetext anzeigen
+    /? oder /h           Hilfetext anzeigen
     /v <datenartversion> Datenartversion
     /x <xml>             Pfad zur Datensatzdatei
     /c <certificate>     Pfad zu einem Benutzerzertifikat, _NULL (Nullzeiger) für kein Benutzerzertifikat
+    /a <pdf>             PDF-Pfad des anzulegenden Drucks, _NULL, wenn kein PDF gedruckt werden soll
     /p <pin>             PIN für das Benutzerzertifikat, _NULL (Nullzeiger) für keine PIN
     /d <dir>             Pfad zum Verzeichnis mit den ERiC-Bibliotheken
     /l <log>             Pfad zum Verzeichnis, in dem die ERiC-Protokolldateien geschrieben werden
     /s <dateipfad>       Serverantwort oder - wenn nicht vorhanden - das Ergebnis in die angegebene Datei schreiben
-    /t <transferhandle>  Transferhandle, das an die Server übermittelt wird (nur bei Datenabholungen anzugeben)
     /n                   Daten werden nicht versendet, sondern nur validiert
     /e                   Der Datensatz wird nicht validiert oder versendet, sondern entschlüsselt
 
@@ -204,14 +240,12 @@ Schrägstrich "/" eingeleitet.
 Beispiele:
      <starte-ericdemo>
      <starte-ericdemo> /?
-     <starte-ericdemo> /v ESt_2020 /x ESt_2020.xml /n
+     <starte-ericdemo> /v ESt_2016 /x ESt_2016.xml /c _NULL /p _NULL
+     <starte-ericdemo> /v ESt_2020 /x ESt_2020.xml /a ESt_2020-Vorschaudruck.pdf /n
      <starte-ericdemo> /v ESt_2020 /x ESt_2020.xml /c test-softidnr-pse.pfx /p 123456
-     <starte-ericdemo> /v MitteilungAbholung /x MitteilungAbholungAnfrage.xml /t 0
-     <starte-ericdemo> /e /x Abholdaten.b64 /s Abholdaten.xml     
+     <starte-ericdemo> /v PostfachAnfrage_32 /x PostfachAnfrage.xml /a _NULL /c test-softidnr-pse.pfx /p 123456
+     <starte-ericdemo> /e /x Abholdaten.b64 /s Abholdaten.xml
 nPA: <starte-ericdemo> /v Kontoinformation /x kontoinformation.xml /c "http://127.0.0.1:24727/eID-Client?testmerker=520000000" /p _NULL
 
 <starte-ericdemo>:
 Alternativ zu den Startskripten können Sie ericdemo auch direkt aufrufen.
-Unter AIX müssen Sie in diesem Fall die globale Umgebungsvariable LIBPATH auf das Verzeichnis
-setzen, in dem die libericapi.so liegt, und die Umgebungsvariable "LDR_PRELOAD64" auf den Pfad der libc++. Beispiel:
-    export LDR_PRELOAD64="/usr/lib/libc++.a(shr_64.o)"

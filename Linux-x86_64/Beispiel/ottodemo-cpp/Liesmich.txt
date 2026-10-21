@@ -18,7 +18,7 @@ Den Quellcode des Beispielprogramms finden Sie im Verzeichnis:
 Das Hauptprogramm beginnt in der Datei ottodemo.cpp.
 
 Die folgenden Abschnitte beschreiben, wie Sie das Beispielprogramm unter
-Windows, Linux und macOS erstellen und ausführen können.
+Windows, Linux, AIX und macOS erstellen und ausführen können.
 
 Voraussetzung:
 ============== 
@@ -28,7 +28,7 @@ Wird kein -i Parameter angegeben, wird die Hersteller-ID in der Konsole abgefrag
 Es muss hier die eigene Hersteller-ID verwendet werden. 
 
 
-Bauen unter Windows:
+Windows:
 ====================
 
 ottodemo ist eine Windows-Konsolenanwendung, die mit
@@ -51,7 +51,7 @@ Beachten Sie:
 Zum Erstellen und Ausführen der ottodemo brauchen Sie Schreibrechte im
 ottodemo-Verzeichnis.
 
-Bauen unter Linux (Unix Makefile):
+Linux (Unix Makefile):
 ==================================
 
 ottodemo ist eine Konsolenanwendung, die mit gcc und GNU make
@@ -98,15 +98,15 @@ ottodemo-cpp ist eine Konsolenanwendung, die einen moderneren C++ Standard einse
 daher einen Compiler mit C++14 Unterstützung erfordert.
 Geeignete Compiler sind der xlclang und der g++. Der xlC wird nicht mehr unterstützt.
 
-Zum Erstellen der ericdemo kann
+Zum Erstellen der ottodemo kann
 
 *       ./build-AIX.sh
 
 aufgerufen werden.
 
 Beachten Sie:
-Zum Erstellen und Ausführen der ericdemo brauchen Sie Schreibrechte im
-ericdemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis an eine andere
+Zum Erstellen und Ausführen der ottodemo brauchen Sie Schreibrechte im
+ottodemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis an eine andere
 Stelle kopieren, an der Sie Schreibrechte besitzen. Danach sind folgende
 Anpassungen notwendig:
 
@@ -119,16 +119,52 @@ Anpassungen notwendig:
         gesetzt werden.
 
 
+Alle Plattformen (CMake):
+=========================
+
+Das zur Verfügung gestellte CMake-Build-Rezept dient Ihnen als Basisrezept für
+das Erstellen des Programms ottodemo mit CMake. Diese Anleitung zum Bauen des
+Programms ottodemo mit CMake richtet sich an fortgeschrittenere Benutzer. Wenn
+Sie sich nicht sicher sind, ob Ihre Anforderungen die Verwendung von CMake
+erfordern, verwenden Sie lieber direkt die plattformspezifischen
+Build-Werkzeuge. Zum Bauen des Programms ottodemo mit CMake ist mindestens die
+CMake-Version 3.22, ein durch CMake unterstütztes Build-Werkzeug wie z.B.
+Visual Studio / MSBuild, GNU Make, Ninja oder Xcode und ein unterstützter
+C++-Compiler (MSVC für Windows, AppleClang für macOS, GCC oder Clang für
+GNU/Linux, IBM (Open) XL C/C++ für AIX) erforderlich. Auf AIX benötigen Sie
+außerdem die AIX Toolbox für Linux Applications, um das Programm in der
+GNU/Linux-Umgebung zu bauen. Wir empfehlen Ihnen das CMake-Build-Verzeichnis
+build im Verzeichnis ottodemo-cpp anzulegen. Um die Baurezepte für die
+Anwendung ottodemo mit Debug-Einstellungen zu generieren, führen Sie den Befehl
+
+*       cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+im Arbeitsverzeichnis ottodemo-cpp aus. Wenn Sie das Projekt für Windows-x86,
+bzw. Windows-x86_64, mit Visual Studio bauen wollen, sollten Sie an den oben
+genannten Befehl die Option -A Win32, bzw. -A x64, anhängen. Um das Programm
+nun zu erstellen, rufen Sie CMake wie folgt im Arbeitsverzeichnis ottodemo-cpp
+auf:
+
+*       cmake --build build --config Debug
+
+Zum Erstellen und Ausführen der ottodemo benötigen Sie Schreibrechte im
+ottodemo-Verzeichnis. Falls nötig, können Sie das Verzeichnis in einen anderen
+Ordner kopieren, in dem Sie Schreibrechte besitzen. Danach sind folgende
+Anpassungen notwendig:
+
+*       In der CMakeLists.txt-Datei muss der Pfad zum include-Verzeichnis der
+        ERiC-Bibliotheken angepasst werden.
+
+*       Dem Skript starte-ottodemo.bat, bzw. starte-ottodemo.sh, muss das
+        Verzeichnis der ERiC-Bibliotheken als Wert der Option /d, bzw. -d,
+        übergeben werden, um die ottodemo erfolgreich ausführen zu können.
+
 Ausführen:
 ==========
 
-Sie können ottodemo wie folgt ausführen:
+Sie können ottodemo im Arbeitsverzeichnis ottodemo-cpp wie folgt ausführen:
 
-*       Unter Windows, 32-Bit-Architektur:
-        starte-ottodemo-x86.bat
-
-*       Unter Windows, 64-Bit-Architektur
-        starte-ottodemo-x64.bat
+        starte-ottodemo.bat
 
 *       Unter Linux, AIX und macOS:
         sh starte-ottodemo.sh
@@ -136,25 +172,25 @@ Sie können ottodemo wie folgt ausführen:
 Diese Startskripte können auch mit folgenden Optionen aufgerufen werden:
 
 Optionen:
-    /?                   Hilfetext anzeigen
-    /h                   Hilfetext anzeigen
-    /e <dateipfad>       Empfange Daten und speichere diese in der angegebenen Datei.
-    /s <dateipfad>       Sende die angegebene Datei und gib die erhaltene Objekt-ID zurück.
-    /o Objekt-ID         OTTER-Objekt-ID der abzuholenden Datei (nur bei Empfang anzugeben)
-    /c <certificate>     Pfad zu einem Benutzerzertifikat
-    /p <pin>             PIN für das Benutzerzertifikat, _NULL (Nullzeiger) für keine PIN
-    /d <dir>             Pfad zum Verzeichnis mit den Otto-Bibliotheken
-    /l <log>             Pfad zum Verzeichnis, in das die Otto-Protokolldateien geschrieben werden
-    /i Hersteller-ID     ID des Softwareherstellers. Falls die Option nicht gesetzt ist, wird die Hersteller-ID interaktiv abgefragt
+	/h                      Hilfetext anzeigen
+	/?                      Hilfetext anzeigen
+	/d <Otto-Verzeichnis>   Pfad des Verzeichnisses mit den ERiC- bzw. Otto-Bibliotheken
+	/l <Log-Verzeichnis>    Pfad des Verzeichnisses, in dem die Protokolldatei otto.log erstellt werden soll
+	/o <Objekt-ID>          ID der Daten, die abgeholt werden sollen (nur bei Empfang anzugeben)
+	/e <Pfad Zieldatei>     Holt Daten von OTTER ab und schreibt sie in die angegebene Datei
+	/s <Pfad Quelldatei>    Sende die angegebene Datei und gib die erhaltene Objekt-ID zurück.
+	/c <Pfad Zertifikat>    Pfad des Sicherheitstokens fuer die Authentifizierung
+	/p <Passwort>           Passwort oder PIN des Sicherheitstokens, _NULL (Nullzeiger) für keine PIN
+	/i <Hersteller-ID>      ID des Softwareherstellers. Falls die Option nicht gesetzt ist, wird die Hersteller-ID interaktiv abgefragt
     
 
-Unter Linux und macOS werden die Optionen mit einem Bindestrich "-" statt einem
+Unter Linux, AIX und macOS werden die Optionen mit einem Bindestrich "-" statt einem
 Schrägstrich "/" eingeleitet.
 
 Beispiele:
      <starte-ottodemo>
      <starte-ottodemo> /?
-     <starte-ottodemo> /e Empfang.xml /o 7090bc69-be5e-4fd0-b91a-2128021295d6 /c test-softidnr-pse /p 123456 /i <Hersteller-ID>
+     <starte-ottodemo> /e Empfang.xml /o 6c12140d-64ca-4ec1-ae9e-08aaf0eb1c6e /c test-softidnr-pse /p 123456 /i <Hersteller-ID>
      <starte-ottodemo> /s <Datei> /c "http://127.0.0.1:24727/eID-Client?testmerker=520000000" /i <Hersteller-ID>
 
 <starte-ottodemo>:

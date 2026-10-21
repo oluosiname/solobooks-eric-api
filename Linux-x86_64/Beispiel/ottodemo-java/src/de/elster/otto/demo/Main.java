@@ -34,7 +34,7 @@ public class Main {
             + "geschrieben wird. Die Option darf nur angegeben werden, wenn auch die "
             + "Option -o gesetzt ist, sie darf nicht angegeben werden, "
             + "wenn die Option -s gesetzt ist.")
-    private Path empfangDatei = Paths.get("beispiel.xml");
+    private Path empfangDatei = Paths.get("beispiel.pdf");
 
     @Parameter(names = {"-s", "--sende"}, description = "Sendet die Datei <dateiname> an OTTER. Die Option darf "
             + "nicht angegeben werden, wenn die Optionen -e oder -o gesetzt sind. "
@@ -55,7 +55,7 @@ public class Main {
     @Parameter(names = {"-o", "--objektId"}, description = "Objekt-UUID des Objekts, das abgeholt werden soll. Die Option darf "
             + "nur angegeben werden, wenn auch die Option -e gesetzt ist, sie darf "
             + "nicht angegeben werden, wenn die Option -s gesetzt ist.")
-    private String objektId = "7090bc69-be5e-4fd0-b91a-2128021295d6";
+    private String objektId = "6c12140d-64ca-4ec1-ae9e-08aaf0eb1c6e";
 
     @Parameter(names = {"-d", "--dir"}, description = "Pfad zum Verzeichnis mit den Otto-Bibliotheken")
     private Path ottoPath = Paths.get("../../").resolve(Platform.isWindows() ? "dll" : "lib").toAbsolutePath().normalize();

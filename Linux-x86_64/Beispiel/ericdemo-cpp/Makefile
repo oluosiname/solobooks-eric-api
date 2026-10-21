@@ -14,7 +14,7 @@ REL=ericdemo/Release
 DEB=ericdemo/Debug
 
 SOURCE=datensatzleser.cpp ericdemo.cpp ericdekodierung.cpp \
-	callbackhandler.cpp ericpuffer.cpp ericsystemsteuerung.cpp \
+	callbackhandler.cpp ericpuffer.cpp \
 	ericvorgang.cpp ericzertifikat.cpp eric.cpp system.cpp
 
 OBJECTS=$(SOURCE:%.cpp=$(DEB)/%.o)

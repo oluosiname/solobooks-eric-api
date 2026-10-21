@@ -9,13 +9,15 @@ class Eric;
 class CallbackHandler
 {
 public:
-    CallbackHandler(const Eric& myEric);
+    explicit CallbackHandler(const Eric& myEric);
 
-    virtual ~CallbackHandler();
+    ~CallbackHandler();
 
     void globalerFortschritt(uint32_t id, uint32_t pos, uint32_t max) const;
 
     void fortschritt(uint32_t id, uint32_t pos, uint32_t max);
+
+    CallbackHandler(const CallbackHandler& ) = delete;
 
 private:
     const Eric& eric;

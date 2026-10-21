@@ -8,17 +8,17 @@
 
 namespace {
 
-static void STDCALL globalerFortschrittAdapter(uint32_t id, uint32_t pos, uint32_t max, void *userData) {
-    const CallbackHandler *const handler = reinterpret_cast<const CallbackHandler *>(userData);
+ void STDCALL globalerFortschrittAdapter(uint32_t id, uint32_t pos, uint32_t max, void *userData) {
+    const CallbackHandler *const handler = static_cast<const CallbackHandler *>(userData);
     handler->globalerFortschritt(id, pos, max);
 }
 
-static void STDCALL fortschrittAdapter(uint32_t id, uint32_t pos, uint32_t max, void *userData) {
-    CallbackHandler *const handler = reinterpret_cast<CallbackHandler *>(userData);
+ void STDCALL fortschrittAdapter(uint32_t id, uint32_t pos, uint32_t max, void *userData) {
+    CallbackHandler *const handler = static_cast<CallbackHandler *>(userData);
     handler->fortschritt(id, pos, max);
 }
 
-std::string mapId(uint32_t id) {
+std::string mapId(const uint32_t id) {
     switch (id) {
     case ERIC_FORTSCHRITTCALLBACK_ID_EINLESEN:
         return "XML einlesen";

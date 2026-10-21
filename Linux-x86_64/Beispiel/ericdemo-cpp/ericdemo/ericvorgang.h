@@ -2,7 +2,6 @@
 #define _ERICVORGANG_H_
 
 #include <string>
-#include <ericapi.h>
 
 // Vorwaertsdeklarationen
 class Eric;
@@ -24,14 +23,13 @@ public:
       */
     explicit EricVorgang(const Eric &eric);
 
-    virtual ~EricVorgang();
 
     /** @brief Führt den Vorgang gemäß der übergebenen Argumente aus
       *        und liefert das Ergebnis sowie gegebenenfalls bei Versand die Serverantwort
-      *        und bei einer Datenabholung das Transferhandle zurück
+      *        zurück
       */
     int ausfuehren( const System::KommandozeilenParser &argParser, const EricZertifikat *zertifikat,
-                    std::string &ergebnis, std::string &antwort, EricTransferHandle &transferHandle ) const;
+                    std::string &ergebnis, std::string &antwort) const;
 
     /** @brief Lese den Steuersatz aus einer Datei ein
       */

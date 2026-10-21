@@ -11,13 +11,9 @@
 EricDekodierung::EricDekodierung(const Eric& eric) : ericAdapter(eric)
 { }
 
-EricDekodierung::~EricDekodierung()
-{ }
-
 void EricDekodierung::leseDatensatz(const std::string &dateiName)
 {
-    Datensatzleser leser;
-    leser.lese(dateiName, verschluesselteDaten);
+    Datensatzleser::lese(dateiName, verschluesselteDaten);
 }
 
 int EricDekodierung::ausfuehren( const System::KommandozeilenParser &argParser,

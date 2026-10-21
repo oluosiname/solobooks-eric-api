@@ -108,7 +108,7 @@ def submit_submission():
             return invalid_request(e)
         
         # Submit XML using ERIC client
-        success, error_code, transfer_handle, error_message, pdf_data, server_response, validation_result, transferticket = eric_client.submit_xml(
+        success, error_code, error_message, pdf_data, server_response, validation_result, transferticket = eric_client.submit_xml(
             req.xml,
             req.cert_base64,
             req.password,
@@ -155,10 +155,9 @@ def submit_submission():
                 pdf_file_path,
                 mimetype='application/pdf',
                 as_attachment=True,
-                download_name=f'{datenartversion}_submission_{transfer_handle if transfer_handle else "unknown"}.pdf'
+                download_name=f'{datenartversion}_submission_{transferticket or "unknown"}.pdf'
             )
             
-            response.headers['X-Transfer-Handle'] = str(transfer_handle) if transfer_handle else 'N/A'
             response.headers['X-Transferticket'] = transferticket if transferticket else 'N/A'
             response.headers['X-Submission-Status'] = 'success'
             if server_response:
@@ -175,7 +174,6 @@ def submit_submission():
             
             result = SubmissionResult(
                 status='success',
-                transfer_handle=transfer_handle,
                 transferticket=transferticket,
                 pdf_base64=pdf_base64,
                 server_response=server_response,

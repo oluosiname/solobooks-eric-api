@@ -88,7 +88,6 @@
         class KommandozeilenParser {
         public:
             KommandozeilenParser();
-            virtual ~KommandozeilenParser() {};
 
             // Parsefehler erzeugen eine Ausnahme!
 #if defined(__xlC__) && !defined(__clang__)
@@ -97,7 +96,6 @@
             void parseKommandozeile(std::vector<std::string>&& argumente);
 #endif
 
-            bool               getParseOk()         const { return parseOk; }
             static void        zeigeHilfe(std::ostream& ostream);
 
             const std::string& getAufrufPfad()          const { return aufrufPfad; }
@@ -107,19 +105,24 @@
             bool                getHilfeAnzeigen()       const { return hilfeAnzeigen; }
             bool                getDatenEntschluesseln() const { return datenEntschluesseln; };
             const std::string& getAusgabeDatei()        const { return ausgabeDatei; }
-            EricTransferHandle  getTransferHandle()      const { return transferHandle; };
-            bool                getHatTransferHandle()   const { return hatTransferHandle; }
 
             // Parameter mit Default-Werten
             const std::string& getZertifikatPfad()      const { return zertifikatPfad.empty() ? KommandozeilenParser::defaultZertifikatPfad : zertifikatPfad; }
             const std::string& getZertifikatPin()       const { return zertifikatPin.empty() ? KommandozeilenParser::defaultZertifikatPin : zertifikatPin; }
             const std::string& getDatensatzDatei()      const { return datensatzDatei.empty() ? KommandozeilenParser::defaultDatensatzDatei : datensatzDatei; }
             const std::string& getDatenartVersion()     const { return datenartVersion.empty() ? KommandozeilenParser::defaultDatenartVersion : datenartVersion; }
-
+            const std::string& getPdfPfad() const  { return pdfPfad; };
+            
         private:
-            bool                parseOk;
+            // Default-Werte
+            static const std::string defaultZertifikatPfad;
+            static const std::string defaultZertifikatPin;
+            static const std::string defaultDatensatzDatei;
+            static const std::string defaultDatenartVersion;
+            static const char * const defaultPdfPfad;
 
             // Kommandozeilenoptionen
+            std::string         pdfPfad;
             std::string         aufrufPfad;
             std::string         logDir;
             std::string         homeDir;
@@ -131,14 +134,7 @@
             bool                hilfeAnzeigen;
             bool                datenEntschluesseln;
             std::string         ausgabeDatei;
-            EricTransferHandle  transferHandle;
-            bool                hatTransferHandle;
-
-            // Default-Werte
-            static const std::string defaultZertifikatPfad;
-            static const std::string defaultZertifikatPin;
-            static const std::string defaultDatensatzDatei;
-            static const std::string defaultDatenartVersion;
+          
         };
 
 
@@ -220,41 +216,13 @@
 #endif
    
 // Der IBM AIX-Compiler xlC Legacy unterstützt C++11 nur unvollständig.
-// Daher werden für diesen Compiler ein paar Hilfsfunktionen benötigt.
+// Daher werden für diesen Compiler Hilfsfunktionen benötigt.
 #if defined(__xlC__) && !defined(__clang__)
         /** @brief Konvertiert einen Datentyp in einen std::string
           *
           * @exception std::ios_base::failure, falls die Konvertierung fehl schlägt
           */
         unsigned long toUlong(const std::string &s);
-
-        /** @brief Instanzen dieser Templateklasse verwalten einen Zeiger,
-          *        der automatisch freigeben wird, wenn die Instanz zerstört wird.
-          */
-        template <typename T>
-        class FreePtr
-        {
-            public:
-                FreePtr() : p(nullptr) {}
-                FreePtr(T *p) : p(p) {}
-                ~FreePtr() { delete p; }
-                T *get() { return p; }
-                const T *get() const { return p; }
-                T &operator*() { return *p; }
-                const T &operator*() const { return *p; }
-                T *operator->() { return p; }
-                const T *operator->() const { return p; }
-                void reset(T *p) { delete this->p; this->p = p; }
-
-                // Kopien unterbinden
-                FreePtr(const FreePtr &) = delete;
-                FreePtr& operator=(const FreePtr &) = delete;
-                FreePtr(const FreePtr &&) = delete;
-                FreePtr& operator=(const FreePtr &&) = delete;
-
-            private:
-                T *p;
-        };
 #endif
   }
 #endif

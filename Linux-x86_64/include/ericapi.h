@@ -40,13 +40,13 @@ Das Dokumentationspaket beinhaltet: @mAbsatz
 + Das @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}. Hier finden Sie sowohl allgemeine Zusatzinformationen als auch spezielle Hinweise zum Gebrauch der Bibliotheken, Datensätze, Datensatzformate und Werte.
 + Das @typeTutorial{ERiC-Tutorial.pdf}. Es illustriert detailliert die Softwareentwicklung mit ERiC an den mitgelieferten Beispielen ericdemo und ottodemo.
 + Die @typeDokumentation{ERiC-Releasenotes.pdf}. Sie enthalten die Änderungen der aktuell unterstützten ERiC Releases.
-+ Die @lsDokumentation{Datenartversionmatrix.xml}. Sie enthält eine Übersicht der datenartVersionen, die ERiC unterstützt. Einige API-Funktionen verwenden die <I>datenartVersion</I> als Parameter, weitere Informationen siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "datenartVersion – Definition und Verwendung."
-+ Diese API-Referenz sowie die Dokumentation aller Feldkennungen, @lsPlausipruefungen{Plausibilitätsprüfungen}, Schemata und @lsSchnittstellenbeschreibungen{Schnittstellenbeschreibungen}.
++ Die @lsDokumentation{Datenartversionmatrix.ods}. Sie enthält eine Übersicht der datenartVersionen, die ERiC unterstützt. Einige API-Funktionen verwenden die <I>datenartVersion</I> als Parameter, weitere Informationen siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "datenartVersion – Definition und Verwendung".
++ Diese API-Referenz sowie die Dokumentation aller Feldkennungen, Plausibilitätsprüfungen, Schemata und Schnittstellenbeschreibungen.
 
 <H3> Encoding und Zeichensatz </H3>
 Alle Daten, die an die ELSTER Annahmeserver übermittelt werden, sind in UTF-8 zu kodieren. Hierbei dürfen die zu übermittelnden Daten keine BOM (=Byte Order Mark) enthalten.
 
-Der Datentyp <B>char</B> zeigt an, wo UTF-8 kodierte Zeichenketten zu verwenden sind. Der Datentyp ::byteChar zeigt an, wo ASCII zu verwenden ist bzw. bei Pfadangaben das betriebssystemspezifische Encoding, siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Übergabe von Pfaden an ERiC API-Funktionen."
+Der Datentyp <B>char</B> zeigt an, wo UTF-8 kodierte Zeichenketten zu verwenden sind. Der Datentyp ::byteChar zeigt an, wo ASCII zu verwenden ist bzw. bei Pfadangaben das betriebssystemspezifische Encoding, siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Übergabe von Pfaden an ERiC API-Funktionen".
 
 Die erlaubte Zeichenmenge lässt sich dem Datentyp <I>BaseStringSType</I> aus dem ElsterBasisSchema @lsElsterBasisSchema{headerbasis_datentypen.xsd} der Schnittstellenbeschreibung entnehmen.
 
@@ -62,7 +62,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      * im @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}. Dort sind die Arbeitsabläufe von Einzel- und Sammellieferung
      * beschrieben.
      *
-     * Die Funktion kann Steuerdaten plausibilisieren, an den ELSTER-Annahmeserver übertragen und
+     * Die Funktion kann Steuerdaten auf Plausibilität prüfen, an den ELSTER-Annahmeserver übertragen und
      * ausdrucken, sowie Protokolle der Übertragung erzeugen. Die ProcessingFlags im Parameter
      * @c bearbeitungsFlags definieren, welche der Schritte wie ausgeführt werden.
      *
@@ -70,10 +70,6 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      * ein PDF-Druck der Daten erfolgen. In diesen Fällen sind die Parameter @c cryptoParameter
      * und @c druckParameter entsprechend zu befüllen. Die möglichen Parameterkombinationen und
      * Druckkennzeichnungen können im @typeDokumentation{ERiC-Entwicklerhandbuch.pdf} nachgelesen werden.
-     *
-     * Sind für einen Anwendungsfall mehrere voneinander abhängige Aufrufe von
-     * ::EricBearbeiteVorgang() nötig, so ist der Parameter @c transferHandle zu übergeben. Dies
-     * ist derzeit nur für die Datenabholung der Fall.
      *
      * Es werden an bestimmten Punkten der Verarbeitung benutzerdefinierte Callback Funktionen
      * aufgerufen. Siehe hierzu \ref STSection_Fortschrittcallbacks.
@@ -85,7 +81,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *              Enthält die zu verarbeitenden XML-Daten.
      * @param[in] datenartVersion
      *      @parblock
-     *              Die @c datenartVersion ist der @lsDokumentation{Datenartversionmatrix.xml} zu entnehmen.
+     *              Die @c datenartVersion ist der @lsDokumentation{Datenartversionmatrix.ods} zu entnehmen.
      *
      *              Dieser Parameter darf nicht NULL sein und muss zu den XML-Eingangsdaten passen.
      *
@@ -117,19 +113,6 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *              siehe ::eric_verschluesselungs_parameter_t.
      *
      *              Erfolgt kein authentifizierter Versand, so ist NULL zu übergeben.
-     *      @endparblock
-     * @param[in,out] transferHandle
-     *      @parblock
-     *              Bei der Datenabholung ist ein Zeiger auf ein vom Aufrufer verwaltetes
-     *              und anfangs mit 0 befülltes ::EricTransferHandle zu übergeben, über das die
-     *              zusammenhängenden Versandvorgänge einer Datenabholung gebündelt werden
-     *              (Bündelung der Versandvorgänge "Anforderung", "Abholung" und optional
-     *              "Quittierung").
-     *
-     *              Wenn bei der Datenabholung kein Versandflag gesetzt ist (nur Validierung),
-     *              darf dem transferHandle auch ein Nullzeiger (NULL) übergeben werden.
-     *
-     *              Bei allen anderen Anwendungsfällen ist immer NULL zu übergeben.
      *      @endparblock
      * @param[out] rueckgabeXmlPuffer
      *      @parblock
@@ -241,7 +224,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      * Die einzelnen Elemente sind in der Schemadefinition
      * @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricBearbeiteVorgang.xsd} dokumentiert.
      * Wenn die Bearbeitungsflags ::ERIC_PRUEFE_HINWEISE und ::ERIC_VALIDIERE übergeben
-     * worden sind, wurden bei der Plausibilisierung keine Fehler gefunden. Es sind
+     * worden sind, wurden bei der Plausibilitätsprüfung keine Fehler gefunden. Es sind
      * keine Fehler im Rückgabepuffer enthalten.
      *
      * \subsection STSection_Plausibilitaetsfehler Plausibilitätsfehler
@@ -277,7 +260,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      * \subsection STSection_Serverfehlerfall Fehler in der Serverantwort
      *
      * Ist der Rückgabewert ::ERIC_TRANSFER_ERR_XML_THEADER oder
-     * ::ERIC_TRANSFER_ERR_XML_NHEADER so enthält der Serverantwortpuffer
+     * ::ERIC_TRANSFER_ERR_XML_NHEADER, so enthält der Serverantwortpuffer
      * Fehlermeldungen. Zur Auswertung kann entweder die Serverantwort selbst
      * ausgewertet werden oder es wird ::EricGetErrormessagesFromXMLAnswer() aufgerufen.
      *
@@ -294,15 +277,15 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      * registrierten Callbacks aufgerufen.
      *
      * @see
+     *      - EricHoleFehlerText()
+     *      - EricGetErrormessagesFromXMLAnswer()
+     *      - EricRegistriereFortschrittCallback()
+     *      - EricRegistriereGlobalenFortschrittCallback()
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Anwendungsfälle von EricBearbeiteVorgang()"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. der jeweiligen Datenart
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "ElsterDatenabholung"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Größenbegrenzung der Eingangsdaten"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Funktionen für Fortschrittcallbacks"
-     *      - EricHoleFehlerText()
-     *      - EricGetErrormessagesFromXMLAnswer()
-     *      - EricRegistriereFortschrittCallback()
-     *      - EricRegistriereGlobalenFortschrittCallback()
      *
      */
     ERICAPI_IMPORT int STDCALL EricBearbeiteVorgang(
@@ -311,7 +294,6 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
         uint32_t bearbeitungsFlags,
         const eric_druck_parameter_t* druckParameter,
         const eric_verschluesselungs_parameter_t* cryptoParameter,
-        EricTransferHandle* transferHandle,
         EricRueckgabepufferHandle rueckgabeXmlPuffer,
         EricRueckgabepufferHandle serverantwortXmlPuffer);
 
@@ -412,7 +394,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
     /**
      * @brief Das @c xml wird gegen das Schema der @c datenartVersion validiert.
      *
-     * Das verwendete Schema kann nachgeschlagen werden unter @lsSchnittstellenbeschreibungen{Dokumentation\\Schnittstellenbeschreibungen\\}
+     * Das verwendete Schema kann nachgeschlagen werden unter @lsDatenarten{Dokumentation\\Datenarten\\}\<verfahren>\\\<datenart>\\Schema\\
      *
      * Nicht unterstützte Datenartversionen: @mAbsatz
      *  - ElsterKMV
@@ -422,7 +404,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *             XML-Zeichenfolge
      * @param[in]  datenartVersion
      *      @parblock
-     *              Die @c datenartVersion ist der @lsDokumentation{Datenartversionmatrix.xml} zu entnehmen.
+     *              Die @c datenartVersion ist der @lsDokumentation{Datenartversionmatrix.ods} zu entnehmen.
      *              Dieser Parameter darf nicht NULL sein und muss zu den XML-Eingangsdaten passen.
      *
      *              Siehe auch @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}.
@@ -443,8 +425,8 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *         - ::ERIC_GLOBAL_COMMONDATA_NICHT_VERFUEGBAR
      *         - ::ERIC_GLOBAL_DATENARTVERSION_UNBEKANNT
      *         - ::ERIC_GLOBAL_NICHT_GENUEGEND_ARBEITSSPEICHER
-     *         - ::ERIC_IO_READER_SCHEMA_VALIDIERUNGSFEHLER: @mLB<a>Die Fehlerbeschreibung steht im <tt>fehlertextPuffer</tt>.
-     *         - ::ERIC_IO_PARSE_FEHLER: @mLB<a>Die Fehlerbeschreibung steht im <tt>fehlertextPuffer</tt>.
+     *         - ::ERIC_IO_READER_SCHEMA_VALIDIERUNGSFEHLER: @mLB<a>Die Fehlerbeschreibung steht im <tt>fehlertextPuffer.</tt>
+     *         - ::ERIC_IO_PARSE_FEHLER: @mLB<a>Die Fehlerbeschreibung steht im <tt>fehlertextPuffer.</tt>
      *         - weitere, siehe eric_fehlercodes.h
      */
     ERICAPI_IMPORT int STDCALL EricCheckXML(
@@ -637,7 +619,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      * @param[in] testmerker
      *      @parblock
      *              Für eine Testübertragung muss der entsprechende Testmerker angegeben werden,
-     *              siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Test Unterstützung bei der ERiC-Anbindung".
+     *              siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Testunterstützung bei der ERiC-Anbindung".
      *
      *              Falls ein Echtfall übertragen werden soll, muss der Wert NULL angegeben werden.
      *      @endparblock
@@ -696,9 +678,9 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *
      *
      * @see
-     *     - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Datenverarbeitung mit ERiC"
-     *     - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Anwendungsfälle von EricBearbeiteVorgang()"
      *     - ERiC-Returncodes und Fehlertexte sind in eric_fehlercodes.h zu finden.
+     *     - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Datenverarbeitung mit ERiC"
+     *     - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Anwendungsfälle von EricBearbeiteVorgang()"             
      */
     ERICAPI_IMPORT int STDCALL EricCreateTH(
         const char* xml, const char* verfahren,
@@ -852,7 +834,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      */
     ERICAPI_IMPORT int STDCALL EricEinstellungSetzen(
         const char* name,
-        const char* wert);
+        const byteChar* wert);
 
     /**
      * @brief Der Wert der API-Einstellung @c name wird auf den Standardwert zurückgesetzt.
@@ -973,11 +955,11 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *
      * Für die Ermittlung der Auswahllisten vieler Feldkennungen wird aus Performanzgründen Anwendungsfall 2 empfohlen.
      * Die Funktion liefert Auswahllisten zu Feldkennungen vom Format "NichtAbgeschlosseneEnumeration" zurück.
-     * Diese Auswahllisten werden auch in der Jahres-/Deltadokumentation dokumentiert.
+     * Diese Auswahllisten werden auch in der Jahres-/@lsDeltadokumentation{Deltadokumentation} dokumentiert.
      *
      * @param[in] datenartVersion
      *            Dieser Parameter darf nicht NULL sein.
-     *            Die gültigen Datenartversionen sind in der @lsDokumentation{Datenartversionmatrix.xml} enthalten.
+     *            Die gültigen Datenartversionen sind in der @lsDokumentation{Datenartversionmatrix.ods} enthalten.
      * @param[in] feldkennung
      *            Feldkennung, für welche die Auswahlliste zu ermitteln ist.
      * @param[out] rueckgabeXmlPuffer
@@ -1024,7 +1006,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      * Die Funktion liefert bei erfolgreicher Ausführung: @mAbsatz
      * - Das Transferticket aus dem Antwort-XML in dem Parameter @c transferticketPuffer.
      * - Den Returncode und die Fehlermeldung aus dem Transferheader
-     *   in den Parametern \c returncodeTHPuffer und \c fehlertextTHPuffer.
+     *   in den Parametern \c returncodeTHPuffer und <tt>fehlertextTHPuffer.</tt>
      * - Für jeden Nutzdatenheader dessen Returncode und Fehlermeldung als XML-Daten im
      *   Parameter @c returncodesUndFehlertexteNDHXmlPuffer nach XML Schema Definition
      *   @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricGetErrormessagesFromXMLAnswer.xsd}.
@@ -1041,8 +1023,8 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      * @param[out] transferticketPuffer Handle auf einen Rückgabepuffer, in den
      *            das Transferticket geschrieben wird, siehe ::EricRueckgabepufferHandle.
      * @param[out] returncodeTHPuffer Handle auf einen Rückgabepuffer, in den
-     *            der Returncode aus dem Transferheader geschrieben wird.
-     *            Siehe ::EricRueckgabepufferHandle.
+     *            der Returncode aus dem Transferheader geschrieben wird, 
+     *            siehe ::EricRueckgabepufferHandle.
      * @param[out] fehlertextTHPuffer Handle auf einen Rückgabepuffer, in den
      *            die Fehlermeldung aus dem Transferheader geschrieben wird, siehe
      *            ::EricRueckgabepufferHandle.
@@ -1081,10 +1063,10 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *     auszuwerten.
      *
      * @see
-     *      - XML-Schema des Transferheaders: @lsElsterBasisSchema{Dokumentation\Schnittstellenbeschreibungen\ElsterBasisSchema\Schema\th000011_extern.xsd}
-     *      - XML-Schema des Nutzdatenheaders: @lsElsterBasisSchema{Dokumentation\Schnittstellenbeschreibungen\ElsterBasisSchema\Schema\ndh000011.xsd}
+     *      - XML-Schema des Transferheaders: @lsElsterBasisSchema{Dokumentation\ElsterBasisSchema\Schema\th000011_extern.xsd}
+     *      - XML-Schema des Nutzdatenheaders: @lsElsterBasisSchema{Dokumentation\ElsterBasisSchema\Schema\ndh000011.xsd}
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Schnittstellenbeschreibungen",
-     *        Tabelle "Ergänzende Softwarepakete und Dateien – Schnittstellenbeschreibungen"
+     *        Tabelle "ELSTER > Ergänzende Softwarepakete und Dateien > Schnittstellenbeschreibungen"
      */
     ERICAPI_IMPORT int STDCALL EricGetErrormessagesFromXMLAnswer(
         const char* xml,
@@ -1165,7 +1147,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *                Optional kann auf die folgende Weise noch ein Testmerker angehängt werden:
      *                http://127.0.0.1:24727/eID-Client?testmerker=520000000. @mLB<a>Zu
      *                den verfügbaren Testmerkern siehe @typeDokumentation{ERiC-Entwicklerhandbuch.pdf},
-     *                Kap. "Test Unterstützung bei der ERiC-Anbindung".
+     *                Kap. "Testunterstützung bei der ERiC-Anbindung".
      *                
      *                <b>Wichtig:</b> Das Ad Hoc-Zertifikat, das in diesem Fall für den neuen
      *                         Personalausweis erzeugt wird, ist nur 24 Stunden gültig.
@@ -1545,7 +1527,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *              Handle auf einen Rückgabepuffer, in den
      *              die Ergebnis XML-Daten geschrieben werden.
      *              Die XML-Daten folgen der XML Schema Definition
-     *              @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricHoleTestFinanzaemter.xsd}.
+     *              @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricHoleTestfinanzaemter.xsd}.
      *
      *              Zur Erzeugung, Verwendung und Freigabe von Rückgabepuffern
      *              siehe Dokumentation zu ::EricRueckgabepufferHandle.
@@ -1554,7 +1536,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      * \b Beispiel:
      * \code{.xml}
      * <?xml version="1.0" encoding="UTF-8"?>
-     * <EricHoleTestFinanzaemter xmlns="http://www.elster.de/EricXML/1.0/EricHoleTestFinanzaemter">
+     * <EricHoleTestfinanzaemter xmlns="http://www.elster.de/EricXML/1.0/EricHoleTestfinanzaemter">
      *   <Finanzamt>
      *       <BuFaNummer>1096</BuFaNummer>
      *       <Name>Testfinanzamt Saarland</Name>
@@ -1564,7 +1546,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *       <Name>Finanzschule (Edenkoben)</Name>
      *     </Finanzamt>
      *     (...)
-     * </EricHoleTestFinanzaemter>
+     * </EricHoleTestfinanzaemter>
      * \endcode
      *
      * @return
@@ -1638,8 +1620,8 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *                        von ::ERIC_CRYPT_E_INVALID_HANDLE = 610201101 bis 610201212
      *
      * @see
-     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Verwendung von EricHoleZertifikatEigenschaften()"
      *      - @lsAPI-Rueckgabe-Schemata{Dokumentation\API-Rueckgabe-Schemata\EricHoleZertifikatEigenschaften.xsd}
+     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Verwendung von EricHoleZertifikatEigenschaften()"             
      *
      */
     ERICAPI_IMPORT int STDCALL EricHoleZertifikatEigenschaften(
@@ -1842,7 +1824,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *  - ::ERIC_GLOBAL_UNKNOWN
      *
      * @see
-     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "BIC ISO-Ländercodes"
+     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "BIC: ISO-Ländercodes"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "BIC-Prüfung"
      */
     ERICAPI_IMPORT int STDCALL EricPruefeBIC(
@@ -1874,7 +1856,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *  - ::ERIC_GLOBAL_UNKNOWN
      *
      * @see
-     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "IBAN - länderspezifische Formate"
+     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "IBAN: Länderspezifische Formate"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "IBAN-Prüfung"
      *
      */
@@ -1915,7 +1897,7 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *
      * @see
      *         - EricPruefeSteuernummer()
-     *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Prüfung der Steueridentifikationsnummer (IdNr)"
+     *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Prüfung der Steueridentifikationsnummer (IdNr.)"
      *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Test-Steueridentifikationsnummer"
      */
     ERICAPI_IMPORT int STDCALL EricPruefeIdentifikationsMerkmal(
@@ -2082,8 +2064,8 @@ Bei der Eingabe von PINs sind nur Zeichen aus dem ASCII Zeichensatz, ohne Sonder
      *           Deshalb sollte der Callback sehr schnell ausgeführt werden.
      *
      * @see
-     *         - EricFortschrittCallback
      *         - EricBearbeiteVorgang()
+     *         - EricFortschrittCallback
      *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Funktionen für Fortschrittcallbacks"
      *
      */

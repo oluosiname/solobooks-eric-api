@@ -19,10 +19,12 @@ public:
       *        Schnittstellenobjekt, das den ERiC kapselt.
       *        Das uebergebene Objekt muss mindestens so lange leben, wie
       *        die erzeugte Instanz der Klasse EricZertifikat, da diese eine Referenz darauf haelt!
+      * @param pfad Pfad zur Zertifikatsdatei für ein Software-Zertifikat
+      * @param pin Pin der Zertifikatsdatei
       */
     EricZertifikat(const Eric &eric, const std::string &pfad, const std::string &pin);
 
-    virtual ~EricZertifikat();
+    ~EricZertifikat();
 
     const char          *getPin()  const { return verschlusselungsParameter.pin; }
     const std::string   &getPfad() const { return pfad;  }
@@ -30,9 +32,9 @@ public:
     EricZertifikatHandle getHandle() const { return verschlusselungsParameter.zertifikatHandle;  }
     const eric_verschluesselungs_parameter_t &getVerschlusselungsParameter() const { return verschlusselungsParameter; }
 
+    EricZertifikat(const EricZertifikat &) = delete;
+
 private:
-    EricZertifikat(const EricZertifikat &); // Kopien verboten
-    EricZertifikat &operator=(const EricZertifikat &); // Zuweisungen verboten
 
     const Eric          &eric;
     const std::string    pfad;

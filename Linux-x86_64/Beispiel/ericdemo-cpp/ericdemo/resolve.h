@@ -12,7 +12,7 @@ namespace Resolve
     typedef ERIC_RESOLVE_LIB_PTR Library;
 
     template<typename charT>
-    Library inline library(const charT* library_name)
+    Library library(const charT* library_name)
     {
         ERIC_RESOLVE_RESET_ERROR;
         const Library library = ERIC_RESOLVE_LOAD_LIBRARY(library_name);
@@ -24,7 +24,7 @@ namespace Resolve
     T function(Library library, const char* function_name)
     {
         ERIC_RESOLVE_RESET_ERROR;
-        return (T)(ERIC_RESOLVE_GET_SYMBOL_FUNCTION (library, function_name));
+        return (T)((ERIC_RESOLVE_GET_SYMBOL_FUNCTION(library, function_name)));
     }
 
     bool inline free_library(Library library) {

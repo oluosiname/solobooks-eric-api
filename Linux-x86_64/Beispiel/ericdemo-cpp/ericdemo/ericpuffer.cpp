@@ -2,8 +2,7 @@
 #include "anwendungsfehler.h"
 #include "system.h"
 
-#include <algorithm>
-#include <string.h>
+#include <string>
 
 using std::string;
 
@@ -17,7 +16,7 @@ EricPuffer::EricPuffer(const Eric& eric) : mEricAdapter(eric)
 
 EricPuffer::~EricPuffer()
 {
-    int rc = mEricAdapter.EricRueckgabepufferFreigeben(mPufferHandle);
+    const int rc = mEricAdapter.EricRueckgabepufferFreigeben(mPufferHandle);
     if(rc != 0) {
         std::cerr << "Freigeben des Rueckgabepuffers fehlgeschlagen." << std::endl;
     }

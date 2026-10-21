@@ -19,16 +19,14 @@ public class OttoEmpfangInputStream extends InputStream implements AutoCloseable
 
     private final EmpfangHandle empfangHandle;
     private final OttoLibrary library;
-    private final OttoInstance instance;
-
-
-    private OttoReturnBuffer returnBuffer;
+    private final OttoReturnBuffer returnBuffer;
     private ByteBuffer srcBuffer;
 
-    private OttoEmpfangInputStream(final OttoLibrary library, final OttoInstance instance, final EmpfangHandle empfangHandle) {
+    private OttoEmpfangInputStream(final OttoLibrary library, final EmpfangHandle empfangHandle, final OttoReturnBuffer returnBuffer) {
         this.empfangHandle = empfangHandle;
-        this.instance = instance;
         this.library = library;
+        this.returnBuffer = Objects.requireNonNull(returnBuffer);
+        this.srcBuffer = ByteBuffer.wrap(Objects.nonNull(returnBuffer.content()) ? returnBuffer.content() : new byte[0]);
     }
 
     /**
@@ -49,81 +47,78 @@ public class OttoEmpfangInputStream extends InputStream implements AutoCloseable
         Objects.requireNonNull(library);
         Objects.requireNonNull(instance);
         Objects.requireNonNull(certificate);
+
+
+        //Initialisiere Empfang-Objekt
         final EmpfangHandle.ByRef byRef = new EmpfangHandle.ByRef();
         final ErrorCode errorCode = library.OttoEmpfangBeginnen(instance.instanceHandle(), objectId,
                 certificate.certificateHandle(), herstellerId, byRef);
+        final EmpfangHandle empfangHandle = byRef.empfangHandle();
         OttoExceptionFactory.onErrorThrow(library, errorCode);
-        return new OttoEmpfangInputStream(library, instance, byRef.empfangHandle());
+
+        OttoReturnBuffer returnBuffer = null;
+        try {
+            //Initialisiere Puffer-Objekt
+            returnBuffer = OttoReturnBuffer.create(library, instance);
+
+            // Starte Empfang
+            final ErrorCode errorcode = library.OttoEmpfangFortsetzen(empfangHandle, returnBuffer.bufferHandle());
+            OttoExceptionFactory.onErrorThrow(library, errorcode);
+
+        } catch (final Exception e) {
+            // Gebe Empfang- und Puffer-Objekt im Fehlerfall frei
+            try (final OttoReturnBuffer ignoredBuffer = returnBuffer) {
+                library.OttoEmpfangBeenden(empfangHandle);
+                throw e;
+            }
+
+        }
+
+        return new OttoEmpfangInputStream(library, empfangHandle, returnBuffer);
     }
 
 
     @Override
     public int read() throws IOException {
-
-        // Wenn es der erste Durchlauf ist, dann initialisiere den Puffer.
-        initBufferIfNecessary();
-
+        if (srcBuffer.capacity() == 0) {
+            return -1;
+        }
         // Wenn keine Daten mehr im Puffer sind, dann aktualisiere den Puffer.
         if (!srcBuffer.hasRemaining()) {
             // Prüfe, ob das Ende des Streams erreicht ist
-            if (srcBuffer.capacity() == 0) {
-                return -1;
-            }
             updateBuffer();
-
             // Prüfe, ob das Ende des Streams erreicht ist
             if (srcBuffer.capacity() == 0) {
                 return -1;
             }
         }
-
         return srcBuffer.get() & 0xFF;
     }
 
-    private void initBufferIfNecessary() throws IOException {
-        if (Objects.isNull(srcBuffer)) {
-            updateBuffer();
-        }
-    }
 
     @Override
     public int read(final byte[] b, final int off, final int len) throws IOException {
         Objects.requireNonNull(b);
         WrapperUtils.checkFromIndexSize(off, len, b.length);
         final ByteBuffer bb = ByteBuffer.wrap(b, off, len);
-
-        // Wenn es der erste Durchlauf ist, dann initialisiere den Puffer.
-        initBufferIfNecessary();
-
         // Übertrage Daten
-        while (bb.hasRemaining()) {
-            // Wenn keine Daten mehr im Puffer sind, dann aktualisiere den Puffer.
-            if (!srcBuffer.hasRemaining()) {
-                if (srcBuffer.capacity() == 0) {
-                    return -1;
-                }
+        while (bb.hasRemaining() && srcBuffer.capacity() != 0) {
+            // Übertrage Daten in den Puffer
+            final int rem = Math.min(srcBuffer.remaining(), bb.remaining());
+            if (rem > 0) {
+                bb.put(srcBuffer.array(), srcBuffer.position(), rem);
+                srcBuffer.position(srcBuffer.position() + rem);
+            } else {
                 updateBuffer();
-                // Wenn das Ende des Streams erreicht ist, dann gebe die Anzahl der gelesenen Bytes zurück,
-                // beziehungsweise -1, wenn keine Bytes gelesen wurden.
-                if (srcBuffer.capacity() == 0) {
-                    return bb.position() == 0 ? -1 : bb.position();
-                }
             }
-            bb.put(srcBuffer.get());
         }
-
-        return bb.position();
+        if (srcBuffer.capacity() == 0 && bb.position() == off) {
+            return -1;
+        }
+        return bb.position() - off;
     }
 
     private void updateBuffer() throws IOException {
-        if (Objects.isNull(returnBuffer)) {
-            try {
-                returnBuffer = OttoReturnBuffer.create(library, instance);
-            } catch (final OttoException e) {
-                throw new IOException(e);
-            }
-        }
-
         final ErrorCode errorcode = library.OttoEmpfangFortsetzen(empfangHandle, returnBuffer.bufferHandle());
         WrapperUtils.onErrorThrowIOException(library, errorcode);
         final byte[] content = returnBuffer.content();
@@ -137,12 +132,9 @@ public class OttoEmpfangInputStream extends InputStream implements AutoCloseable
      */
     @Override
     public void close() throws IOException {
-        final ErrorCode errorcode = library.OttoEmpfangBeenden(empfangHandle);
-        empfangHandle.setPointer(null);
-        try {
-            if (Objects.nonNull(returnBuffer)) {
-                returnBuffer.close();
-            }
+        try (final OttoReturnBuffer ignoredBuffer = returnBuffer) {
+            final ErrorCode errorcode = library.OttoEmpfangBeenden(empfangHandle);
+            empfangHandle.setPointer(null);
             OttoExceptionFactory.onErrorThrow(library, errorcode);
         } catch (final OttoException e) {
             throw new IOException(e);

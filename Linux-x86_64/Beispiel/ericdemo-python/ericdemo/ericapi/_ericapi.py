@@ -230,7 +230,6 @@ class PyEric:
                      c_uint32,
                      POINTER(_et.eric_druck_parameter_t),
                      POINTER(_et.eric_verschluesselungs_parameter_t),
-                     POINTER(_et.EricTransferHandle),
                      _et.EricRueckgabepufferHandle,
                      _et.EricRueckgabepufferHandle]],
             ['EricBeende',
@@ -390,17 +389,11 @@ class PyEric:
             bearbeitungsFlags: int,
             druckParameter: _typing.Optional[eric_druck_parameter_t],
             cryptoParameter: _typing.Optional[eric_verschluesselungs_parameter_t],
-            transferHandle: _typing.Optional[int],
             rueckgabeXmlPuffer: EricRueckgabepufferHandle,
-            serverantwortXmlPuffer: EricRueckgabepufferHandle) -> _typing.Tuple[int, _typing.Optional[int]]:
+            serverantwortXmlPuffer: _typing.Optional[EricRueckgabepufferHandle]) -> int:
         """
-        :returns: EricFehlerCode, EricTransferHandle
+        :returns: EricFehlerCode
         """
-        th = None
-        th_ref = None
-        if transferHandle is not None:
-            th = _et.EricTransferHandle(transferHandle)
-            th_ref = byref(th)
 
         rc = self._lib.EricBearbeiteVorgang(
             datenpuffer,
@@ -408,11 +401,10 @@ class PyEric:
             bearbeitungsFlags,
             druckParameter,
             cryptoParameter,
-            th_ref,
             rueckgabeXmlPuffer,
             serverantwortXmlPuffer)
 
-        return rc, None if transferHandle is None else th.value
+        return rc
 
     def PyEricBeende(self) -> int:
         """

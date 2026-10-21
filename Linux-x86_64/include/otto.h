@@ -74,6 +74,7 @@ extern "C" {
  *             Für Linux, AIX und macOS ist zu beachten, dass der syslogd-Dienst
  *             gegebenenfalls erst noch zu aktivieren und für die Protokollierung
  *             von Meldungen der Facility "User" zu konfigurieren ist.
+ *
  *             Suchkriterien für Otto-Meldungen in der Windows-Ereignisansicht
  *             sind "ERiC (Elster Rich Client)" als Quelle und "Anwendung"
  *             als Protokoll.
@@ -420,7 +421,7 @@ OttoStatusCode C_DECL OttoPruefsummeAktualisieren(OttoPruefsummeHandle pruefsumm
  * wenn diese über die Mindestdatenmenge für eine Übermittlung
  * an den OTTER-Server berechnet wurde. (20 MiB)
  * Eine Prüfsumme kann nur einmalig signiert werden.
- * Danach muß das Prüfsummenobjekt freigegeben werden.
+ * Danach muss das Prüfsummenobjekt freigegeben werden.
  *
  * @param[in]  pruefsumme
  *             Handle der Prüfsumme, die signiert werden soll.
@@ -752,7 +753,7 @@ OttoStatusCode C_DECL OttoEmpfangBeenden(OttoEmpfangHandle empfang);
  *
  * Diese Funktion ist eine bequemere Alternative zu der blockweisen Datenabholung über die
  * OttoEmpfang-Funktionen. Intern bündelt sie die Aufrufe der OttoEmpfangs-Funktionen,
- * wie sie sonst von der Anwendung selbst durchgeführt werden müßten.
+ * wie sie sonst von der Anwendung selbst durchgeführt werden müssten.
  *
  * Der Nachteil dieser Funktion gegenüber den OttoEmpfang-Funktionen besteht darin, dass
  * die abgeholten Daten alle im Hauptspeicher von Otto gehalten werden. Sie eignet sich daher nicht
@@ -775,7 +776,7 @@ OttoStatusCode C_DECL OttoEmpfangBeenden(OttoEmpfangHandle empfang);
  *
  *              Wenn die Größe zu gering angegeben wird, geht dies zwar zu Lasten der Geschwindigkeit und
  *              des Hauptspeicherbedarfs, weil dann der Rückgabepuffer von Otto intern sukzessive vergrößert
- *              werden muß, aber es führt nicht zu einem Fehler.
+ *              werden muss, aber es führt nicht zu einem Fehler.
  *      @endparblock
  * @param[in]  zertifikatsPfad
  *      @parblock
@@ -939,7 +940,7 @@ OttoStatusCode C_DECL OttoProxyKonfigurationSetzen(OttoInstanzHandle instanz,
  *
  */
 OttoStatusCode C_DECL OttoEinstellungSetzen(OttoInstanzHandle instanz,
-                                            const char *einstellungName, const char *einstellungWert);
+                                            const char *einstellungName, const byteChar *einstellungWert);
 
 /**
  * @brief      Liest den aktuellen Wert einer Otto-Einstellung in der angegebenen Instanz aus.
@@ -952,7 +953,7 @@ OttoStatusCode C_DECL OttoEinstellungSetzen(OttoInstanzHandle instanz,
  *             Name der Einstellung, deren Wert ausgelesen werden soll.
  *
  * @param[out] einstellungWert
- *             Der ausgelesene Wert der Einstellung
+ *             Der ausgelesene Wert der Einstellung.
  *
  * @return
  *             - ::OTTO_OK

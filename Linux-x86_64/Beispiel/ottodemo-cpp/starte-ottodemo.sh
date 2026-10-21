@@ -1,10 +1,11 @@
 #!/bin/bash
 
-ERIC_PROJEKTDIR=$( pwd )
-ERIC_DEMO=$ERIC_PROJEKTDIR/ottodemo/Debug/ottodemo
+OTTO_PROJEKT_DIR="$( pwd )"
 
-if [ "`uname -s`" = "AIX" ]; then
-    export LDR_PRELOAD64="/usr/lib/libc++.a(shr_64.o)"
+
+if [ "$(uname -s)" = "AIX" ]; then
+
+    OTTO_DEMO_BIN="$( find "$OTTO_PROJEKT_DIR"  -type f -name ottodemo -print | head -n 1)"
 
     while getopts e:s:c:p:o:d:l:i:h? opt 2>/dev/null
     do
@@ -13,30 +14,23 @@ if [ "`uname -s`" = "AIX" ]; then
         esac
     done
 
-    if [ -z "$APIPATH" ]; then
-        APIPATH=`cd ${ERIC_PROJEKTDIR}/../../lib && pwd`
+    if [ -n "$APIPATH" ] && [ -z "$LIBPATH" ]; then
+	      export LIBPATH="$APIPATH"
+    elif [ -n "$APIPATH" ]; then
+        export LIBPATH="$APIPATH:$LIBPATH"
     fi
-
-    if [ ! -f "${APIPATH}/libericapi.so" ]; then
-        echo "libericapi.so konnte in ${APIPATH} nicht gefunden werden"
-        exit 1
-    fi
-
-    if [ -z "$LIBPATH" ]; then
-        export LIBPATH=$APIPATH
-    else
-        export LIBPATH=$APIPATH:$LIBPATH
-    fi
+else
+    OTTO_DEMO_BIN="$( find "$OTTO_PROJEKT_DIR"  -type f -maxdepth 3 -name ottodemo -print -quit)"
 fi
 
-if [ -x "$ERIC_DEMO" ]; then
-    echo Starte ottodemo ...
-    "$ERIC_DEMO" $@
+if [ -x "$OTTO_DEMO_BIN" ]; then
+    echo "Starte ottodemo ..."
+    "$OTTO_DEMO_BIN" "$@"
     exit $?
 else
-    echo "Programm nicht gefunden: $ERIC_DEMO"
+    echo "Programm nicht gefunden: ottodemo"
     echo "Bitte erstellen Sie ottodemo unter Linux durch den Aufruf von 'make', unter AIX durch den Aufruf von build-AIX.sh und unter macOS mit XCode"
-    echo "Bitte Taste druecken"
+    echo "Bitte Taste drücken"
     read -sn 1 ack
     exit 1
 fi

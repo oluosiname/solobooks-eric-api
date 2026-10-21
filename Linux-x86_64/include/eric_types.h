@@ -19,7 +19,7 @@
  *
  * Alle API-Funktionen der Multithreading-API nehmen einen Zeiger auf eine
  * ERiC-Instanz entgegen und verrichten ihre Aufgaben auf dieser ERiC-Instanz.
- * Die EricInstanz enthält sämtliche veränderlichen Zustände des ERiC.
+ * Die ERiC-Instanz enthält sämtliche veränderlichen Zustände des ERiC.
  * Dies sind ERiC-Einstellungen, Plugin- und Log-Verzeichnis, Proxyeinstellungen,
  * Zertifikatshandle, Rückgabepuffer, etc.
  *
@@ -38,9 +38,9 @@
  * ERiC-Instanz darf aber nicht in zwei Threads gleichzeitig verwendet werden.
  *
  * @see
- *       - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Hinweise zum optimierten Einsatz von ERiC-Instanzen und Plugins"
  *       - ::EricMtInstanzErzeugen()
  *       - ::EricMtInstanzFreigeben()
+ *       - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Hinweise zum optimierten Einsatz von ERiC-Instanzen und Plugins" 
  */
 typedef struct EricInstanz *EricInstanzHandle;
 
@@ -57,31 +57,6 @@ typedef char byteChar;
  * @brief Integer-Typ für Zertifikat-Handles.
  */
 typedef uint32_t EricZertifikatHandle;
-
-/**
-* @brief Das ::EricTransferHandle wird beim Anwendungsfall "Datenabholung"
-*        der API-Funktion ::EricBearbeiteVorgang() übergeben.
-*
-* Es ist vom Aufrufer zu initialisieren
-* und wird ::EricBearbeiteVorgang() als Zeiger übergeben. Es wird
-* verwendet, um bei der Datenabholung mehrere Versandvorgänge zu bündeln.
-* Dabei ist das Handle für den ersten Vorgang "Anfrage" mit dem Wert 0
-* zu initialisieren, bevor ::EricBearbeiteVorgang() aufgerufen wird.
-* Das von ::EricBearbeiteVorgang() zurückgegebene Handle ist dann
-* bei allen Folgevorgängen derselben Datenabholung unverändert
-* wieder zu übergeben.
-*
-* Wird bei einer Datenabholung NULL oder ein ungültiger Zeiger
-* als Handle übergeben, gibt ::EricBearbeiteVorgang()
-* den Fehlercode ::ERIC_GLOBAL_TRANSFERHANDLE zurück.
-*
-* Bei allen Verfahren außer der Datenabholung sollte das Transferhandle
-* beim Aufruf der ::EricBearbeiteVorgang() NULL sein. Wird bei solchen
-* Verfahren ein Handle übergeben, so wird dieses ignoriert.
-*
-*
-*/
-typedef uint32_t EricTransferHandle;
 
 
 /**
@@ -121,7 +96,7 @@ typedef enum
      *          angegeben werden.
      *
      * @note    Zur Prüfbedingung "ERiC_DV_Freigabedatum_pruefen" siehe das Dokument
-     *          "Zusatzinformationen_zur_Plausibilitaetspruefung.pdf" im ERiC-Dokumentationspaket.
+     *          @typeDatenarten{Zusatzinformationen_zur_Plausibilitaetspruefung.pdf} im ERiC-Dokumentationspaket.
      */
     ERIC_VALIDIERE_OHNE_FREIGABEDATUM = 1L << 8,
 } eric_bearbeitung_flag_t;
@@ -166,11 +141,11 @@ struct EricReturnBufferApi;
  *        anderen Instanz verwendet wird.
  *
  * @see
- *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Rückgabepuffer der ERiC Programmierschnittstelle"
  *      - ::EricRueckgabepufferErzeugen()
  *      - ::EricRueckgabepufferLaenge()
  *      - ::EricRueckgabepufferInhalt()
  *      - ::EricRueckgabepufferFreigeben()
+ *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Rückgabepuffer der ERiC Programmierschnittstelle" 
  */
 typedef struct EricReturnBufferApi* EricRueckgabepufferHandle;
 
@@ -207,13 +182,13 @@ typedef struct EricReturnBufferApi* EricRueckgabepufferHandle;
 *        protokolliert.
 *
 * @see
-*      - eric_druck_parameter_t
 *      - ::EricBearbeiteVorgang()
+*      - eric_druck_parameter_t
 *
 */
 typedef int(STDCALL *EricPdfCallback)(
     const char *pdfBezeichner,
-    const BYTE *pdfDaten,
+    const uint8_t *pdfDaten,
     uint32_t pdfGroesse,
     void *benutzerDaten);
 

@@ -136,10 +136,6 @@
 #ifndef ERIC_DOXYGEN_MODE
 
 
-typedef unsigned char BYTE;
-typedef unsigned char byte;
-
-
 #define ERIC_UINT32_MAX 0xffffffffUL
 
 /**

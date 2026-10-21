@@ -46,8 +46,8 @@ Arguments::Arguments() : appPath("ottodemo"),
                          ottoDirPath(demoDirPath + ".." + PATH_SEPARATOR + ".." + PATH_SEPARATOR + DYLIB_DIR + PATH_SEPARATOR),
                          logDirPath(demoDirPath),
                          inFilePath(),
-                         objectId("7090bc69-be5e-4fd0-b91a-2128021295d6"),
-                         outFilePath("beispiel.xml"),
+                         objectId("6c12140d-64ca-4ec1-ae9e-08aaf0eb1c6e"),
+                         outFilePath("beispiel.pdf"),
                          certPath(demoDirPath + "test-softidnr-pse.pfx"),
                          certPin("123456"),
                          herstellerId(),
@@ -83,7 +83,7 @@ void Arguments::help() const {
 
     std::cout << std::endl << "Beispiele:" << std::endl;
     std::cout << "\tottodemo " << optionPrefix << "h" << std::endl;
-    std::cout << "\tottodemo " << optionPrefix << "e Download.file " << optionPrefix << "o 7090bc69-be5e-4fd0-b91a-2128021295d6 " << optionPrefix << "i <Hersteller-ID>" << std::endl;
+    std::cout << "\tottodemo " << optionPrefix << "e Download.file " << optionPrefix << "o 6c12140d-64ca-4ec1-ae9e-08aaf0eb1c6e " << optionPrefix << "i <Hersteller-ID>" << std::endl;
     std::cout << "\tottodemo " << optionPrefix << "s Upload.file " << optionPrefix << "i <Hersteller-ID> " << optionPrefix << "c test-softidnr-pse.pfx " << optionPrefix << "p 123456" << std::endl;
     std::cout << "\tottodemo " << optionPrefix << "c \"http://127.0.0.1:24727/eID-Client?testmerker=520000000\" " << std::endl;
     std::cout << std::endl << "\tDer in den Beispielen angegebene Platzhalter \"<Hersteller-ID>\" muss durch die herstellereigene ID ersetzt werden." << std::endl;
@@ -199,7 +199,7 @@ const Arguments parseArguments(int argc, char *argv[]) {
 
         if (0 != previousOption)
             throw std::invalid_argument("Fehlender Parameter fuer Option "s + optionPrefix + previousOption);
-        if (!arguments.sendData) {
+        if (!optionSetH && !arguments.sendData) {
             arguments.fetchData = true; // Wenn nicht explizit versendet werden soll, wird standardmäßig abgeholt
             optionSetE = true;
         }

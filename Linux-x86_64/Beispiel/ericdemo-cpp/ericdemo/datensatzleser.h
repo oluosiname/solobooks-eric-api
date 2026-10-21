@@ -7,11 +7,10 @@
 class Datensatzleser
 {
 public:
-    Datensatzleser() {};
-    ~Datensatzleser() {};
-
     /** @brief Lese XML-Datensatz aus einer Datei in den uebergebenen String. */
-    void lese(const std::string& dateiName, std::string& xmlDatensatz);
+    static void lese(const std::string& dateiName, std::string& xmlDatensatz);
+
+    Datensatzleser() = delete;
 };
 
 #endif //_DATENSATZLESER_H_

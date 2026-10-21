@@ -1,10 +1,6 @@
 #ifndef _ERICPUFFER_H_
 #define _ERICPUFFER_H_
 
-#pragma once
-
-#include <string>
-#include <vector>
 #include "eric.h"
 
 /** @brief Verwalten von ERiC-Rueckgabepuffern */
@@ -24,7 +20,7 @@ public:
      *         die erzeugte Instanz der Klasse EricPuffer, da diese eine Referenz
      *         darauf haelt.
      */
-    EricPuffer(const Eric& eric);
+    explicit EricPuffer(const Eric& eric);
 
     /** Der Destruktor gibt den von diesem Objekt verwalteten
       * Rueckgabepuffer wieder frei. */
@@ -39,13 +35,12 @@ public:
     /** @brief Hole Anzahl der in den von diesem Objekt verwalteten Rueckgabepuffer geschriebenen Bytes */
     uint32_t laenge() const;
 
+    EricPuffer(const EricPuffer &) = delete;
 
 private:
 
     EricRueckgabepufferHandle mPufferHandle;
     const Eric& mEricAdapter;
-
-    EricPuffer &operator=(const EricPuffer &); // Zuweisungen verboten
 
 };
 

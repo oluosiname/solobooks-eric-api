@@ -15,19 +15,19 @@
  * @details Steht für die Hauptversionsnummer.
  *        
  */
-#define ERIC_MAJOR_VERSION  43
+#define ERIC_MAJOR_VERSION  45
 
 
 /**
  * @details Steht für die untergeordnete Versionsnummer.
  *        
  */
-#define ERIC_MINOR_VERSION  2
+#define ERIC_MINOR_VERSION  1
 
 /**
  * @details Steht für die Patch-Versionsnummer.
  *        
  */
-#define ERIC_PATCH_VERSION  6
+#define ERIC_PATCH_VERSION  3
 
 #endif

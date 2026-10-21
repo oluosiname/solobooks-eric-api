@@ -140,9 +140,7 @@ class EricClient:
     def extract_transferticket(self, eric, server_response: Optional[str]) -> Optional[str]:
         """Extract the Transferticket from the Finanzamt server response XML.
 
-        The Transferticket is the receipt the filer quotes to the Finanzamt. It is
-        distinct from the transfer handle returned by EricBearbeiteVorgang, which is
-        a Datenabholung bundling parameter and is NULL for a submission.
+        The Transferticket is the receipt the filer quotes to the Finanzamt.
 
         Returns None rather than raising: a submission that succeeded must not be
         reported as failed just because the receipt could not be parsed.
@@ -331,13 +329,12 @@ class EricClient:
         processing_flags = ERIC_VALIDIERE
         
         with self._eric_buffer(eric) as response_buffer, self._eric_buffer(eric) as server_buffer:
-            rc, th = eric.PyEricBearbeiteVorgang(
+            rc = eric.PyEricBearbeiteVorgang(
                 datenpuffer=xml_bytes,
                 datenartVersion=datenart_version,
                 bearbeitungsFlags=processing_flags,
                 druckParameter=None,
                 cryptoParameter=None,
-                transferHandle=None,
                 rueckgabeXmlPuffer=response_buffer,
                 serverantwortXmlPuffer=server_buffer
             )
@@ -358,12 +355,12 @@ class EricClient:
         password: str, 
         datenart_version: Optional[str] = None,
         return_pdf: bool = True
-    ) -> Tuple[bool, Optional[int], Optional[int], Optional[str], Optional[bytes], Optional[str], Optional[str], Optional[str]]:
+    ) -> Tuple[bool, Optional[int], Optional[str], Optional[bytes], Optional[str], Optional[str], Optional[str]]:
         """
         Submit XML with certificate authentication
 
         Returns:
-            (success, error_code, transfer_handle, error_message, pdf_data,
+            (success, error_code, error_message, pdf_data,
              server_response_xml, validation_result_xml, transferticket)
         """
         eric = self._get_eric_instance()
@@ -402,13 +399,12 @@ class EricClient:
             
             with self._eric_certificate(eric, cert_file_path, password) as crypto_params:
                 with self._eric_buffer(eric) as response_buffer, self._eric_buffer(eric) as server_buffer:
-                    rc, th = eric.PyEricBearbeiteVorgang(
+                    rc = eric.PyEricBearbeiteVorgang(
                         datenpuffer=xml_bytes,
                         datenartVersion=datenart_version,
                         bearbeitungsFlags=processing_flags,
                         druckParameter=print_params,
                         cryptoParameter=crypto_params,
-                        transferHandle=None,
                         rueckgabeXmlPuffer=response_buffer,
                         serverantwortXmlPuffer=server_buffer
                     )
@@ -421,7 +417,7 @@ class EricClient:
                     
                     if rc != ERIC_OK:
                         error_message = self._get_error_message(eric, rc)
-                        return False, rc, None, error_message, None, server_response_text, validation_result_xml, None
+                        return False, rc, error_message, None, server_response_text, validation_result_xml, None
 
                     # Get PDF from callback if available
                     result_pdf = None
@@ -430,7 +426,7 @@ class EricClient:
 
                     transferticket = self.extract_transferticket(eric, server_response_text)
 
-                    return True, None, th, None, result_pdf, server_response_text, None, transferticket
+                    return True, None, None, result_pdf, server_response_text, None, transferticket
         finally:
             # Cleanup certificate file
             try:
@@ -463,16 +459,10 @@ class EricClient:
         product_version: str = 'spike',
         belegart: Optional[str] = 'VaSt_LStB',
         testmerker: Optional[str] = None,
-        datenart_version: str = 'ElsterVaStDaten_31'
+        datenart_version: str = 'ElsterVaStDaten_32'
     ) -> Tuple[bool, Optional[int], Optional[str], list]:
         """
         Run a complete VaSt Belegabruf (ERiC Entwicklerhandbuch 9.2.4.2).
-
-        Both phases run here rather than in the caller because they must share
-        one EricTransferHandle: it is initialised to 0 for the Anfrage and the
-        value ERIC returns has to be passed back unchanged on the Abholung,
-        which is what bundles them into a single retrieval. Passing NULL
-        instead yields ERIC_GLOBAL_TRANSFERHANDLE (610001227).
 
         Returns:
             (success, error_code, error_message, belege)
@@ -503,11 +493,8 @@ class EricClient:
                     'testmerker': testmerker,
                 }
 
-                # Phase 1: which Belege are on offer. Handle starts at 0.
                 anfrage = self._build_anfrage(idnr, year, belegart, header)
-                rc, transfer_handle, answer = self._send_abholung(
-                    eric, anfrage, datenart_version, crypto_params, 0
-                )
+                rc, answer = self._send_abholung(eric, anfrage, datenart_version, crypto_params)
                 failure = self._failure(eric, rc, answer)
                 if failure:
                     return (False, *failure, [])
@@ -516,11 +503,8 @@ class EricClient:
                 if not ids:
                     return True, None, None, []
 
-                # Phase 2: fetch them, reusing the handle phase 1 returned.
                 abholung = self._build_abholung(idnr, year, ids, header)
-                rc, _th, answer = self._send_abholung(
-                    eric, abholung, datenart_version, crypto_params, transfer_handle
-                )
+                rc, answer = self._send_abholung(eric, abholung, datenart_version, crypto_params)
                 failure = self._failure(eric, rc, answer)
                 if failure:
                     return (False, *failure, [])
@@ -574,19 +558,18 @@ class EricClient:
             ))
         return codes
 
-    def _send_abholung(self, eric, xml: str, datenart_version: str, crypto_params, transfer_handle: int):
-        """One EricBearbeiteVorgang round trip. Returns (rc, handle, answer_xml)."""
+    def _send_abholung(self, eric, xml: str, datenart_version: str, crypto_params):
+        """One EricBearbeiteVorgang round trip. Returns (rc, answer_xml)."""
         # No ERIC_DRUCKE: ElsterVaStDaten does not support PDF print (9.2.3).
         flags = ERIC_VALIDIERE | ERIC_SENDE
 
         with self._eric_buffer(eric) as response_buffer, self._eric_buffer(eric) as server_buffer:
-            rc, th = eric.PyEricBearbeiteVorgang(
+            rc = eric.PyEricBearbeiteVorgang(
                 datenpuffer=xml.encode('utf-8'),
                 datenartVersion=datenart_version,
                 bearbeitungsFlags=flags,
                 druckParameter=None,
                 cryptoParameter=crypto_params,
-                transferHandle=transfer_handle,
                 rueckgabeXmlPuffer=response_buffer,
                 serverantwortXmlPuffer=server_buffer
             )
@@ -598,7 +581,7 @@ class EricClient:
                 if validation:
                     print(f'ERIC validation buffer: {validation.decode("utf-8", errors="replace")[:2000]}', flush=True)
 
-            return rc, th, answer
+            return rc, answer
 
     @staticmethod
     def _xml_escape(value) -> str:
@@ -635,7 +618,7 @@ class EricClient:
             f"<DatenLieferant>{e(header['datenlieferant'])}</DatenLieferant>"
             '</NutzdatenHeader>'
             '<Nutzdaten>'
-            f'<Datenabholung xmlns="{self.VAST_ABHOLUNG_NS}" version="31">{inner}</Datenabholung>'
+            f'<Datenabholung xmlns="{self.VAST_ABHOLUNG_NS}" version="32">{inner}</Datenabholung>'
             '</Nutzdaten>'
             '</Nutzdatenblock>'
         )
@@ -719,8 +702,7 @@ class EricClient:
     # --- VaSt Berechtigungsmanagement (Verfahren ElsterBRM) ---
     #
     # A different Verfahren from the Datenabholung used for retrieval, so none of
-    # the /datenabholung plumbing applies: no transfer handle (these are single
-    # round trips), no CMS-encrypted payload to decode, and the datenartversion
+    # the /datenabholung plumbing applies: no CMS-encrypted payload to decode, and the datenartversion
     # is the bare Datenart name rather than carrying a version suffix
     # (Datenartversionmatrix.xml). Nutzdaten come from elster_brm.py.
 
@@ -764,16 +746,13 @@ class EricClient:
 
         try:
             with self._eric_certificate(eric, cert_file_path, password) as crypto_params:
-                # transferHandle is NULL here: handles bundle a Datenabholung's
-                # phases, and these Datenarten are single round trips.
                 with self._eric_buffer(eric) as response_buffer, self._eric_buffer(eric) as server_buffer:
-                    rc, _th = eric.PyEricBearbeiteVorgang(
+                    rc = eric.PyEricBearbeiteVorgang(
                         datenpuffer=xml.encode('utf-8'),
                         datenartVersion=datenart,
                         bearbeitungsFlags=ERIC_VALIDIERE | ERIC_SENDE,
                         druckParameter=None,
                         cryptoParameter=crypto_params,
-                        transferHandle=None,
                         rueckgabeXmlPuffer=response_buffer,
                         serverantwortXmlPuffer=server_buffer
                     )

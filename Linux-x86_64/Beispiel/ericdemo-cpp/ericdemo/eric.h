@@ -2,9 +2,7 @@
 #define _ERIC_ERICLIB_H_
 
 #include <string>
-#include <ericdef.h>
 #include <eric_types.h>
-#include <ericapi.h>
 
 #include "resolve.h"
 
@@ -55,7 +53,6 @@ public:
         uint32_t bearbeitungsFlags,
         const eric_druck_parameter_t *druckParameter,
         const eric_verschluesselungs_parameter_t *cryptoParameter,
-        EricTransferHandle *transferHandle,
         EricRueckgabepufferHandle rueckgabeXmlPuffer,
         EricRueckgabepufferHandle serverantwortXmlPuffer) const;
 
@@ -133,13 +130,12 @@ protected:
      */
     bool ladeEricApi(const std::string &apiVerzeichnis);
 
+    Eric(const Eric &) = delete;
+    Eric& operator= (const Eric &) = delete;
 
 private:
-    Eric(const Eric &);
-    Eric & operator= (const Eric &);
 
     bool istGeladen() const;
-
     Resolve::Library libEricApi;
 };
 

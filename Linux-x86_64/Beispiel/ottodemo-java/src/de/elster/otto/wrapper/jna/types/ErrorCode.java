@@ -269,7 +269,7 @@ public enum ErrorCode {
      /** eSigner: Der Lesepuffer zum Dekodieren der ASN.1-Struktur ist zu klein. */
      OTTO_ESIGNER_ASN1_READ_BUFFER_TOO_SMALL(610405845),
      
-     /** eSigner: Die Daten der ASN.1-Struktur sind unvollstaendig. */
+     /** eSigner: Die Daten der ASN.1-Struktur sind unvollständig. */
      OTTO_ESIGNER_ASN1_READ_DATA_INCOMPLETE(610405846),
      
      /** eSigner: Die ASN.1-Struktur enthält kein Enveloped Data. */
@@ -277,6 +277,9 @@ public enum ErrorCode {
      
      /** eSigner: Die ASN.1-Struktur enthält keine Daten. */
      OTTO_ESIGNER_ASN1_NO_CONTENT_DATA(610405848),
+     
+     /** eSigner: Fehler beim Signieren der XML-Eingabedatei. */
+     OTTO_ESIGNER_XML_VERIFY(610405849),
      
      /** Fehler beim Einlesen der otto.ini. */
      OTTO_INIDATEI_LESEFEHLER(610407001),

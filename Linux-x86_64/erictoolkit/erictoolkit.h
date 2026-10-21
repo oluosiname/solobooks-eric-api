@@ -198,7 +198,7 @@ extern "C"
      *         - ::ERIC_GLOBAL_NULL_PARAMETER: Parameter @c bic ist NULL.
      *
      * @see
-     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "BIC ISO-Ländercodes"
+     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "BIC: ISO-Ländercodes"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "BIC-Prüfung"
      */
     ETKAPI_DECL int STDCALL EtkPruefeBIC(const char* bic);
@@ -237,7 +237,7 @@ extern "C"
      *         - ::ERIC_GLOBAL_NULL_PARAMETER: Parameter @c iban ist NULL.
      *
      * @see
-     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "IBAN - länderspezifische Formate"
+     *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "IBAN: Länderspezifische Formate"
      *      - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "IBAN-Prüfung"
      *
      */
@@ -256,9 +256,9 @@ extern "C"
      *         - ::ERIC_GLOBAL_NULL_PARAMETER
      *
      * @see
-     *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Prüfung der Steueridentifikationsnummer (IdNr)"
-     *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Test-Steueridentifikationsnummer"
      *         - EtkPruefeSteuernummer()
+     *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Prüfung der Steueridentifikationsnummer (IdNr.)"
+     *         - @typeDokumentation{ERiC-Entwicklerhandbuch.pdf}, Kap. "Test-Steueridentifikationsnummer"
      */
     ETKAPI_DECL int STDCALL EtkPruefeIdentifikationsMerkmal(const char* steuerId);
 

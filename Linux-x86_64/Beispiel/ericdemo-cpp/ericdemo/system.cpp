@@ -30,23 +30,10 @@ const std::string KommandozeilenParser::defaultZertifikatPfad("test-softidnr-pse
 const std::string KommandozeilenParser::defaultZertifikatPin("123456");
 const std::string KommandozeilenParser::defaultDatensatzDatei("ESt_2020.xml");
 const std::string KommandozeilenParser::defaultDatenartVersion("ESt_2020");
+const char * const KommandozeilenParser::defaultPdfPfad = "ericprint.pdf";
 
-KommandozeilenParser::KommandozeilenParser() :
-    parseOk(true),
-    aufrufPfad(),
-    logDir(),
-    homeDir(),
-    zertifikatPfad(),
-    zertifikatPin(),
-    datensatzDatei(),
-    datenartVersion(),
-    datensatzSenden(true),
-    hilfeAnzeigen(false),
-    datenEntschluesseln(false),
-    ausgabeDatei(),
-    transferHandle(0),
-    hatTransferHandle(false)
-{ }
+
+KommandozeilenParser::KommandozeilenParser():pdfPfad(defaultPdfPfad),datensatzSenden(true),hilfeAnzeigen(),datenEntschluesseln(){}
 
 #if defined(__xlC__) && !defined(__clang__)
 void KommandozeilenParser::parseKommandozeile( const std::vector<std::string> &argumente)
@@ -64,96 +51,86 @@ void KommandozeilenParser::parseKommandozeile( std::vector<std::string> &&argume
 
         if (OPT_PRAEFIX == iter->at(0)) {
             if (0 == letzteOption) {
-                letzteOption = std::tolower(iter->at(1), std::locale(""));
+                if(iter->size() != 2) {
+                    throw Anwendungsfehler(std::string("Eine Option besteht aus dem Zeichen \"") + OPT_PRAEFIX + "\" und einem folgenden Buchstaben.");
+                }
+                letzteOption = std::tolower((*iter)[1], std::locale(""));
                 switch (letzteOption) {
-                case 'h':
-                case '?':
-                    hilfeAnzeigen = true;
-                    letzteOption = 0; // Hilfeoptionen erwarten keine
-                                      // nachfolgenden Parameter
-                    break;
-                case 'n':
-                    datensatzSenden = false;
-                    letzteOption = 0;
-                    break;
-                case 'l': // Protokollverzeichnis (log_dir)
-                case 'd': // Heimverzeichnis (home_dir)
-                case 'c': // Pfad zum Zertifikat
-                case 'p': // PIN
-                case 'v': // Datenartversion
-                case 'x': // Datensatz.xml
-                case 's': // Rueckgabe speichern
-                case 't': // Transferhandle
-                    // Optionen, die einen nachfolgenden Parameter erwarten
-                    // Fuer solche Optionen ist hier noch nichts zu tun
-                    break;
-                case 'e':
-                    datenEntschluesseln = true;
-                    letzteOption = 0;
-                    break;
-
-                default:
-                    parseOk = false;
-                    throw Anwendungsfehler(std::string("Unbekannte Option ") + *iter);
-                    break;
+                    case 'h':
+                    case '?':
+                        hilfeAnzeigen = true;
+                        letzteOption = 0; // Hilfeoptionen erwarten keine
+                                          // nachfolgenden Parameter
+                        break;
+                    case 'n':
+                        datensatzSenden = false;
+                        letzteOption = 0;
+                        break;
+                    case 'l': // Protokollverzeichnis (log_dir)
+                    case 'd': // Heimverzeichnis (home_dir)
+                    case 'c': // Pfad zum Zertifikat
+                    case 'p': // PIN
+                    case 'a': // PDF-Pfad
+                    case 'v': // Datenartversion
+                    case 'x': // Datensatz.xml
+                    case 's': // Rueckgabe speichern
+                        // Optionen, die einen nachfolgenden Parameter erwarten
+                        // Fuer solche Optionen ist hier noch nichts zu tun
+                        break;
+                    case 'e':
+                        datenEntschluesseln = true;
+                        letzteOption = 0;
+                        break;
+                    default:
+                        throw Anwendungsfehler(std::string("Unbekannte Option ") + *iter);
                 }
             } else {
                 // Zwei aufeinanderfolgende Optionsflags bedeuten, dass ein Optionsparameter fehlt
-                parseOk = false;
                 throw Anwendungsfehler(std::string("Fehlender Parameter fuer Option ") + *PREVIOUS(iter));
             }
         } else {
             switch (letzteOption) {
-            case 'l': // Protokollverzeichnis (log_dir)
-                logDir.assign(MOVE_NO_XLC(*iter));
-                break;
-            case 'd': // Heimverzeichnis (home_dir)
-                homeDir.assign(MOVE_NO_XLC(*iter));
-                break;
-            case 'c': // Pfad zum Zertifikat
-                zertifikatPfad.assign(MOVE_NO_XLC(*iter));
-                break;
-            case 'p': // PIN
-                zertifikatPin.assign(MOVE_NO_XLC(*iter));
-                break;
-            case 's': // In Dateiname speichern
-                ausgabeDatei.assign(MOVE_NO_XLC(*iter));
-                break;
-            case 't': // Transferhandle
-                try {
-#if defined(__xlC__) && !defined(__clang__)
-                    transferHandle = System::toUlong(*iter);
-#else
-                    transferHandle = static_cast<EricTransferHandle>(std::stoul(*iter));
-#endif
-                    hatTransferHandle = true;
-                } catch (const std::invalid_argument &) {
-                    parseOk = false;
-                    throw Anwendungsfehler(std::string("Ungueltiger Parameter fuer Option ") + *PREVIOUS(iter));
-                }
-                break;
-            case 'v': // Datenartversion
-                datenartVersion.assign(MOVE_NO_XLC(*iter));
-                break;
-            case 'x': // Datensatzdatei
-                datensatzDatei.assign(MOVE_NO_XLC(*iter));
-                break;
-            case 0:
-                parseOk = false;
-                throw Anwendungsfehler(std::string("Wert \"") + *iter + std::string("\" angegeben, aber Optionsparameter fehlt "));
-                break;
+                case 'a': // PDF-Pfad
+                    pdfPfad.assign(MOVE_NO_XLC(*iter));
+                    break;
+                case 'l': // Protokollverzeichnis (log_dir)
+                    logDir.assign(MOVE_NO_XLC(*iter));
+                    break;
+                case 'd': // Heimverzeichnis (home_dir)
+                    homeDir.assign(MOVE_NO_XLC(*iter));
+                    break;
+                case 'c': // Pfad zum Zertifikat
+                    zertifikatPfad.assign(MOVE_NO_XLC(*iter));
+                    break;
+                case 'p': // PIN
+                    zertifikatPin.assign(MOVE_NO_XLC(*iter));
+                    break;
+                case 's': // In Dateiname speichern
+                    ausgabeDatei.assign(MOVE_NO_XLC(*iter));
+                    break;
+                case 'v': // Datenartversion
+                    datenartVersion.assign(MOVE_NO_XLC(*iter));
+                    break;
+                case 'x': // Datensatzdatei
+                    datensatzDatei.assign(MOVE_NO_XLC(*iter));
+                    break;
+                case 0:
+                    throw Anwendungsfehler(std::string("Wert \"") + *iter + std::string("\" angegeben, aber Optionsparameter fehlt "));
+                    break;
 
-            default:
-                parseOk = false;
-                throw Anwendungsfehler(std::string("Parameter fuer unbekannte Option ") + *PREVIOUS(iter));
-                break;
+                default:
+                    throw Anwendungsfehler(std::string("Parameter fuer unbekannte Option ") + *PREVIOUS(iter));
+                    break;
             }
             letzteOption = 0;
         }
     }
+    
+    if(letzteOption) {
+        throw Anwendungsfehler(std::string("Für die Option ") + OPT_PRAEFIX + letzteOption + " wurde kein Argument übergeben.");
+    }
 
     if (datenEntschluesseln && !datenartVersion.empty()) {
-        parseOk = false;
         throw Anwendungsfehler(std::string("Die Optionen ") + OPT_PRAEFIX + 'v' + " und " + OPT_PRAEFIX + "e schliessen sich gegenseitig aus.");
     }
 }
@@ -170,6 +147,8 @@ void KommandozeilenParser::zeigeHilfe(std::ostream& ostream) {
         << "             Pfad zur Datensatzdatei" << NEW_LINE
         << "    " << OPT_PRAEFIX << 'c' << " <certificate>"
         << "     Pfad zu einem Benutzerzertifikat, _NULL (Nullzeiger) fuer kein Benutzerzertifikat" << NEW_LINE
+        << "    " << OPT_PRAEFIX << 'a' << " <pdf>"
+        << "             PDF-Pfad des anzulegenden Drucks, _NULL, wenn kein PDF gedruckt werden soll" << NEW_LINE
         << "    " << OPT_PRAEFIX << 'p' << " <pin>"
         << "             PIN fuer das Benutzerzertifikat, _NULL (Nullzeiger) fuer keine PIN" << NEW_LINE
         << "    " << OPT_PRAEFIX << 'd' << " <dir>"
@@ -178,8 +157,6 @@ void KommandozeilenParser::zeigeHilfe(std::ostream& ostream) {
         << "             Pfad zum Verzeichnis, in dem die ERiC-Protokolldateien geschrieben werden" << NEW_LINE
         << "    " << OPT_PRAEFIX << 's' << " <dateipfad>"
         << "       Schreibt die Serverantwort oder - wenn nicht vorhanden - das Ergebnis in die angegebene Datei" << NEW_LINE
-        << "    " << OPT_PRAEFIX << 't' << " <transferhandle>"
-        << "  Transferhandle, das an die Server uebermittelt wird (nur bei Datenabholungen anzugeben)" << NEW_LINE
         << "    " << OPT_PRAEFIX << 'n'
         << "                   Der Datensatz soll nicht versendet, sondern nur validiert werden" << NEW_LINE
         << "    " << OPT_PRAEFIX << 'e'
@@ -190,6 +167,7 @@ void KommandozeilenParser::zeigeHilfe(std::ostream& ostream) {
         << "    <xml>:             ESt_2020.xml" << NEW_LINE
         << "    <certificate>:     test-softidnr-pse.pfx" << NEW_LINE
         << "    <pin>:             123456" << NEW_LINE
+        << "    <pdf>              "<< defaultPdfPfad  << NEW_LINE
 #ifdef _WIN32
         << "    <dir>:             <Arbeitsverzeichnis>" << PFAD_SEPARATOR << ".." << PFAD_SEPARATOR << ".." << PFAD_SEPARATOR << "dll" << NEW_LINE
 #else
@@ -201,17 +179,15 @@ void KommandozeilenParser::zeigeHilfe(std::ostream& ostream) {
         << "    " << aufrufPfad << NEW_LINE
         << "    " << aufrufPfad << " " << OPT_PRAEFIX << "?" << NEW_LINE
         << "    " << aufrufPfad << " " << OPT_PRAEFIX << "v ESt_2020 " << OPT_PRAEFIX << "x ESt_2020.xml " << OPT_PRAEFIX << "c test-softidnr-pse.pfx " << OPT_PRAEFIX << "p 123456" << NEW_LINE
-        << "    " << aufrufPfad << " " << OPT_PRAEFIX << "v ESt_2016 " << OPT_PRAEFIX << "x ESt_2016.xml " << OPT_PRAEFIX << "c _NULL " << OPT_PRAEFIX << "p _NULL" << NEW_LINE
-        << "    " << aufrufPfad << " " << OPT_PRAEFIX << "v ESt_2020 " << OPT_PRAEFIX << "x ESt_2020.xml "
-                                       << OPT_PRAEFIX << "n" << NEW_LINE
+        << "    " << aufrufPfad << " " << OPT_PRAEFIX << "v ESt_2020 " << OPT_PRAEFIX << "x ESt_2020.xml " << OPT_PRAEFIX << "a ESt_2020-Vorschaudruck.pdf "<< OPT_PRAEFIX << "n" << NEW_LINE
         << "    " << aufrufPfad << " " << OPT_PRAEFIX << "v ESt_2020 " << OPT_PRAEFIX << "x ESt_2020.xml " << NEW_LINE
+        << "    " << aufrufPfad << " " << OPT_PRAEFIX << "v ESt_2016 " << OPT_PRAEFIX << "x ESt_2016.xml " << OPT_PRAEFIX << "c _NULL " << OPT_PRAEFIX << "p _NULL" << NEW_LINE
         << "    " << aufrufPfad << " " << OPT_PRAEFIX << "v Kontoinformation " << OPT_PRAEFIX << "x kontoinformation.xml "
         << OPT_PRAEFIX << "c \"http://127.0.0.1:24727/eID-Client?testmerker=520000000\" " << OPT_PRAEFIX << "p _NULL" << NEW_LINE
-        << "    " << aufrufPfad << " " << OPT_PRAEFIX << "v MitteilungAbholung " << OPT_PRAEFIX << "x MitteilungAbholungAnfrage.xml "
-        << OPT_PRAEFIX << "c test-softidnr-pse.pfx " << OPT_PRAEFIX << "p 123456 " << OPT_PRAEFIX << "t 0" << NEW_LINE
+        << "    " << aufrufPfad << " " << OPT_PRAEFIX << "v PostfachAnfrage_32 " << OPT_PRAEFIX << "x PostfachAnfrage.xml " << OPT_PRAEFIX << "a _NULL "
+        << OPT_PRAEFIX << "c test-softidnr-pse.pfx " << OPT_PRAEFIX << "p 123456 " << NEW_LINE
         << "    " << aufrufPfad << " " << OPT_PRAEFIX << "e " << OPT_PRAEFIX << "x Abholdaten.b64 " << OPT_PRAEFIX << "s Abholdaten.xml" << std::endl;
 }
-
 
 
 std::string getBibliotheksDateiname(const std::string &bibliotheksName)
@@ -250,6 +226,7 @@ bool getArbeitsverzeichnis(std::string &arbeitsVerzeichnis)
     return true;
 }
 
+    
 
 std::string dateiPfad(const std::string &verzeichnisPfad, const std::string &dateiName)
 {

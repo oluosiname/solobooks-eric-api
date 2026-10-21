@@ -17,6 +17,7 @@ COPY requirements.txt /app/
 COPY api.py /app/
 COPY models.py /app/
 COPY eric_client.py /app/
+COPY elster_brm.py /app/
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt

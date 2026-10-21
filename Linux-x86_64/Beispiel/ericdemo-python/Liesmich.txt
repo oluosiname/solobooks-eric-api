@@ -30,7 +30,7 @@ Voraussetzung:
 ============== 
 
 Für die Nutzung des mitgelieferten XML-Beispieldatensatzes "ESt_2020.xml"  
-gilt ab dem ERiC-Release 39.4.x folgende Voraussetzung:
+gilt folgende Voraussetzung:
 
 Die Hersteller-ID "74931" im Element <HerstellerID>...</HerstellerID> 
 muss durch die eigene Hersteller-ID ersetzt werden. 
@@ -72,13 +72,13 @@ Optionen:
   -v <datenartversion>  Datenartversion
   -x <xml>              Pfad zur Datensatzdatei
   -c <zertifikat>       Pfad zu einem Benutzerzertifikat, _NULL (Nullzeiger) für kein Benutzerzertifikat
+  -a <pdf>              PDF-Pfad des anzulegenden Drucks, _NULL, wenn kein PDF gedruckt werden soll
   -p <pin>              PIN für das Benutzerzertifikat, _NULL (Nullzeiger) für keine PIN
   -l <log>              Pfad zum Verzeichnis, in dem die ERiC-Protokolldateien geschrieben werden
   -d <dir>              Pfad zum Verzeichnis mit den ERiC-Bibliotheken
   -n                    Der Datensatz soll nicht versendet, sondern nur validiert werden
   -e                    Der Datensatz wird nicht validiert oder versendet, sondern entschlüsselt
   -s <dateipfad>        Die Serverantwort bzw. die entschlüsselten Daten werden in die angegebene Datei geschrieben
-  -t <transferhandle>   Transferhandle, das an die Server übermittelt wird (nur bei Datenabholungen anzugeben)
 
 Unter Windows werden die Optionen mit einem Schrägstrich "/" statt einem
 Bindestrich "-" eingeleitet.
@@ -87,8 +87,8 @@ Beispiele:
   <starte-ericdemo>
   <starte-ericdemo> -v ESt_2020 -x ESt_2020.xml -c test-softidnr-pse.pfx -p 123456
   <starte-ericdemo> -v ESt_2016 -x ESt_2016.xml -c _NULL -p _NULL
-  <starte-ericdemo> -v ESt_2020 -x ESt_2020.xml -n
+  <starte-ericdemo> -v ESt_2020 -x ESt_2020.xml -a ESt_2020-Vorschaudruck.pdf -n
   <starte-ericdemo> -v ESt_2020 -x ESt_2020.xml
   <starte-ericdemo> -v Kontoinformation -x kontoinformation.xml -c "http://127.0.0.1:24727/eID-Client?testmerker=520000000" -p _NULL
-  <starte-ericdemo> -v MitteilungAbholung -x MitteilungAbholungAnfrage.xml -c test-softidnr-pse.pfx -p 123456 -t 0
+  <starte-ericdemo> -v PostfachAnfrage_32 -x PostfachAnfrage.xml -a _NULL -c test-softidnr-pse.pfx -p 123456
   <starte-ericdemo> -e -x Abholdaten.b64 -s Abholdaten.xml

@@ -1,17 +1,17 @@
+import typing
+from contextlib import nullcontext
+
 import ericapi
-from ericapi.fehlercodes import *
 
 from applicationerror import ApplicationError
 
 from argumentparser import get_ericdemo_argument_parser, DemoArgs
+from ericapi.fehlercodes import ERIC_OK
 
 from erictasks import EricProcess, EricDecode
 from ericutilities import EricBuffer, EricCertificate, print_titelzeile
 
-from progresscallbacks import ProgressCallbacks
 from fileio import write_file_bytes
-
-from typing import Optional
 
 
 def main():
@@ -22,47 +22,36 @@ def main():
         # Initialisiere PyEric
         eric = ericapi.PyEric(args.home_dir, args.log_dir)
 
-        # Registriere Callbacks
-        callback = ProgressCallbacks()
-        eric.PyEricRegistriereGlobalenFortschrittCallback(callback.global_progress)
-        eric.PyEricRegistriereFortschrittCallback(callback.progress)
-
-        ergebnis = bytes()
         antwort = bytes()
-        transferhandle = None
 
         # Zertifikat einlesen, falls vorhanden
-        certificate = None
-        if args.cert:
-            certificate = EricCertificate(eric, args.cert, args.pin)
-            with certificate:
+        cert: typing.Union[EricCertificate, nullcontext[None]] = nullcontext()
+        if args.cert and (args.senden or args.entschluesseln):
+            cert = EricCertificate(eric, args.cert, args.pin)
+        with cert as certificate:
+            if certificate is not None:
                 print_titelzeile(f'Zertifikatseigenschaften von "{args.cert}"')
                 print(certificate.get_properties())
 
-        if args.entschluesseln:
-            # Daten dekodieren
-            dekodierung = EricDecode(eric)
-            dekodierung.read_dataset(args.xml)
-            rc = dekodierung.execute(certificate)
-            ergebnis = dekodierung.get_result()
+            if args.entschluesseln:
+                # Daten dekodieren
+                dekodierung = EricDecode(eric)
+                dekodierung.read_dataset(args.xml)
+                rc = dekodierung.execute(certificate)
+                ergebnis = dekodierung.get_result()
 
-        else:
-            # Daten verarbeiten
-            vorgang = EricProcess(eric)
-            vorgang.read_dataset(args.xml, args.datenartversion)
+            else:
+                # Daten verarbeiten
+                vorgang = EricProcess(eric)
+                vorgang.read_dataset(args.xml, args.datenartversion)
 
-            rc = vorgang.execute(
-                certificate=certificate,
-                send=args.senden,
-                transfer_handle=args.transfer_handle)
-            ergebnis, antwort = vorgang.get_results()
-            transferhandle = vorgang.get_transfer_handle()
+                rc, ergebnis, antwort = vorgang.execute(
+                    certificate=certificate,
+                    pdf_path=args.pdf_path,
+                    send=args.senden)
 
-        _protokolliere(args, rc, ergebnis, antwort, eric, transferhandle)
+            _protokolliere(args, rc, ergebnis, antwort, eric)
 
-        # Callbacks abmelden
-        eric.PyEricRegistriereGlobalenFortschrittCallback(None)
-        eric.PyEricRegistriereFortschrittCallback(None)
 
     except ericapi.PyEricError as err:
         print('\nPyEricError: ' + str(err))
@@ -76,9 +65,8 @@ def _protokolliere(
         fehlercode: int,
         ergebnis: bytes,
         antwort: bytes,
-        eric: ericapi.PyEric,
-        transferhandle: Optional[int] = None
-        ):
+        eric: ericapi.PyEric
+):
     """Gibt den Antwort-Text einer ERiC-Funktion aus und schreibt die Serverantwort oder das Ergebnis in eine Datei"""
     if fehlercode != ERIC_OK:
         with EricBuffer(eric) as textbuffer:
@@ -96,9 +84,6 @@ def _protokolliere(
     elif args.senden:
         status_text = 'Sendestatus'
     p += f'{status_text}: {fehlertext}\n'
-
-    if (args.transfer_handle is not None) and args.senden:
-        p += f'\nTransferhandle: {transferhandle} \n'
 
     if ergebnis:
         p += '\nRückgabe:\n'
@@ -122,7 +107,6 @@ def _lesbare_rueckgabe(data: bytes) -> str:
     """Gibt eine menschenlesbare Repräsentation der Daten zurück, d.h. bei Texten den Text
     und bei binären Daten eine Angabe zum Binärformat"""
     if len(data) > 3:
-        mytest = data[0:4]
         if data[0:4] == b'\x25\x50\x44\x46':
             return '[PDF-Dokument]'
         if data[0:4] == b'\x50\x4B\x03\x04':

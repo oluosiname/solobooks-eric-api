@@ -1,22 +1,26 @@
+import locale
+import os
+
 import ericapi
-from ericapi.bearbeitungsflags import *
+from ericapi.bearbeitungsflags import ERIC_SENDE, ERIC_VALIDIERE, ERIC_DRUCKE
 
 from applicationerror import ApplicationError
-from ericutilities import EricBuffer, EricCertificate, print_titelzeile
+from progresscallbacks import ProgressCallbacks
+from ericutilities import EricBuffer, EricCertificate, print_titelzeile, EricFortschrittsCallback
 
 from fileio import read_file_bytes
 
-from typing import Tuple, Optional
+from typing import Optional
 from contextlib import nullcontext
 
 
-def get_default_print_parameters() -> ericapi.eric_druck_parameter_t:
-    """Standard-Druckeinstellungen des Beispiels"""
+def create_print_parameters(pdf_path: str, preview: bool) -> ericapi.eric_druck_parameter_t:
+    """Druckeinstellungen erzeugen"""
     params = ericapi.eric_druck_parameter_t()
     params.version = 4
-    params.vorschau = 0
+    params.vorschau = 1 if preview else 0
     params.duplexDruck = 0
-    params.pdfName = 'ericprint.pdf'
+    params.pdfName = pdf_path.encode(locale.getpreferredencoding()) if os.name == 'nt' else pdf_path
     params.fussText = None
     params.set_callback(None)
     return params
@@ -24,25 +28,11 @@ def get_default_print_parameters() -> ericapi.eric_druck_parameter_t:
 
 class EricProcess:
     """Klasse zum Aufrufen von EricBearbeiteVorgang"""
+
     def __init__(self, eric: ericapi.PyEric):
         self._eric = eric
         self._datensatz = ""
         self._datenart_version = ""
-        self._result_response = bytes()
-        self._result_server = bytes()
-        self._result_th = None
-
-    def get_results(self) -> Tuple[bytes, bytes]:
-        """Holt den Inhalt des Rückgabepuffers und Serverantwort-Puffers des zuletzt ausgeführten Vorgangs
-        :returns: Ergebnis, Serverantwort
-        """
-        return self._result_response, self._result_server
-
-    def get_transfer_handle(self) -> int:
-        """Holt den vom letzten ausgeführten Vorgang gesetzten Transfer Handle.
-        :returns: TransferHandle
-        """
-        return self._result_th
 
     def read_dataset(self, datei: str, datenart_version: str) -> None:
         """Lese XML-Datensatz von einer Datei"""
@@ -52,56 +42,68 @@ class EricProcess:
 
     def execute(self,
                 certificate: Optional[EricCertificate] = None,
-                send: bool = False,
-                transfer_handle: Optional[int] = None
-                ) -> int:
+                pdf_path: Optional[str] = None,
+                send: bool = False) -> tuple[int, bytes, bytes]:
         """Führt den Vorgang aus
-        :returns: EricFehlercode
+        :returns: EricFehlercode, Eric-Antwort, Serverantwort
         """
-        self._result_server = bytes()
-        self._result_response = bytes()
-        self._result_th = None
+        result_server: bytes = bytes()
+        result_response: bytes = bytes()
 
-        print_params = None
-        processing_flags = ERIC_VALIDIERE
+        # Registriere Callbacks
+        callback: ProgressCallbacks = ProgressCallbacks()
 
-        if send:
-            processing_flags |= ERIC_SENDE
-            print_titelzeile('{} den Datensatz'.format("Sende" if transfer_handle is not None else "Sende und drucke"))
-            if transfer_handle is None:
+        with EricFortschrittsCallback(self._eric, callback.global_progress, callback.progress):
+
+            print_params: Optional[ericapi.eric_druck_parameter_t] = None
+            processing_flags: int = ERIC_VALIDIERE
+
+            titelzeile: str = "Validiere"
+
+            if send:
+                processing_flags |= ERIC_SENDE
+                titelzeile = "Sende"
+                if certificate is not None:
+                    print(f'Sende mit Zertifikat: {certificate.get_path()}')
+                else:
+                    print('Sende ohne Zertifikat')
+
+            if pdf_path is not None:
                 processing_flags |= ERIC_DRUCKE
-                print_params = get_default_print_parameters()
-
-            if certificate is not None:
-                print(f'Sende mit Zertifikat: {certificate.get_path()}')
+                print_params = create_print_parameters(pdf_path, not send)
+                titelzeile += " und drucke den Datensatz in die Datei \"{}\"".format(pdf_path)
             else:
-                print('Sende ohne Zertifikat')
-        else:
-            print_titelzeile('Validiere den Datensatz')
+                titelzeile += " den Datensatz"
 
-        with certificate if certificate else nullcontext():
-            crypto_params = certificate.get_verschluesselungsparameter() if certificate and send else None
-            with EricBuffer(self._eric) as response_buffer, EricBuffer(self._eric) as server_buffer:
-                rc, th = self._eric.PyEricBearbeiteVorgang(
-                    datenpuffer=self._datensatz,
-                    datenartVersion=self._datenart_version,
-                    bearbeitungsFlags=processing_flags,
-                    druckParameter=print_params,
-                    cryptoParameter=crypto_params,
-                    transferHandle=transfer_handle,
-                    rueckgabeXmlPuffer=response_buffer.handle(),
-                    serverantwortXmlPuffer=server_buffer.handle()
+            print_titelzeile(titelzeile)
+
+            crypto_params: Optional[
+                ericapi.eric_verschluesselungs_parameter_t] = certificate.get_verschluesselungsparameter() if certificate and send else None
+            rc = 0
+            with EricBuffer(self._eric) as response_buffer:
+                server_buffer_context = nullcontext()
+                if send:
+                    server_buffer_context = EricBuffer(self._eric)
+                with server_buffer_context as server_buffer:
+                    server_buffer_handle = server_buffer.handle() if server_buffer else None
+                    rc = self._eric.PyEricBearbeiteVorgang(
+                        datenpuffer=self._datensatz,
+                        datenartVersion=self._datenart_version,
+                        bearbeitungsFlags=processing_flags,
+                        druckParameter=print_params,
+                        cryptoParameter=crypto_params,
+                        rueckgabeXmlPuffer=response_buffer.handle(),
+                        serverantwortXmlPuffer=server_buffer_handle
                     )
+                    result_server: bytes = server_buffer.content() if server_buffer else bytes()
+                result_response: bytes = response_buffer.content()
 
-                self._result_th = th
-                self._result_response = response_buffer.content()
-                self._result_server = server_buffer.content()
-
-        return rc
+        return rc, result_response, result_server
 
 
 class EricDecode:
     """Klasse zum Aufrufen von EricDekodiereDaten"""
+
     def __init__(self, eric: ericapi.PyEric):
         self._eric = eric
         self._datei = ""
@@ -130,7 +132,7 @@ class EricDecode:
 
         print(f'Entschlüssele mit Zertifikat: {certificate.get_path()}')
 
-        with EricBuffer(self._eric) as buffer, certificate:
+        with EricBuffer(self._eric) as buffer:
             rc = self._eric.PyEricDekodiereDaten(
                 zertifikatHandle=certificate.get_handle(),
                 pin=certificate.get_pin(),

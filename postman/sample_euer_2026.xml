@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Elster xmlns="http://www.elster.de/elsterxml/schema/v11">
+    <TransferHeader version="11">
+        <Verfahren>ElsterErklaerung</Verfahren>
+        <DatenArt>EUER</DatenArt>
+        <Vorgang>send-Auth</Vorgang>
+        <Testmerker>700000004</Testmerker>
+        <HerstellerID>97263</HerstellerID>
+        <DatenLieferant>ERiC Entwicklung</DatenLieferant>
+        <Datei>
+            <Verschluesselung>CMSEncryptedData</Verschluesselung>
+            <Kompression>GZIP</Kompression>
+            <TransportSchluessel/>
+        </Datei>
+    </TransferHeader>
+    <DatenTeil>
+        <Nutzdatenblock>
+            <NutzdatenHeader version="11">
+                <NutzdatenTicket>adfjasldkfuweor456asvs</NutzdatenTicket>
+                <Empfaenger id="F">9198</Empfaenger>
+                <Hersteller>
+                    <ProduktName>ERICTest</ProduktName>
+                    <ProduktVersion>2009.1/0</ProduktVersion>
+                </Hersteller>
+                <DatenLieferant>Softwaretester ERiC</DatenLieferant>
+            </NutzdatenHeader>
+            <Nutzdaten>
+                <E77 xmlns="http://finkonsens.de/elster/elstererklaerung/euer/e77/v2026" version="2026">
+                    <EUER>
+                        <Abw_Zeitraum>
+                            <E6000302>12.01.</E6000302>
+                            <E6000303>21.08.2026</E6000303>
+                        </Abw_Zeitraum>
+                        <Allg>
+                            <E6000016>Musterkörperschaft</E6000016>                            
+                            <E6000023>Musterstraße</E6000023>
+                            <E6000024>80123</E6000024>
+                            <E6000025>Musterort</E6000025>
+                            <E6000026>9198011310010</E6000026>
+                            <E6000017>Musterbetrieb</E6000017>
+                            <E6000602>310</E6000602>
+                            <E6000603>3</E6000603>
+                            <E6000604>1</E6000604>
+                            <E6000019>2</E6000019>
+                        </Allg>
+                        <BEin>
+                            <GesamtSum>
+                                <E6001201>0,00</E6001201>
+                            </GesamtSum>
+                        </BEin>
+                        <BAus>
+                            <Fremdleistung>
+                                <Sum>
+                                    <E6001701>10,00</E6001701>
+                                </Sum>
+                            </Fremdleistung>
+                            <Summe_BAus>
+                                <E6005301>10,00</E6005301>
+                            </Summe_BAus>
+                        </BAus>
+                        <Ermittlung_Gewinn>
+                            <Uebertrag>
+                                <E6005501>0,00</E6005501>
+                                <E6005601>10,00</E6005601>
+                            </Uebertrag>
+                        </Ermittlung_Gewinn>
+                    </EUER>
+                    <Vorsatz>
+                        <Unterfallart>77</Unterfallart>
+                        <Vorgang>01</Vorgang>
+                        <StNr>9198011310010</StNr>
+                        <Zeitraum>2026</Zeitraum>
+                        <AbsName>Testfallversand ERiC</AbsName>
+                        <AbsStr>Testgasse 1a</AbsStr>
+                        <AbsPlz>12345</AbsPlz>
+                        <AbsOrt>Musterstadt</AbsOrt>
+                        <Copyright>(c) 2022 Bayerisches Landesamt für Steuern</Copyright>
+                        <OrdNrArt>S</OrdNrArt>
+                        <Rueckuebermittlung>
+                            <Bescheid>2</Bescheid>
+                        </Rueckuebermittlung>
+                    </Vorsatz>
+                </E77>
+            </Nutzdaten>
+        </Nutzdatenblock>
+    </DatenTeil>
+</Elster>

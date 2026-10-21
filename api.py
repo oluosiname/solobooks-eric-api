@@ -64,7 +64,8 @@ def validate_xml():
         # Validate XML using ERIC client
         is_valid, error_code, error_message, validation_result = eric_client.validate_xml(
             req.xml,
-            req.datenartversion
+            req.datenartversion,
+            req.skip_release_date_check
         )
         
         if is_valid:

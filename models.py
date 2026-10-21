@@ -9,6 +9,7 @@ class ValidationRequest(BaseModel):
     """Request model for XML validation"""
     xml: str = Field(..., description="The XML content to validate")
     datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025, EUER_2025, ESt_2025, ZMDO). Auto-detected if not provided. Note ZMDO carries no year.")
+    skip_release_date_check: bool = Field(False, description="Validate without ERiC's release-date check, which rejects a tax year before 1 January of the following year. Validation only; /submit always applies it.")
 
 
 class ValidationResult(BaseModel):

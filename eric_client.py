@@ -18,6 +18,9 @@ from ericdemo import ericapi
 from ericdemo.ericapi.fehlercodes import ERIC_OK
 from ericdemo.ericapi.bearbeitungsflags import ERIC_VALIDIERE, ERIC_SENDE, ERIC_DRUCKE
 
+# eric_types.h defines it; the bundled Python binding does not.
+ERIC_VALIDIERE_OHNE_FREIGABEDATUM = 1 << 8
+
 
 class UnknownTaxYearError(ValueError):
     """The tax year could not be determined and guessing it would be unsafe."""
@@ -304,7 +307,12 @@ class EricClient:
             print(f"Warning: Could not extract datenartversion from XML: {e}")
             return None
     
-    def validate_xml(self, xml_content: str, datenart_version: Optional[str] = None) -> Tuple[bool, Optional[int], Optional[str], Optional[str]]:
+    def validate_xml(
+        self,
+        xml_content: str,
+        datenart_version: Optional[str] = None,
+        skip_release_date_check: bool = False
+    ) -> Tuple[bool, Optional[int], Optional[str], Optional[str]]:
         """
         Validate XML without submitting
         
@@ -326,7 +334,7 @@ class EricClient:
             xml_bytes = xml_content
         
         # Only validate, no send or print
-        processing_flags = ERIC_VALIDIERE
+        processing_flags = ERIC_VALIDIERE_OHNE_FREIGABEDATUM if skip_release_date_check else ERIC_VALIDIERE
         
         with self._eric_buffer(eric) as response_buffer, self._eric_buffer(eric) as server_buffer:
             rc = eric.PyEricBearbeiteVorgang(

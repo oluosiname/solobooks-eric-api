@@ -1,9 +1,13 @@
+import typing
+
 import ericapi
 import os
 import locale
 from applicationerror import ApplicationError
 
 from typing import Optional
+
+from ericapi import fehlercodes
 
 
 def print_titelzeile(msg: str):
@@ -12,6 +16,7 @@ def print_titelzeile(msg: str):
 
 class EricBuffer:
     """Verwalten von ERiC-Rückgabepuffern"""
+
     def __init__(self, eric: ericapi.PyEric):
         self._eric = eric
         self._handle = None
@@ -50,8 +55,35 @@ class EricBuffer:
         return self._eric.PyEricRueckgabepufferLaenge(self._handle)
 
 
+class EricFortschrittsCallback:
+    """Verwalten von einem FortschrittsCallback"""
+
+    def __init__(self, eric: ericapi.PyEric, global_callback: typing.Callable[[int, int, int], None],
+                 fortschritt_callback: typing.Callable[[int, int, int], None]):
+        self._fortschritts_callback = fortschritt_callback
+        self._global_callback = global_callback
+        self._eric = eric
+
+    def __enter__(self):
+        rc = self._eric.PyEricRegistriereGlobalenFortschrittCallback(self._global_callback)
+        if rc != fehlercodes.ERIC_OK:
+            raise ApplicationError(f"Kann den globalen FortschrittsCallback nicht registrieren. ERiC-Fehlercode {rc}")
+        rc = self._eric.PyEricRegistriereFortschrittCallback(self._fortschritts_callback)
+        if rc != fehlercodes.ERIC_OK:
+            raise ApplicationError(f"Kann den FortschrittsCallback nicht registrieren. ERiC-Fehlercode {rc}")
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        rc = self._eric.PyEricRegistriereFortschrittCallback(None)
+        rc1 = self._eric.PyEricRegistriereGlobalenFortschrittCallback(None)
+        if rc != fehlercodes.ERIC_OK:
+            raise ApplicationError(f"Kann den FortschrittsCallback nicht deregistrieren. ERiC-Fehlercode {rc}")
+        if rc1 != fehlercodes.ERIC_OK:
+            raise ApplicationError(f"Kann den globalen FortschrittsCallback nicht deregistrieren. ERiC-Fehlercode {rc1}")
+
+
 class EricCertificate:
     """Verwalten von einem ERiC-Zertifikat"""
+
     def __init__(self,
                  eric: ericapi.PyEric,
                  file_path: str,
@@ -65,7 +97,7 @@ class EricCertificate:
     def __enter__(self):
         """Lädt das Zertifikat"""
         path = self._file_path.encode(locale.getpreferredencoding()) if os.name == 'nt' else self._file_path
-        rc, htoken, info = self._eric.PyEricGetHandleToCertificate(path)
+        rc, htoken, _ = self._eric.PyEricGetHandleToCertificate(path)
         if rc != 0:
             raise ApplicationError(f"Kann Zertifikat {self._file_path} nicht laden")
 

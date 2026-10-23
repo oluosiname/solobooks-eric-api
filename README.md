@@ -87,9 +87,6 @@ On a successful submission the Transferticket is returned as:
 - `X-Transferticket` response header, when `return_pdf` is `true` (body is the PDF)
 - `transferticket` JSON field, when `return_pdf` is `false`
 
-`transfer_handle` is a separate, pre-existing field: ERiC's Datenabholung bundling
-parameter, not a receipt. Do not confuse the two.
-
 
 ## Setup
 
@@ -162,12 +159,12 @@ Submit a tax return (UStVA, EUER, etc.) to ELSTER.
 **Response:**
 
 - If `return_pdf=true` (default): Returns PDF file with submission metadata in headers:
-  - `X-Transfer-Handle`: Transfer handle from ELSTER
+  - `X-Transferticket`: the receipt the filer quotes to the Finanzamt
   - `X-Submission-Status`: Submission status
   - `X-Server-Response`: Server response (truncated)
 - If `return_pdf=false`: Returns JSON with:
   - `status`: "success"
-  - `transfer_handle`: Transfer handle
+  - `transferticket`: the receipt the filer quotes to the Finanzamt
   - `pdf_base64`: PDF as base64 encoded string
   - `server_response`: Server response XML
   - `message`: Success message
@@ -259,9 +256,8 @@ if response.status_code == 200:
     with open('submission_result.pdf', 'wb') as f:
         f.write(response.content)
 
-    # Get transfer handle from headers
-    transfer_handle = response.headers.get('X-Transfer-Handle')
-    print(f'Submission successful! Transfer Handle: {transfer_handle}')
+    transferticket = response.headers.get('X-Transferticket')
+    print(f'Submission successful! Transferticket: {transferticket}')
 else:
     print(f'Error: {response.json()}')
 ```

@@ -1,4 +1,3 @@
-import os
 from applicationerror import ApplicationError
 
 

@@ -1,14 +1,14 @@
 from math import floor
-from ericapi.fortschrittids import *
+from ericapi import fortschrittids
 
 
 class ProgressCallbacks:
-    _mapId = {
-        ERIC_FORTSCHRITTCALLBACK_ID_EINLESEN: 'XML einlesen',
-        ERIC_FORTSCHRITTCALLBACK_ID_VORBEREITEN: 'Versand vorbereiten',
-        ERIC_FORTSCHRITTCALLBACK_ID_VALIDIEREN: 'Validieren',
-        ERIC_FORTSCHRITTCALLBACK_ID_SENDEN: 'Versenden',
-        ERIC_FORTSCHRITTCALLBACK_ID_DRUCKEN: 'Drucken'
+    _MAP_ID = {
+        fortschrittids.ERIC_FORTSCHRITTCALLBACK_ID_EINLESEN: 'XML einlesen',
+        fortschrittids.ERIC_FORTSCHRITTCALLBACK_ID_VORBEREITEN: 'Versand vorbereiten',
+        fortschrittids.ERIC_FORTSCHRITTCALLBACK_ID_VALIDIEREN: 'Validieren',
+        fortschrittids.ERIC_FORTSCHRITTCALLBACK_ID_SENDEN: 'Versenden',
+        fortschrittids.ERIC_FORTSCHRITTCALLBACK_ID_DRUCKEN: 'Drucken'
     }
     _BAR_LENGTH = 78
 
@@ -18,10 +18,10 @@ class ProgressCallbacks:
         self._current_id = None
 
     @staticmethod
-    def global_progress(cbid, cbpos, cbmax):
-        print('{}/{}: {}'.format(cbpos, cbmax, ProgressCallbacks._mapId[cbid]))
+    def global_progress(cbid: int, cbpos: int, cbmax: int):
+        print('{}/{}: {}'.format(cbpos, cbmax, ProgressCallbacks._MAP_ID[cbid]))
 
-    def progress(self, cbid, cbpos, cbmax):
+    def progress(self, cbid: int, cbpos: int, cbmax: int):
         if self._current_id != cbid:
             print('[', end='')
             self._current_id = cbid

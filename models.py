@@ -9,6 +9,7 @@ class ValidationRequest(BaseModel):
     """Request model for XML validation"""
     xml: str = Field(..., description="The XML content to validate")
     datenartversion: Optional[str] = Field(None, description="ERiC data version (e.g., UStVA_2025, EUER_2025, ESt_2025, ZMDO). Auto-detected if not provided. Note ZMDO carries no year.")
+    skip_release_date_check: bool = Field(False, description="Validate without ERiC's release-date check, which rejects a tax year before 1 January of the following year. Validation only; /submit always applies it.")
 
 
 class ValidationResult(BaseModel):
@@ -32,9 +33,7 @@ class SubmissionRequest(BaseModel):
 class SubmissionResult(BaseModel):
     """Response model for tax return submission (JSON format)"""
     status: str
-    # transfer_handle is ERiC's Datenabholung bundling parameter, not a receipt.
     # transferticket is the reference the filer quotes to the Finanzamt.
-    transfer_handle: Optional[int] = None
     transferticket: Optional[str] = None
     pdf_base64: Optional[str] = None
     server_response: Optional[str] = None
@@ -63,7 +62,6 @@ class DatenabholungRequest(BaseModel):
 
 class DatenabholungResult(BaseModel):
     """Response model for a VaSt Belegabruf"""
-    # Both phases run server-side because they must share one transfer handle.
     belege: List[str] = []
     error_code: Optional[int] = None
     error_message: Optional[str] = None

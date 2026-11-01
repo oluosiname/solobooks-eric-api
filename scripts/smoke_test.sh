@@ -33,7 +33,7 @@ SAMPLES_DIR="$(dirname "$0")/../postman"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-for pair in "est:sample_est_2025.xml" "ustva:sample_ustva_2025.xml" "zmdo:sample_zmdo_2025.xml"; do
+for pair in "est:sample_est_2025.xml" "est2026:sample_est_2026.xml" "euer2026:sample_euer_2026.xml" "ustva:sample_ustva_2025.xml" "zmdo:sample_zmdo_2025.xml"; do
   key="${pair%%:*}"; file="${pair#*:}"
   if [ ! -f "$SAMPLES_DIR/$file" ]; then
     echo "  MISSING SAMPLE: $SAMPLES_DIR/$file" >&2
@@ -43,9 +43,11 @@ for pair in "est:sample_est_2025.xml" "ustva:sample_ustva_2025.xml" "zmdo:sample
 import json, sys
 src, auto_out, explicit_out, key = sys.argv[1:5]
 xml = open(src, encoding="utf-8").read()
-version = {"est": "ESt_2025", "ustva": "UStVA_2025", "zmdo": "ZMDO"}[key]
-json.dump({"xml": xml}, open(auto_out, "w"))
-json.dump({"xml": xml, "datenartversion": version}, open(explicit_out, "w"))
+version = {"est": "ESt_2025", "est2026": "ESt_2026", "euer2026": "EUER_2026", "ustva": "UStVA_2025", "zmdo": "ZMDO"}[key]
+# ERiC refuses a tax year before 1 January of the following one.
+extra = {"skip_release_date_check": True} if key.endswith("2026") else {}
+json.dump({"xml": xml, **extra}, open(auto_out, "w"))
+json.dump({"xml": xml, "datenartversion": version, **extra}, open(explicit_out, "w"))
 PY
 done
 
@@ -74,8 +76,8 @@ check "status is ok" "ok" \
   "$(python3 -c "import json;print(json.load(open('$TMP/h'))['status'])" 2>/dev/null || echo parse-error)"
 
 echo
-echo "Validation - all three form types"
-for pair in "est:ESt" "ustva:UStVA" "zmdo:ZMDO"; do
+echo "Validation - every form type"
+for pair in "est:ESt" "est2026:ESt 2026" "ustva:UStVA" "zmdo:ZMDO"; do
   key="${pair%%:*}"; label="${pair#*:}"
   check "$label validates (datenart auto-detected)" "true" \
     "$(post /validate "$TMP/${key}_v1" "$TMP/$key.json" >/dev/null; \
@@ -84,6 +86,10 @@ for pair in "est:ESt" "ustva:UStVA" "zmdo:ZMDO"; do
     "$(post /validate "$TMP/${key}_v2" "$TMP/${key}_explicit.json" >/dev/null; \
        python3 -c "import json;print(str(json.load(open('$TMP/${key}_v2'))['valid']).lower())" 2>/dev/null || echo parse-error)"
 done
+# Datenart detection reads only the E10 namespace; callers always name EUER_*.
+check "EUER 2026 validates (explicit datenartversion)" "true" \
+  "$(post /validate "$TMP/euer2026_v2" "$TMP/euer2026_explicit.json" >/dev/null; \
+     python3 -c "import json;print(str(json.load(open('$TMP/euer2026_v2'))['valid']).lower())" 2>/dev/null || echo parse-error)"
 
 echo
 echo "Rejection status code"

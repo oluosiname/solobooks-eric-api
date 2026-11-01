@@ -156,9 +156,6 @@ ERIC_GLOBAL_VERSAND_ART_NICHT_UNTERSTUETZT = 610001225
 #  [610001226] Die Version eines der angegebenen Parameter ist ungültig.
 ERIC_GLOBAL_UNGUELTIGE_PARAMETER_VERSION = 610001226
 
-#  [610001227] Für das Verfahren Datenabholung wurde ein illegales Transferhandle angegeben.
-ERIC_GLOBAL_TRANSFERHANDLE = 610001227
-
 #  [610001228] Die Initialisierung eines Plugins ist fehlgeschlagen.
 ERIC_GLOBAL_PLUGININITIALISIERUNG = 610001228
 
@@ -168,7 +165,7 @@ ERIC_GLOBAL_INKOMPATIBLE_VERSIONEN = 610001229
 #  [610001230] Das im XML-Element "<Verschluesselung>" angegebene Verschlüsselungsverfahren wird vom ERiC nicht unterstützt.
 ERIC_GLOBAL_VERSCHLUESSELUNGSVERFAHREN_NICHT_UNTERSTUETZT = 610001230
 
-#  [610001231] Der Aufruf eine API-Funktion des ERiCs darf erst dann erfolgen, wenn ein vorheriger Aufruf zurückgekehrt ist.
+#  [610001231] Der Aufruf einer API-Funktion des ERiCs darf erst dann erfolgen, wenn ein vorheriger Aufruf zurückgekehrt ist.
 ERIC_GLOBAL_MEHRFACHAUFRUFE_NICHT_UNTERSTUETZT = 610001231
 
 #  [610001404] Das Bundesland/Finanzamt mit der angegebenen Nummer nimmt bei der angegebenen Steuerart am ELSTER-Verfahren nicht teil.
@@ -264,12 +261,6 @@ ERIC_TRANSFER_ERR_BEGINTRANSPORTSCHLUESSEL = 610101257
 #  [610101258] Im XML-String konnte der Text "</TransportSchluessel>" nicht gefunden werden.
 ERIC_TRANSFER_ERR_ENDTRANSPORTSCHLUESSEL = 610101258
 
-#  [610101259] Im XML-String konnte der Text "<DatenGroesse>" nicht gefunden werden.
-ERIC_TRANSFER_ERR_BEGINDATENGROESSE = 610101259
-
-#  [610101260] Im XML-String konnte der Text "</DatenGroesse>" nicht gefunden werden.
-ERIC_TRANSFER_ERR_ENDDATENGROESSE = 610101260
-
 #  [610101271] Beim Datenaustausch ist ein Fehler aufgetreten.
 ERIC_TRANSFER_ERR_SEND = 610101271
 
@@ -344,6 +335,9 @@ ERIC_TRANSFER_EID_NPABLOCKIERT = 610101524
 
 #  [610201016] Fehler bei der Schlüsselerzeugung.
 ERIC_CRYPT_ERROR_CREATE_KEY = 610201016
+
+#  [610201017] Dem System steht nicht mehr genügend Entropie zur Verfügung.
+ERIC_CRYPT_OUT_OF_ENTROPY = 610201017
 
 #  [610201101] eSigner: Ungültiges Token Handle.
 ERIC_CRYPT_E_INVALID_HANDLE = 610201101
@@ -545,6 +539,9 @@ ERIC_CRYPT_E_ASN1_NO_ENVELOPED_DATA = 610201231
 
 #  [610201232] Die ASN.1-Struktur enthält keine Daten
 ERIC_CRYPT_E_ASN1_NO_CONTENT_DATA = 610201232
+
+#  [610201233] Fehler beim Signieren der XML-Eingabedatei
+ERIC_CRYPT_E_XML_VERIFY = 610201233
 
 #  [610301001] Verarbeitung fehlerhaft, keine genaueren Informationen vorhanden.
 ERIC_IO_FEHLER = 610301001

@@ -9,6 +9,7 @@ from applicationerror import ApplicationError
 class DemoArgs(argparse.Namespace):
     """Namespace, der einen ApplicationError statt eines AttributeError wirft,
      wenn das Attribut nicht existiert"""
+
     def __getattr__(self, attr):
         raise ApplicationError("'DemoArgs' object has no attribute {}".format(attr))
 
@@ -33,6 +34,7 @@ class _DemoArgumentParser(argparse.ArgumentParser):
         try:
             args.cert = "" if args.cert == '_NULL' else args.cert
             args.pin = "" if args.pin == '_NULL' else args.pin
+            args.pdf_path = None if args.pdf_path == '_NULL' else args.pdf_path
             args.home_dir = os.fspath(Path(args.home_dir).resolve())
             args.log_dir = os.fspath(Path(args.log_dir).resolve())
 
@@ -78,17 +80,23 @@ def get_ericdemo_argument_parser():
                      help='Diese Hilfe ausgeben')
 
     # Optionen
-    mx_grp.add_argument(pfx+'v', type=str,
-                     metavar='<datenartversion>',
-                     dest='datenartversion',
-                     help='Datenartversion',
-                     default='ESt_2020'
-                     )
+    mx_grp.add_argument(pfx + 'v', type=str,
+                        metavar='<datenartversion>',
+                        dest='datenartversion',
+                        help='Datenartversion',
+                        default='ESt_2020'
+                        )
     grp.add_argument(pfx + 'x', type=str,
                      metavar='<xml>',
                      dest='xml',
                      help='Pfad zur Datensatzdatei',
                      default='ESt_2020.xml'
+                     )
+    grp.add_argument(pfx + 'a', type=str,
+                     metavar='<pdf>',
+                     dest='pdf_path',
+                     help='PDF-Pfad des anzulegenden Drucks, _NULL, wenn kein PDF gedruckt werden soll',
+                     default='ericprint.pdf'
                      )
     grp.add_argument(pfx + 'c', type=str,
                      metavar='<certificate>',
@@ -120,26 +128,21 @@ def get_ericdemo_argument_parser():
                      help='Die Serverantwort bzw. die entschluesselten Daten werden in die angegebene Datei geschrieben',
                      default=""
                      )
-    grp.add_argument(pfx + 't', type=int,
-                     metavar='<transferhandle>',
-                     dest='transfer_handle',
-                     help='Transferhandle, das an die Server uebermittelt wird (nur bei Datenabholungen anzugeben)',
-                     default=None
-                     )
     grp.add_argument(pfx + 'n', action='store_false',
                      dest="senden",
                      help='Der Datensatz soll nicht versendet, sondern nur validiert werden'
                      )
     mx_grp.add_argument(pfx + 'e', action='store_true',
-                     dest='entschluesseln',
-                     help='Die Datensatzdatei wird entschluesselt und nicht validiert oder versendet'
-                     )
+                        dest='entschluesseln',
+                        help='Die Datensatzdatei wird entschluesselt und nicht validiert oder versendet'
+                        )
     # Standardwerte ausgeben
     defaults = [
         ('<datenartversion>:', 'ESt_2020'),
         ('<xml>:', 'ESt_2020.xml'),
         ('<certificate>:', 'test-softidnr-pse.pfx'),
         ('<pin>:', '123456'),
+        ('<pdf>:', 'ericprintf.pdf'),
         ('<dir>:', str(os.path.join('<Arbeitsverzeichnis>', '..', '..', lib_folder_name))),
         ('<log>:', '<Arbeitsverzeichnis>'),
     ]
@@ -154,10 +157,9 @@ def get_ericdemo_argument_parser():
 
     epilog += f'{aufruf} {pfx}v ESt_2020 {pfx}x ESt_2020.xml {pfx}c test-softidnr-pse.pfx {pfx}p 123456\n'
     epilog += f'{aufruf} {pfx}v ESt_2016 {pfx}x ESt_2016.xml {pfx}c _NULL {pfx}p _NULL\n'
-    epilog += f'{aufruf} {pfx}v ESt_2020 {pfx}x ESt_2020.xml {pfx}n\n'
-    epilog += f'{aufruf} {pfx}v ESt_2020 {pfx}x ESt_2020.xml\n'
+    epilog += f'{aufruf} {pfx}v ESt_2020 {pfx}x ESt_2020.xml {pfx}n {pfx}a ESt_2020-Vorschaudruck.pdf \n'
     epilog += f'{aufruf} {pfx}v Kontoinformation {pfx}x kontoinformation.xml {pfx}c "http://127.0.0.1:24727/eID-Client?testmerker=520000000" {pfx}p _NULL\n'
-    epilog += f'{aufruf} {pfx}v MitteilungAbholung {pfx}x MitteilungAbholungAnfrage.xml {pfx}c test-softidnr-pse.pfx {pfx}p 123456 {pfx}t 0\n'
+    epilog += f'{aufruf} {pfx}v PostfachAnfrage_32 {pfx}x PostfachAnfrage.xml {pfx}a _NULL {pfx}c test-softidnr-pse.pfx {pfx}p 123456\n'
     epilog += f'{aufruf} {pfx}e {pfx}x Abholdaten.b64 {pfx}s Abholdaten.xml\n'
 
     parser.epilog = epilog

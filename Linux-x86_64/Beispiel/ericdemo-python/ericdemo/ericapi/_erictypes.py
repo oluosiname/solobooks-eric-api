@@ -12,7 +12,6 @@ else:
     EricPdfCallback = _ct.CFUNCTYPE(_ct.c_int, _ct.c_char_p, _ct.c_void_p, _ct.c_uint32, _ct.c_void_p)
 
 EricZertifikatHandle = _ct.c_uint32
-EricTransferHandle = _ct.c_uint32
 
 
 class EricRueckgabepufferHandle(_ct.c_void_p):
